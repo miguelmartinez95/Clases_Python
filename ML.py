@@ -1,12 +1,6 @@
 from sklearn.preprocessing import MinMaxScaler
 import sys
 
-
-
-
-
-
-
 sys.path.insert(1,'E:\Documents\Doctorado\Clases_python')
 
 from errors import Eval_metrics as evals
@@ -49,11 +43,13 @@ class ML:
         self.inf_limit = inf_limit
 
 
-
-
-
     @staticmethod
     def cv_division(x,y, fold):
+        '''
+        :param fold: division for cv_analysis
+        :return: data divided into train, test and validations in addition to the indexes division
+        '''
+
         x = x.reset_index(drop=True)
         y = y.reset_index(drop=True)
 
@@ -67,7 +63,6 @@ class ML:
         step = int(x.shape[0]/fold)
         w = 0
         w2 = step
-        #index = []
         indexes = []
         try:
             while w2 <= x.shape[0]:
@@ -75,30 +70,13 @@ class ML:
 
                 X_val.append(a.iloc[range(len(a)-math.ceil(len(a)/2), len(a)-1)])
                 X_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
-                #X_val.append(x.iloc[range(w,w2)])
                 X_train.append(x.drop(range(w,w2)))
-
-
-            #   if not isinstance(scalar_rad, list):
-            #       data_test = a.drop(range(len(a)-math.floor(len(a)/2), len(a)))
-            #       pl = np.where(names == 'radiation')[0]
-            #       rad = data_test.iloc[:, pl]
-            #       rad = scalar_rad.inverse_transform(pd.DataFrame(rad))
-
-            #       #rad = np.delete(rad,range(ind_out),0)
-            #       rad = np.delete(rad, range(n_lags), 0)
-
-            #       index.append(np.where(rad <= limit)[0])
 
 
                 a = y.iloc[range(w,w2)]
                 Y_val.append(a.iloc[range(len(a)-math.ceil(len(a)/2), len(a)-1)])
                 Y_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
-                #Y_test.append(y.iloc[range(w,w2)])
                 Y_train.append(y.drop(range(w,w2)))
-                #Y_val.append(y.drop(range(w,w2)))
-
-                #indexes.append(np.array([w,w2]))
                 indexes.append(np.array([w2-math.ceil(len(a)/2)+1,w2]))
                 w=w2
                 w2+=step
@@ -112,13 +90,17 @@ class ML:
 
     @staticmethod
     def fix_values_0(restriction, zero_problem, limit):
+        '''
+        :param restriction: schedule hours or irradiance variable depending on the zero_problem
+        :param zero_problem: schedule or radiation
+        :param limit: limit hours or radiation limit
+        :return: the indexes where the data are not in the correct time schedule or is below the radiation limit
+        '''
         if zero_problem == 'schedule':
             try:
                 limit1 = limit[0]
                 limit2 = limit[1]
                 hours = restriction.hour
-                #data = pd.DataFrame(data)
-                #data = data.reset_index(drop=True)
                 ii = np.where(hours < limit1 | hours > limit2)[0]
                 ii= ii[ii>=0]
             except:
@@ -126,8 +108,6 @@ class ML:
         elif zero_problem == 'radiation':
             try:
                 rad = restriction
-                #data = pd.DataFrame(data)
-                #data = data.reset_index(drop=True)
                 ii = np.where(rad <= limit)[0]
                 ii = ii[ii >= 0]
                 # data.iloc[ii] = 0
@@ -136,13 +116,17 @@ class ML:
         else:
             'Unknown situation with nights'
 
-        #   ii2 = np.where(data<limit_inf)
-        #   data.iloc[ii2]=0
         res = {'indexes_out': ii}
         return (res)
 
     @staticmethod
     def cortes(x, D, lim):
+        '''
+        :param x:
+        :param D: length of data
+        :param lim: dimension of the curves
+        :return: data divided in curves of specific length
+        '''
         Y = np.zeros((lim, int(D / lim)))
         i = 0
         s = 0
@@ -161,7 +145,15 @@ class ML:
 
 
     @staticmethod
-    def ts(new_data, look_back, pred_col, dim, names, lag):
+    def ts(new_data, look_back, pred_col, names, lag):
+        '''
+        :param look_back: amount of lags
+        :param pred_col: variables to lagged
+        :param names: name variables
+        :param lag: name of lag-- variable lag1
+        :return: dataframe with lagged data
+        '''
+
         t = new_data.copy()
         t['id'] = range(0, len(t))
         t = t.iloc[look_back:, :]
@@ -182,6 +174,11 @@ class ML:
 
 
     def introduce_lags(self, lags, var_lag):
+        '''
+        :param lags: amount of lags
+        :param var_lag: label of lagged variables
+        :return: data lagged
+        '''
         if self.n_lags>0:
             d1 = self.data.copy()
             tt = d1.index
@@ -190,8 +187,7 @@ class ML:
             try:
                 names1= d1.columns[selec]
                 for i in range(self.n_lags):
-                    d1 = self.ts(d1, lags, selec, d1.shape[0], names1, i + 1)
-                    #self.data = self.ts(self.data, lags, selec, self.data.shape[0], names1, i+1)
+                    d1 = self.ts(d1, lags, selec, names1, i + 1)
                     selec = range(dim, dim +var_lag)
                     dim += var_lag
                     tt =  np.delete(tt, 0)
@@ -205,6 +201,9 @@ class ML:
             print('No lags selected')
 
     def adjust_limits(self):
+        '''
+        Adjust the data or the variable to certain upper or lower limits
+        '''
         inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit)[0]
         sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit)[0]
         if len(inf)>0:
@@ -213,6 +212,9 @@ class ML:
             self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
 
     def adapt_horizont(self):
+        '''
+        Move the data sample to connected the y with the x based on the future selected
+        '''
         if self.horizont==0:
             self.data = self.data
         else:
@@ -230,21 +232,22 @@ class ML:
         print('Horizont adjusted!')
 
     def scalating(self, scalar_limits,groups,x,y):
-
+        '''
+        :param scalar_limits: limit of the scalar data
+        :param groups: groups defining the different variable groups to be scaled together
+        :return: data scaled depending if x, y or both are scaled
+        '''
         scalars = dict()
         names = list(groups.keys())
         if x==True and y==True:
             try:
                 for i in range(len(groups)):
                     scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    #scalars.append(MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1])))
                     selec =groups[names[i]]
                     d = self.data.iloc[:,selec]
                     if(len(selec)>1):
-                        #scalars[i].fit(np.concatenate(np.array(d)).reshape(-1,1))
                         scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1,1))
                     else:
-                        #scalars[i].fit(np.array(d).reshape(-1, 1))
                         scalars[names[i]].fit(np.array(d).reshape(-1, 1))
                     for z in range(len(selec)):
                         self.data.iloc[:,selec[z]]= scalars[names[i]].transform(pd.DataFrame(d.iloc[:,z]))[:,0]
@@ -259,15 +262,12 @@ class ML:
         elif x==True and y==False:
             try:
                 for i in range(len(groups)):
-                    #scalars.append(MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1])))
                     scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                     selec  =groups[names[i]]
                     d = self.data.iloc[:,selec]
                     if (len(selec) > 1):
-                        #scalars[i].fit(np.concatenate(np.array(d)).reshape(-1, 1))
                         scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
                     else:
-                        #scalars[i].fit(np.array(d).reshape(-1, 1))
                         scalars[names[i]].fit(np.array(d).reshape(-1, 1))
                     for z in range(len(selec)):
                         self.data.iloc[:,selec[z]]= scalars[names[i]].transform(pd.DataFrame(d.iloc[:,z]))[:,0]
@@ -290,6 +290,14 @@ class ML:
         self.data = self.data.replace(np.nan, self.mask_value)
 
     def missing_values_interpolate(self, delete_end, delete_start, mode, limit, order=2):
+        '''
+        :param delete_end: delete missing data at the last row
+        :param delete_start: delete missing data at the first row
+        :param mode: linear, spline, polinimial..
+        :param limit: amount of missing values accepted
+        :param order: if spline or polinomial
+        :return: data interpolated
+        '''
         dd =  self.data.copy()
         dd = dd.reset_index(drop=True)
         ii = self.data.index
@@ -316,12 +324,12 @@ class ML:
 
         self.data = dd
         self.data.index=ii
-        #a = self.data.iloc[:,self.pos_y]
-        #a[a<self.inf_limit] = self.inf_limit
-        #a[a>self.sup_limit] = self.sup_limit
-        #self.data.iloc[:,self.pos_y] = a
 
     def fda_outliers(self, freq):
+        '''
+        :param freq: amount of values in a hour
+        :return: the variable y with missing value in the days considered as outliers
+        '''
         step = int(60 / freq)
         y = self.data.iloc[:, self.pos_y]
         index = y.index
@@ -371,10 +379,8 @@ class ML:
             fd_y3 = pd.DataFrame(fd_y2.copy())
             index2 = fd_y3.index
 
-        # fd_y2 = np.array(fd_y2)
 
         fd = fd_y2.tolist()
-        # fd_0 = fd_y.transpose().tolist()
 
         fd1 = skfda.FDataGrid(fd, grid)
 
@@ -386,7 +392,6 @@ class ML:
         o1 = np.where(oo1 == -1)[0]
         o2 = np.where(oo2 == -1)[0]
         o_final = np.intersect1d(o1, o2)
-        #o_final = np.union1d(o1, o2)
 
         print(len(o_final))
         # diff = 0
@@ -396,7 +401,6 @@ class ML:
             for t in range(len(o_final)):
                 w = np.empty(fd_y.shape[1])
                 w[:] = np.nan
-                # fd_y[out[t],:]= np.zeros(fd_y.shape[1])
                 fd_y[out[t], :] = w
 
         Y = fd_y.flatten()
@@ -421,20 +425,17 @@ class MLP(ML):
 
     def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit, type):
         super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
-        #self.activation1 = activation1
-        #self.activation2 = activation2
-        #self.activation1 = 'relu'
-        #self.activation2 = 'linear'
         self.type = type
-
-
- #   def adjust_limits(self):
- #       self.data[np.where(y < self.inf_limit)[0], self.pos_y] = self.inf_limit
- #       self.data[np.where(y > self.sup_limit)[0], self.pos_y] = self.sup_limit
 
 
     @staticmethod
     def mlp_classification(layers, neurons, inputs, outputs, mask, mask__value):
+        '''
+        :param inputs: amount of inputs
+        :param outputs: amount of outputs
+        :param mask: True or false
+        :return:
+        '''
         # activation2 to classification is usually softmax
         try:
             ANN_model = Sequential()
@@ -457,6 +458,11 @@ class MLP(ML):
 
     @staticmethod
     def mlp_regression(layers, neurons,  inputs,mask, mask_value):
+        '''
+        :param inputs:amount of inputs
+        :param mask:True or false
+        :return: the MLP architecture
+        '''
         try:
             ANN_model = Sequential()
             if mask==True:
@@ -479,28 +485,12 @@ class MLP(ML):
             raise NameError('Problems building the MLP')
 
 
-
- #  def __init__(self,data,layers, neurons, pacience, epochs,activation1, activation2 ):
- #      super().__init__(data,scalar_y)
- #      self.layers = layers
- #      self.neurons = neurons
- #      self.pacience = pacience
- #      self.epochs = epochs
- #      self.activation1 = activation1
- #      self.activation2 = activation2
-
-
-    #@staticmethod
-    #def get_scalar_y(data,scalar_1, scalar_2, pos_y):
-    #    scalar_y = MinMaxScaler(feature_range=(scalar_1, scalar_2))
-    #    scalar_y.fit(pd.DataFrame(data.iloc[:, pos_y]))
-    #    return (scalar_y)
-#
-   # f1 = mlp_regression.__func__()
-   # f2 = mlp_classification.__func__()
-
     def cv_analysis(self,fold, neurons, pacience, batch, mean_y, q=[]):
-        #scalar_y = MLP.get_scalar_y(self.data, self.scalar_limits[0], self.scalar_limits[1], self.pos_y)
+        '''
+        :param fold: divisions in cv analysis
+        :param q: a Queue to paralelyse or empty list to do not paralyse
+        :return: predictions, real values, errors and the times needed to train
+        '''
         scalar_y =self.scalar_y
         names = self.data.columns
 
@@ -554,7 +544,6 @@ class MLP(ML):
 
         res = super().cv_division(x, y, fold)
 
-
         x_test =res['x_test']
         x_train=res['x_train']
         x_val=res['x_val']
@@ -562,7 +551,6 @@ class MLP(ML):
         y_train = res['y_train']
         y_val = res['y_val']
         indexes = res['indexes']
-
 
         times_test = []
         tt = self.times
@@ -598,15 +586,10 @@ class MLP(ML):
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
                 y_real2 = np.array(val_y.copy())
-                #if self.zero_problem=='schedule':
-                 #   print('*****Night-schedule fixed******')
 
                 y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                 y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-                #res= super().fix_values_0(times_test[z], self.zero_problem, self.limits, self.horizont)
 
-
-                #index_hour = res['indexes_out']
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -615,99 +598,15 @@ class MLP(ML):
                 y_realF.index = times_test[z]
                 predictions.append(y_predF)
                 reales.append(y_realF)
-                #if len(index_hour)>0 and self.horizont==0:
-                #    y_pred1 = np.delete(y_pred, index_hour, 0)
-                #    y_real1 = np.delete(y_real, index_hour, 0)
-                #    y_real2 = np.delete(y_real2, index_hour, 0)
-                #elif len(index_hour)>0 and self.horizont>0:
-                #    y_pred1 = np.delete(y_pred, index_hour-self.horizont, 0)
-                #    y_real1 = np.delete(y_real, index_hour-self.horizont, 0)
-                #    y_real2 = np.delete(y_real2, index_hour-self.horizont, 0)
-                #else:
-                #    y_pred1 = y_pred
-                #    y_real1 = y_real
+
                 if self.mask==True:
                     o = np.where(y_real2 < self.inf_limit)[0]
-                    # o2 = np.where(y_real2==self.sup_limit)[0]
-                    # o = np.union1d(o1,o2)
                     if len(o)>0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
                 cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
                 rmse[z] = evals(y_pred, y_real).rmse()
                 nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
-                #elif self.zero_problem=='radiation':
-                #    print('*****Night-radiation fixed******')
-                #    #scalar_x = self.scalar_x
-
-
-
-                #    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                #    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
-                #    #res= super().fix_values_0( scalar_rad.inverse_transform(val_x.iloc[:,place]),  self.zero_problem, self.limits, self.horizont)
-
-                #    #y_pred = res['data']
-                #    #index_rad = res['indexes_out']
-                #    y_predF = y_pred.copy()
-                #    y_predF = pd.DataFrame(y_predF)
-                #    y_predF.index = times_test[z]
-                #    y_realF = y_real.copy()
-                #    y_realF = pd.DataFrame(y_realF)
-                #    y_realF.index = times_test[z]
-
-                #    predictions.append(y_predF)
-                #    reales.append(y_realF)
-
-                #    #if len(index_rad) > 0:
-                #    #    y_pred1 = np.delete(y_pred, index_rad, 0)
-                #    #    y_real1 = np.delete(y_real, index_rad, 0)
-                #    #    y_real2 = np.delete(y_real2, index_rad, 0)
-                #    #else:
-                #    #    y_pred1 = y_pred
-                #    #    y_real1 = y_real
-
-                #    if self.mask == True:
-                #        o = np.where(y_real2 < self.inf_limit)[0]
-                #        # o2 = np.where(y_real2==self.sup_limit)[0]
-                #        # o = np.union1d(o1,o2)
-                #        if len(o)>0:
-                #            y_pred = np.delete(y_pred, o, 0)
-                #            y_real = np.delete(y_real, o, 0)
-
-                #    cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
-                #    rmse[z] = evals(y_pred, y_real).rmse()
-                #    nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
-                #else:
-                #    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                #    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
-                #    y_predF = y_pred.copy()
-                #    y_predF = pd.DataFrame(y_predF)
-                #    y_predF.index = times_test[z]
-                #    y_realF = y_real.copy()
-                #    y_realF = pd.DataFrame(y_realF)
-                #    y_realF.index = times_test[z]
-
-                #    predictions.append(y_predF)
-                #    reales.append(y_realF)
-
-                #    if self.mask == True:
-                #        o = np.where(y_real2 < self.inf_limit)[0]
-                #        # o2 = np.where(y_real2==self.sup_limit)[0]
-                #        # o = np.union1d(o1,o2)
-                #        y_pred = np.delete(y_pred, o, 0)
-                #        y_real = np.delete(y_real, o, 0)
-
-                #    cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
-                #    rmse[z] = evals(y_pred, y_real).rmse()
-                #    nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
-
-
-                ##predictions.append(y_pred)
-                ##reales.append(y_real)
-                ##cv[z]= evals(y_pred, y_real).cv_rmse(mean_y)
-                ##nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
             res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv,
                  'nmbe':nmbe, 'rmse':rmse,
@@ -740,6 +639,12 @@ class MLP(ML):
             ##########################################################################
 
     def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel, top):
+        '''
+        :param fold: division in cv analyses
+        :param parallel: True or false (True to linux)
+        :param top: the best options yielded
+        :return: the options with their results and the top options
+        '''
         results = [0 for x in range(len(neurons) * len(paciences))]
         deviations = [0 for x in range(len(neurons) * len(paciences))]
         options = {'neurons':[], 'pacience':[]}
@@ -748,7 +653,6 @@ class MLP(ML):
         if parallel == 0:
             for t in range(len(neurons)):
                 print('##################### Option ####################', w)
-                #layer = len(neurons[t])
                 neuron = neurons[t]
 
                 for i in range(len(paciences)):
@@ -783,7 +687,6 @@ class MLP(ML):
                     elif z == parallel and w < contador:
                         for p in processes:
                             p.join()
-                            #res2.append(q.get())
                         for v in range(len(processes)):
                             res2.append(q.get()[0])
                             res2.append(q.get()[1])
@@ -820,8 +723,6 @@ class MLP(ML):
         r1 = results.copy()
         d1 = deviations.copy()
         print(r1)
-        #indx = [0 for x in range(10)]
-        top_results = []
         top_results = {'error':[], 'std':[], 'neurons':[], 'pacience':[]}
 
         for i in range(top):
@@ -832,21 +733,16 @@ class MLP(ML):
                 else:
                     zz= a[0][0]
 
-                #list1=[]
-                #list1.append(r1[zz])
                 top_results['error'].append(r1[zz])
                 top_results['std'].append(d1[zz])
                 top_results['neurons'].append(options['neurons'][zz])
                 top_results['pacience'].append(options['pacience'][zz])
 
-                #list1.append()
-                #list1.append(options['neurons'][zz])
-                #list1.append(options['pacience'][zz])
                 r1.remove(np.min(r1))
                 d1.remove(d1[zz])
                 options['neurons'].pop(zz)
                 options['pacience'].pop(zz)
-                #top_results.append(list1)
+
         print('Process finished!!!')
 
 
@@ -857,9 +753,14 @@ class MLP(ML):
 
 
     def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test):
+        '''
+        :param x_train: x to train
+        :param x_test: x to early stopping
+        :param y_train: y to train
+        :param y_test: y to early stopping
+        :return: trained model and the time needed to train
+        '''
         layers = len(neurons)
-        #mean_y = np.mean(np.concatenate(y_train, y_test, y_val))
-        #mean_y = np.mean(self.data.iloc[:,self.pos_y])
         model = self.__class__.mlp_regression(layers, neurons,self.data.shape[1]-1)
 
         # Checkpoint callback
@@ -875,10 +776,14 @@ class MLP(ML):
         return(res)
 
     def predict(self, model,x_val, y_val,mean_y):
+        '''
+        :param model: trained model
+        :param x_val: x to predict
+        :param y_val: y to predict
+        :return: predictions with the errors depending of zero_problem
+        '''
         x_val=x_val.reset_index(drop=True)
         y_val=y_val.reset_index(drop=True)
-        #mean_y = np.mean(self.data.iloc[:,self.pos_y])
-        #scalar_y = MLP.get_scalar_y(self.data, self.scalar_limits[0], self.scalar_limits[1], self.pos_y)
         scalar_y = self.scalar_y
 
         y_pred = model.predict(pd.DataFrame(x_val))
