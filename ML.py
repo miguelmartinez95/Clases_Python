@@ -333,7 +333,6 @@ class ML:
         '''
         step = int(60 / freq)
         y = self.data.iloc[:, self.pos_y]
-        index = y.index
         hour = self.times.hour
         start = np.where(hour == 0)[0][0]
 
