@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn import metrics
+import numpy as np
 
 class Eval_metrics:
 
@@ -20,11 +21,14 @@ class Eval_metrics:
         return(cv)
 
     def cv_rmse_daily(self, mean,times):
+        '''
+        :return: cv(rmse) day by day
+        '''
         days =times.day
         dd= pd.concat([self.real, self.predict,days ])
-        cv=[0 for x in range(len(unique(days)))]
-        for i in unique(days):
-            ii=n.where(days==i)
+        cv=[0 for x in range(len(np.unique(days)))]
+        for i in np.unique(days):
+            ii=np.where(days==i)
             cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii])) / mean)
 
         return(cv)
@@ -34,11 +38,14 @@ class Eval_metrics:
         return(rmse)
 
     def rmse_daily(self,times):
+        '''
+        :return: rmse day by day
+        '''
         days = times.day
         dd = pd.concat([self.real, self.predict, days])
-        rmse= [0 for x in range(len(unique(days)))]
-        for i in unique(days):
-            ii = n.where(days == i)
+        rmse= [0 for x in range(len(np.unique(days)))]
+        for i in np.unique(days):
+            ii = np.where(days == i)
             rmse[i] = np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii]))
 
         return(rmse)
@@ -52,15 +59,18 @@ class Eval_metrics:
         return (nmbe * 100)
 
     def nmbe_daily(self,mean,times):
+        '''
+        :return: nmbe day by day
+        '''
         y_true = np.array(self.real)
         y_pred = np.array(self.predict)
         y_true = y_true.reshape(len(y_true), 1)
         y_pred = y_pred.reshape(len(y_pred), 1)
         days = times.day
         dd = pd.concat([self.real, self.predict, days])
-        nmbe = [0 for x in range(len(unique(days)))]
-        for i in unique(days):
-            ii = n.where(days == i)
+        nmbe = [0 for x in range(len(np.unique(days)))]
+        for i in np.unique(days):
+            ii = np.where(days == i)
             nmbe[i] = 100*(np.mean(y_true.iloc[ii] - y_pred.iloc[ii]) / mean)
 
 
