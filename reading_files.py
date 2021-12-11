@@ -14,17 +14,19 @@ class Reading_files:
 
     def __init__(self, destination):
         self.destination = destination
-      #self.directory = directory
-      # self.start  =start
-      # self.end  =end
-      # self.freq = freq
-      # self.freq_n = freq_n
-      # self.timezone = timezone
-      # self.adaptation = adaptation
-
 
 
     def reading(self, directory, n_folders, separator, decimal, col_index, type, export):
+        '''
+        :param directory: place where the data is stored
+        :param n_folders: there is more than one folder or not
+        :param separator: data separator
+        :param decimal: separtor symbol
+        :param col_index: a initial column working as index
+        :param type: csv, txt, etc
+        :param export: True or False
+        :return: joined data frama
+        '''
         sep = "\\"
         try:
             if n_folders > 1:
@@ -88,7 +90,7 @@ class Reading_files:
                     else:
                         raise NameError('There are not files in the folder')
             #df_total.index = np.arange(0, df_total.shape[0])
-            return (df_total)
+            return df_total
         except:
             raise NameError('General problem')
 
@@ -100,6 +102,14 @@ class Reading_files:
             pass
 
     def weather_cronograph_new(self, var_name, sensor_name, host, time_start, time_end, step, export):
+        '''
+        :param var_name: name of selected variables
+        :param sensor_name: sensor used for collecting variable
+        :param host: weather = none
+        :param step: data frequency
+        :param export: True or False
+        :return:data downloaded from crnograph (new version)
+        '''
         import influxdb_client
         from influxdb_client import InfluxDBClient, Point, Dialect
         from influxdb_client.client.write_api import SYNCHRONOUS
@@ -112,7 +122,9 @@ class Reading_files:
                                token='_NjAhMS1RtaGJG7pIvENLwVOPEzClu9Krl-em0zfTHuMxR11jDkPT9R9NFUPlGB22GCNdAfl3g5jBgiDMZCl6w==',
                                org='gte')
 
-
+        sep = '.'
+        time_start_str = time_start.strftime('%Y-%m-%dT%H:%M:%SZ')
+        time_end_str = time_end.strftime('%Y-%m-%dT%H:%M:%SZ')
         query_api = client.query_api()
         if host == 'none':
 
@@ -158,11 +170,19 @@ class Reading_files:
         else:
             pass
 
-        return (var_meteo)
+        return var_meteo
 
 
 
     def weather_cronograph_old(self, var_name, sensor_name, host, time_start, time_end, step, export):
+        '''
+        :param var_name: name of selected variables
+        :param sensor_name: sensor used for collecting variable
+        :param host: weather = none
+        :param step: data frequency
+        :param export: True or False
+        :return: data downloaded from cronograph (old version)
+        '''
         import influxdb
         variables=[]
         CONN_STR = "influxdb://admin:4dm1n_P4ss*@fluidos.uvigo.es:18086"
