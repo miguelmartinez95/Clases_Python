@@ -16,8 +16,6 @@ class Exploratory_analysis():
           "- Correlation with the dependent variable \n"
           "- Outliers detection"))
 
-
-
     def __init__(self,data):
         self.data = data
 
@@ -35,16 +33,7 @@ class Exploratory_analysis():
             plt.title(self.data.columns[i])
 
     def plots(self):
-
-      #  start = datetime.strptime(self.data.index[0], '%Y-%m-%d %H:%M:%S')
-      #  end = datetime.datetime.strptime("07-07-2014", "%d-%m-%Y")
-      #  date_generated = [start + datetime.timedelta(days=x) for x in range(0, (end - start).days)]
-#
-      #  for date in date_generated:
-      #      print
-      #      date.strftime("%d-%m-%Y")
         time = self.data.index
-        #time=datetime.strftime(time)
         data = self.data.reset_index(drop=True)
         for i in range(data.shape[1]):
             plt.figure()
@@ -57,19 +46,24 @@ class Exploratory_analysis():
 
 
     def outliers(self, data_no_NAs,position_y, contamination):
+        '''
+        :param data_no_NAs: daat without missing values
+        :param contamination: assumed proportion of outliers
+        :return: dictionary with the outliers detected in each of the variables
+        '''
         from sklearn.ensemble import IsolationForest
         if contamination==None:
             iso = IsolationForest(contamination=0.1)
         else:
             iso = IsolationForest(contamination=contamination)
-
+        outliers_total = dict()
         if len(data_no_NAs.shape)>1:
-
             for t in range(data_no_NAs.shape[1]):
                 dd = np.array(data_no_NAs.iloc[:,t]).reshape(-1, 1)
                 yhat = iso.fit_predict(dd)
                 ind1= np.arange(data_no_NAs.shape[0])
                 outliers = ind1[yhat == -1]
+                outliers_total[data_no_NAs.columns[t]]=outliers
                 print('Siendo la media de',data_no_NAs.columns[t], np.mean(data_no_NAs.iloc[:,t]), 'los outliers detectados son',len(outliers),'y son:', data_no_NAs.iloc[:,t][outliers])
 
         else:
@@ -77,5 +71,7 @@ class Exploratory_analysis():
             yhat = iso.fit_predict(data_no_NAs)
             ind1= np.arange(data_no_NAs.shape[0])
             outliers = ind1[yhat == -1]
+            outliers_total[data_no_NAs.columns]=outliers
             print('Siendo la media de',data_no_NAs.columns[t], np.mean(dd),'los outliers detectados son:', dd[outliers])
 
+        return outliers_total
