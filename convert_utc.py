@@ -8,6 +8,12 @@ import pytz
 
 
 def convert_timezone_indv(dt, tz1, tz2):
+    '''
+    :param dt: date value
+    :param tz1: time zone original
+    :param tz2: time zone objective
+    :return: date value converted
+    '''
     tz1 = pytz.timezone(tz1)
     tz2 = pytz.timezone(tz2)
 
@@ -37,6 +43,9 @@ class Solving_utc:
 
 
     def convert_join(self, data):
+        '''
+        Taking into account the case, data is converted in UTC format based on the original case
+        '''
 
         if self.case==0:
 
@@ -71,6 +80,9 @@ class Solving_utc:
         return(data)
 
     def delete_hour_missing(self,data):
+        '''
+        Find the missing hour (without data for the time format) and delete it.
+        '''
         times1 = pd.date_range(start=self.start, end=self.end, freq=self.freq, tz='UTC')
 
         step = int(60 / self.freq_n)
