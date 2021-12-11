@@ -114,6 +114,7 @@ class ML:
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         else:
+            ii=[]
             'Unknown situation with nights'
 
         res = {'indexes_out': ii}
@@ -625,11 +626,11 @@ class MLP(ML):
 
 
         else:
-            data2 = self.data
-            yy = data2.iloc[:,self.pos_y]
-            yy = pd.Series(yy, dtype='category')
-            n_classes = len(yy.cat.categories.to_list())
-            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes)
+            #data2 = self.data
+            #yy = data2.iloc[:,self.pos_y]
+            #yy = pd.Series(yy, dtype='category')
+            #n_classes = len(yy.cat.categories.to_list())
+            #model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes)
 
             ####################################################################
 
@@ -761,7 +762,7 @@ class MLP(ML):
         :return: trained model and the time needed to train
         '''
         layers = len(neurons)
-        model = self.__class__.mlp_regression(layers, neurons,self.data.shape[1]-1)
+        model = self.__class__.mlp_regression(layers, neurons,self.data.shape[1]-1, self.mask, self.mask_value)
 
         # Checkpoint callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
