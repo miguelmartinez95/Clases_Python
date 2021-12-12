@@ -48,11 +48,11 @@ class Reading_files:
                                     new = [str(directory1), filename]
                                 else:
                                     raise NameError('Some file is not'+type)
-                                if count == 1 and type=='csv':
+                                if count == 1 and type=='.csv':
                                     df = pd.read_csv(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
-                                elif count==1 and type=='txt':
+                                elif count==1 and type=='.txt':
                                     df = pd.read_table(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
-                                elif count>1 and type=='csv':
+                                elif count>1 and type=='.csv':
                                     df = pd.concat([df, pd.read_csv(sep.join(new), sep=separator, decimal=decimal,
                                                                     index_col=col_index)], axis=0)
                                 else:
@@ -73,9 +73,9 @@ class Reading_files:
             else:
                 list_f = os.listdir(directory)
                 print(list_f)
-                if len(list_f) == 1 and type=='csv':
+                if len(list_f) == 1 and type=='.csv':
                     df = pd.read_csv(directory, sep=separator, decimal=decimal, index_col=col_index)
-                elif len(list_f) == 1 and type=='txt':
+                elif len(list_f) == 1 and type=='.txt':
                     df = pd.read_table(directory, sep=separator, decimal=decimal, index_col=col_index)
                 else:
                     count = 1
@@ -86,11 +86,11 @@ class Reading_files:
                                 new = [str(directory), filename]
                             else:
                                 raise NameError('Some file is not' + type)
-                            if count == 1 and type == 'csv':
+                            if count == 1 and type == '.csv':
                                 df = pd.read_csv(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
-                            elif count == 1 and type == 'txt':
+                            elif count == 1 and type == '.txt':
                                 df = pd.read_table(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
-                            elif count > 1 and type == 'csv':
+                            elif count > 1 and type == '.csv':
                                 df = pd.concat([df, pd.read_csv(sep.join(new), sep=separator, decimal=decimal,
                                                                 index_col=col_index)], axis=0)
                             else:
