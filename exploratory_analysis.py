@@ -40,7 +40,7 @@ class Exploratory_analysis():
             try:
                 plt.plot(time.to_pydatetime(),self.data.iloc[:,i])
                 plt.title(self.data.columns[i])
-            except:
+            except AttributeError:
                 time = pd.to_datetime(time)
                 plt.plot(time, self.data.iloc[:, i])
                 plt.title(self.data.columns[i])
