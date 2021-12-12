@@ -625,11 +625,11 @@ class MLP(ML):
 
 
         else:
-            #data2 = self.data
-            #yy = data2.iloc[:,self.pos_y]
-            #yy = pd.Series(yy, dtype='category')
-            #n_classes = len(yy.cat.categories.to_list())
-            #model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes)
+            data2 = self.data
+            yy = data2.iloc[:,self.pos_y]
+            yy = pd.Series(yy, dtype='category')
+            n_classes = len(yy.cat.categories.to_list())
+            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes)
 
             ####################################################################
 
