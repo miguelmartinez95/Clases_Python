@@ -37,13 +37,8 @@ class Exploratory_analysis():
         data = self.data.reset_index(drop=True)
         for i in range(data.shape[1]):
             plt.figure()
-            try:
-                plt.plot(time.to_pydatetime(),self.data.iloc[:,i])
-                plt.title(self.data.columns[i])
-            except AttributeError:
-                time = pd.to_datetime(time)
-                plt.plot(time, self.data.iloc[:, i])
-                plt.title(self.data.columns[i])
+            plt.plot(time.to_pydatetime(),self.data.iloc[:,i])
+            plt.title(self.data.columns[i])
 
     def correlations(self, position_y):
         correlation = self.data.corr().iloc[:,position_y]
