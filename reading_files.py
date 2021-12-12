@@ -74,9 +74,13 @@ class Reading_files:
                 list_f = os.listdir(directory)
                 print(list_f)
                 if len(list_f) == 1 and type=='.csv':
-                    df = pd.read_csv(directory, sep=separator, decimal=decimal, index_col=col_index)
+                    filename=list_f[0]
+                    new = [str(directory), filename]
+                    df = pd.read_csv(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
                 elif len(list_f) == 1 and type=='.txt':
-                    df = pd.read_table(directory, sep=separator, decimal=decimal, index_col=col_index)
+                    filename=list_f[0]
+                    new = [str(directory), filename]
+                    df = pd.read_table(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
                 else:
                     count = 1
                     if len(list_f) > 0:
@@ -97,10 +101,11 @@ class Reading_files:
                                 df = pd.concat([df, pd.read_table(sep.join(new), sep=separator, decimal=decimal,
                                                                   index_col=col_index)], axis=0)
                             count += 1
-                        df_total = df
-
                     else:
                         raise NameError('There are not files in the folder')
+                df_total = df
+
+
             #df_total.index = np.arange(0, df_total.shape[0])
             return df_total
         except:
