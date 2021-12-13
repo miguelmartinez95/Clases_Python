@@ -48,10 +48,15 @@ class Reading_files:
                                     new = [str(directory1), filename]
                                 else:
                                     raise NameError('Some file is not'+type)
-                                if count == 1:
+                                if count == 1 and type=='.csv':
                                     df = pd.read_csv(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
-                                else:
+                                elif count==1 and type=='.txt':
+                                    df = pd.read_table(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
+                                elif count>1 and type=='.csv':
                                     df = pd.concat([df, pd.read_csv(sep.join(new), sep=separator, decimal=decimal,
+                                                                    index_col=col_index)], axis=0)
+                                else:
+                                    df = pd.concat([df, pd.read_table(sep.join(new), sep=separator, decimal=decimal,
                                                                     index_col=col_index)], axis=0)
                                 count += 1
 
@@ -68,8 +73,14 @@ class Reading_files:
             else:
                 list_f = os.listdir(directory)
                 print(list_f)
-                if len(list_f) == 1:
-                    df = pd.read_csv(directory, sep=separator, decimal=decimal, index_col=col_index)
+                if len(list_f) == 1 and type=='.csv':
+                    filename=list_f[0]
+                    new = [str(directory), filename]
+                    df = pd.read_csv(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
+                elif len(list_f) == 1 and type=='.txt':
+                    filename=list_f[0]
+                    new = [str(directory), filename]
+                    df = pd.read_table(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
                 else:
                     count = 1
                     if len(list_f) > 0:
@@ -79,16 +90,22 @@ class Reading_files:
                                 new = [str(directory), filename]
                             else:
                                 raise NameError('Some file is not' + type)
-                            if count == 1:
+                            if count == 1 and type == '.csv':
                                 df = pd.read_csv(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
-                            else:
+                            elif count == 1 and type == '.txt':
+                                df = pd.read_table(sep.join(new), sep=separator, decimal=decimal, index_col=col_index)
+                            elif count > 1 and type == '.csv':
                                 df = pd.concat([df, pd.read_csv(sep.join(new), sep=separator, decimal=decimal,
                                                                 index_col=col_index)], axis=0)
+                            else:
+                                df = pd.concat([df, pd.read_table(sep.join(new), sep=separator, decimal=decimal,
+                                                                  index_col=col_index)], axis=0)
                             count += 1
-                        df_total = df
-
                     else:
                         raise NameError('There are not files in the folder')
+                df_total = df
+
+
             #df_total.index = np.arange(0, df_total.shape[0])
             return df_total
         except:
