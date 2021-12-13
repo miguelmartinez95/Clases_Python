@@ -692,22 +692,26 @@ class LSTM_model(DL):
         step = int(data.shape[0] / fold)
         w = 0
         w2 = step
-        times_test = []
+        times_val = []
         ####################################################################################
 
         try:
            for i in range(2):
                 train, test, index_test = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                index_test = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test)-1),:]
+                index_val = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test)-1),:]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]-1),:,:]
                 test = test[range(test.shape[0]-math.floor(test.shape[0]/2), test.shape[0]),:,:]
+                #index_test = index_test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]-1),:]
+                #index_val = index_test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]-1),:]
                 x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont)
                 x_test, y_test = LSTM_model.to_supervised(test, pos_y, n_lags,horizont)
                 x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont)
-                index_test = index_test.reshape((index_test.shape[0] * index_test.shape[1], 1))
-                index_test = np.delete(index_test, range(n_lags), axis=0)
-                times_test.append(index_test[:,0])
+                #index_test = index_test.reshape((index_test.shape[0] * index_test.shape[1], 1))
+                index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
+                #index_test = np.delete(index_test, range(n_lags), axis=0)
+                index_val = np.delete(index_val, range(n_lags), axis=0)
+                times_val.append(index_val[:,0])
 
                 X_test.append(x_test)
                 X_train.append(x_train)
@@ -720,7 +724,7 @@ class LSTM_model(DL):
                 w2 = data.shape[0]
         except:
             raise NameError('Problems with the sample division in the cv classic')
-        res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_test':times_test}
+        res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_val':times_val}
         return res
 
 
@@ -747,7 +751,7 @@ class LSTM_model(DL):
         y_train =np.array(res['y_train'])
         y_val =np.array(res['y_val'])
 #
-        times_test = res['time_test']
+        times_val = res['time_val']
 
 
         if self.type=='regression':
@@ -783,7 +787,7 @@ class LSTM_model(DL):
                         y_pred[np.where(y_pred < self.inf_limit)[0]]=self.inf_limit
                         y_pred[np.where(y_pred > self.sup_limit)[0]]=self.sup_limit
 
-                        res = super().fix_values_0(times_test[z],
+                        res = super().fix_values_0(times_val[z],
                                                       self.zero_problem, self.limits)
 
 
@@ -793,10 +797,10 @@ class LSTM_model(DL):
 
                         y_predF = y_pred.copy()
                         y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_test[z]
+                        y_predF.index = times_val[z]
                         y_realF = y_real.copy()
                         y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = times_test[z]
+                        y_realF.index = times_val[z]
 
 
                         predictions.append(y_predF)
@@ -841,10 +845,10 @@ class LSTM_model(DL):
 
                         y_predF = y_pred.copy()
                         y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_test[z]
+                        y_predF.index = times_val[z]
                         y_realF = y_real.copy()
                         y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = times_test[z]
+                        y_realF.index = times_val[z]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -886,10 +890,10 @@ class LSTM_model(DL):
 
                         y_predF = y_pred.copy()
                         y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_test[z]
+                        y_predF.index = times_val[z]
                         y_realF = y_real.copy()
                         y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = times_test[z]
+                        y_realF.index = times_val[z]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -901,7 +905,7 @@ class LSTM_model(DL):
                     zz +=1
 
 
-            res_final = {'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv,
+            res_final = {'preds': predictions, 'reals':reales, 'times_val':times_val, 'cv_rmse':cv,
                  'nmbe':nmbe, 'rmse':rmse,
                  'times_comp':times}
 
@@ -1257,3 +1261,370 @@ class LSTM_model(DL):
         print('Process finished!!!')
         res = {'errors': results, 'options': options, 'best': top_results}
         return res
+
+
+
+
+#    @staticmethod
+#    def nsga2_individual(X, y, med, contador,n_processes,dictionary):
+#        from pymoo.core.repair import Repair
+#        class MyRepair(Repair):
+#
+#            def _do(self, problem, pop, **kwargs):
+#                for k in range(len(pop)):
+#                    x = pop[k].X
+#                    if MyProblem.bool4(x[1], x[2]) == 1:
+#                        x[2] = 0
+#
+#                return pop
+#        from pymoo.algorithms.moo.nsga2 import NSGA2
+#        from pymoo.factory import get_problem, get_visualization, get_decomposition
+#        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+#        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+#        from pymoo.optimize import minimize
+#        if n_processes>1:
+#            pool = multiprocessing.Pool(n_processes)
+#            problem = MyProblem(X, y, med, contador, parallelization=('starmap', pool.starmap))
+#        else:
+#            problem = MyProblem(X, y, med, contador)
+#        algorithm = NSGA2(pop_size=50, repair=MyRepair(), eliminate_duplicates=True,
+#                          sampling=get_sampling("int_random"),
+#                          # sampling =g,
+#                          # crossover=0.9,
+#                          # mutation=0.1)
+#                          crossover=get_crossover("int_sbx"),
+#                          mutation=get_mutation("int_pm", prob=0.1))
+#        termination = MultiObjectiveSpaceToleranceTermination(tol=0.0025,
+#                                                              n_last=10, nth_gen=2, n_max_gen=None,
+#                                                              n_max_evals=4000)
+#
+#        res = minimize(problem,
+#                       algorithm,
+#                       termination,
+#                       # ("n_gen", 20),
+#                       pf=True,
+#                       verbose=True,
+#                       seed=7)
+#
+#        if res.F.shape[0] > 1:
+#            weights = np.array([0.75, 0.25])
+#            I = get_decomposition("pbi").do(res.F, weights).argmin()
+#            obj_T = res.F
+#            struct_T = res.X
+#            obj = res.F[I, :]
+#            struct = res.X[I, :]
+#        else:
+#            obj_T = res.F
+#            struct_T = res.X
+#            obj = res.F
+#            struct = res.X
+#
+#        print(dictionary)
+#        pool.close()
+#
+#        return (obj_T, struct_T, obj, struct, res)
+#
+#    def optimal_search_nsga2(self, fold, mc, neurons_dense, neurons_lstm, paciences, batch, mean_y,parallel,top):
+#        '''
+#        :param fold: assumed division of data sample
+#        :param mc: repetitions of cv analysis considering the intial or the final of sample
+#        :param parallel: 0 no paralyse
+#        :param top: number of best solution selected
+#        :return: errors obtained with the options considered together  with the best solutions
+#        '''
+#        manager = multiprocessing.Manager()
+#        #dictionary = manager.dict()
+#
+#        #results = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
+#        #deviations = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
+#
+#        #options = {'neurons_dense': [], 'neurons_lstm': [], 'pacience': []}
+#        #w = 0
+#        #contador=len(neurons_lstm) * len(neurons_dense) * len(paciences)-1
+#        if parallel==0:
+#            manager = multiprocessing.Manager()
+#            dictionary = manager.dict()
+#            contador = manager.list()
+#            contador.append(0)
+#            x = self.data.drop(self.data.columns[self.pos_y], axis=1)
+#            y = self.data.iloc[:,self.pos_y]
+#            obj, x_obj, obj_total, x_obj_total = LSTM_model.nsga2_individual(x, y, mean_y, contador,0, dictionary)
+#
+#        elif parallel>=2:
+#            manager = multiprocessing.Manager()
+#            dictionary = manager.dict()
+#            contador = manager.list()
+#            contador.append(0)
+#            x = self.data.drop(self.data.columns[self.pos_y], axis=1)
+#            y = self.data.iloc[:,self.pos_y]
+#            obj, x_obj, obj_total, x_obj_total = LSTM_model.nsga2_individual(x, y, mean_y, contador, 6, dictionary)
+#
+#        else:
+#            raise NameError('Option not considered')
+#
+#        r1 = results.copy()
+#        d1 = deviations.copy()
+#        print(r1)
+#        top_results = {'error': [], 'std': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
+#
+#        for i in range(top):
+#            a = np.where(r1 == np.min(r1))[0]
+#            print(a)
+#            if len(a) == 1:
+#                zz = a[0]
+#            else:
+#                zz = a[0][0]
+#
+#            top_results['error'].append(r1[zz])
+#            top_results['std'].append(d1[zz])
+#            top_results['neurons_dense'].append(options['neurons_dense'][zz])
+#            top_results['neurons_lstm'].append(options['neurons_lstm'][zz])
+#            top_results['pacience'].append(options['pacience'][zz])
+#
+#            r1.remove(np.min(r1))
+#            d1.remove(d1[zz])
+#            options['neurons_dense'].pop(zz)
+#            options['neurons_lstm'].pop(zz)
+#            options['pacience'].pop(zz)
+#
+#        print('Process finished!!!')
+#        res = {'errors': results, 'options': options, 'best': top_results}
+#        return res
+#
+#from pymoo.core.problem import Problem
+#class MyProblem(LSTM_model, Problem):
+#    def info(self):
+#        print('Class to use NSGA2 in architectures search.')
+#
+#    def __init__(self, horizont, scalar_y,zero_problem, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,X1, y, med, contador,
+#                 n_var,neurons_lstm, neurons_dense,pacience,batch,xlimit_inf, xlimit_sup,**kwargs):
+#        LSTM_model.__init__(horizont, scalar_y,zero_problem, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type)
+#        Problem.__init__(n_var=n_var,
+#                         n_obj=2,
+#                         n_constr=1,
+#                         xl=xlimit_inf,
+#                         xu=xlimit_sup,
+#                         type_var=np.int,
+#                         elementwise_evaluation=True,
+#                         **kwargs)
+#        self.X1 = X1
+#        self.y = y
+#        self.med = med
+#        self.contador = contador
+#        self.n_var =n_var
+#        self.neurons_lstm = neurons_lstm
+#        self.neurons_dense = neurons_dense
+#        self.pacience = pacience
+#        self.batch = batch
+#
+#
+#    @staticmethod
+#    def complex(neurons_lstm, neurons_dense, max_N, max_H):
+#        u = len(neurons_lstm) + len(neurons_dense)
+#
+#        # F = 0.5*(u / max_H) + np.sum(W / max_N)
+#        F = 0.25 * (u / max_H) + 0.75 * np.sum(np.concatenate((neurons_lstm, neurons_dense))) / max_N
+#
+#        return F
+#
+#    def cv_nsga(self,fold,mc, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary, q=[]):
+#        name1 = tuple([neurons_lstm, neurons_dense])
+#        try:
+#            a0, a1 = dictionary[name1]
+#            return a0, a1
+#
+#        except KeyError:
+#            pass
+#        cvs = [0 for x in range(mc*2)]
+#
+#        names = self.data.columns
+#        names = np.delete(names, self.pos_y)
+#        layers_lstm = len(neurons_lstm)
+#        layers_neurons = len(neurons_dense)
+#
+#        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
+#
+#        x_test = np.array(res['x_test'])
+#        x_train = np.array(res['x_train'])
+#        x_val = np.array(res['x_val'])
+#        y_test = np.array(res['y_test'])
+#        y_train = np.array(res['y_train'])
+#        y_val = np.array(res['y_val'])
+#        #
+#        times_val = res['time_test']
+#
+#        if self.type == 'regression':
+#            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,
+#                                                          self.mask, self.mask_value, self.repeat_vector)
+#            # Train the model
+#            zz = 0
+#            predictions = []
+#            reales = []
+#            for z in range(2):
+#                print('Fold number', z)
+#                for zz2 in range(mc):
+#                    time_start = time()
+#                    model = self.__class__.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
+#                                                       batch)
+#
+#                    res = self.__class__.predict_model(model, self.n_lags, x_val[z])
+#                    y_pred = res['y_pred']
+#
+#                    y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+#
+#                    y_real = y_val[z]
+#                    y_real2 = y_val[z].copy()
+#                    y_real = np.array(self.scalar_y.inverse_transform(y_real))
+#
+#                    if self.zero_problem == 'schedule':
+#                        print('*****Night-schedule fixed******')
+#
+#                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+#                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+#
+#                        res = super().fix_values_0(times_val[z],
+#                                                   self.zero_problem, self.limits)
+#
+#                        y_pred = res['data']
+#                        index_hour = res['indexes_out']
+#
+#                        y_predF = y_pred.copy()
+#                        y_predF = pd.DataFrame(y_predF)
+#                        y_predF.index = times_val[z]
+#                        y_realF = y_real.copy()
+#                        y_realF = pd.DataFrame(y_realF)
+#                        y_realF.index = times_val[z]
+#
+#                        predictions.append(y_predF)
+#                        reales.append(y_realF)
+#
+#                        if len(index_hour) > 0 and self.horizont == 0:
+#                            y_pred1 = np.delete(y_pred, index_hour, 0)
+#                            y_real1 = np.delete(y_real, index_hour, 0)
+#                            y_real2 = np.delete(y_real2, index_hour, 0)
+#                        elif len(index_hour) > 0 and self.horizont > 0:
+#                            y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+#                            y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+#                            y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
+#                        else:
+#                            y_pred1 = y_pred
+#                            y_real1 = y_real
+#
+#                        # Outliers and missing values
+#                        o = np.where(y_real2 < self.inf_limit)[0]
+#
+#                        if len(o) > 0:
+#                            y_pred1 = np.delete(y_pred1, o, 0)
+#                            y_real1 = np.delete(y_real1, o, 0)
+#
+#                        cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+#
+#
+#                    elif self.zero_problem == 'radiation':
+#                        print('*****Night-radiation fixed******')
+#                        place = np.where(names == 'radiation')[0]
+#                        scalar_rad = self.scalar_x['radiation']
+#
+#                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+#                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+#
+#                        res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+#                                                   self.zero_problem, self.limits)
+#
+#                        index_rad = res['indexes_out']
+#
+#                        y_predF = y_pred.copy()
+#                        y_predF = pd.DataFrame(y_predF)
+#                        y_predF.index = times_val[z]
+#                        y_realF = y_real.copy()
+#                        y_realF = pd.DataFrame(y_realF)
+#                        y_realF.index = times_val[z]
+#
+#                        predictions.append(y_predF)
+#                        reales.append(y_realF)
+#                        if len(index_rad) > 0 and self.horizont == 0:
+#                            y_pred1 = np.delete(y_pred, index_rad, 0)
+#                            y_real1 = np.delete(y_real, index_rad, 0)
+#                            y_real2 = np.delete(y_real2, index_rad, 0)
+#                        elif len(index_rad) > 0 and self.horizont > 0:
+#                            y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
+#                            y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
+#                            y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
+#                        else:
+#                            y_pred1 = y_pred
+#                            y_real1 = y_real
+#
+#                        # Outliers and missing values
+#                        o = np.where(y_real2 < self.inf_limit)[0]
+#
+#                        if len(o) > 0:
+#                            y_pred1 = np.delete(y_pred1, o, 0)
+#                            y_real1 = np.delete(y_real1, o, 0)
+#
+#                        cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+#
+#                    else:
+#                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+#                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+#
+#                        # Outliers and missing values
+#                        o = np.where(y_real2 < self.inf_limit)[0]
+#
+#                        if len(o) > 0:
+#                            y_pred2 = np.delete(y_pred, o, 0)
+#                            y_real2 = np.delete(y_real, o, 0)
+#                        else:
+#                            y_pred2 = y_pred
+#                            y_real2 = y_real
+#
+#                        y_predF = y_pred.copy()
+#                        y_predF = pd.DataFrame(y_predF)
+#                        y_predF.index = times_val[z]
+#                        y_realF = y_real.copy()
+#                        y_realF = pd.DataFrame(y_realF)
+#                        y_realF.index = times_val[z]
+#
+#                        predictions.append(y_predF)
+#                        reales.append(y_realF)
+#
+#                        cvs[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+#
+#                    zz += 1
+#
+#            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 20000, 8)
+#            dictionary[name1] = np.mean(cvs), complexity
+#            res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
+#
+#
+#            z = Queue()
+#            if type(q) == type(z):
+#                q.put(np.mean(cvs))
+#            else:
+#                return (res_final)
+#
+#    @staticmethod
+#    def bool4(x2,x3):
+#        if x2 == 0 and x3 > 0:
+#            a = 1
+#        else:
+#            a = 0
+#
+#        return (a)
+#
+#
+#    def _evaluate(self, x, out, *args, **kwargs):
+#        X1 = self.X1
+#        g1 = MyProblem.bool4(x[1], x[2])
+#        out["G"] = g1
+#
+#        print(x)
+#
+#        f1, f2 = MyProblem.cv_nsga(5,2, self.neurons_lstm, self.neurons_dense, self.paciences, self.batch, self.med,dict(),dict())
+#
+#        print(
+#            '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
+#            self.contador, '\n #########################')
+#        self.contador[0] += 1
+#
+#        out["F"] = np.column_stack([f1, f2])
+#
