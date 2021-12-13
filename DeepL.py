@@ -559,7 +559,7 @@ class LSTM_model(DL):
                 model.add(Dense(neurons_dense[z], activation='relu'))
 
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
-        model.compile(loss='mse', optimizer='adam',metrics=['accuracy'])
+        model.compile(loss='mse', optimizer='adam',metrics=['mse'])
         model.summary()
 
         return model
