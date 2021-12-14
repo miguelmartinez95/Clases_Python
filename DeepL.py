@@ -478,7 +478,7 @@ class LSTM_model(DL):
             # ensure we have enough data for this instance
             if out_end < len(data):
                 xx = np.delete(data,pos_y,1)
-                x_input = xx[in_start:in_end]
+                x_input = xx[in_start:in_end,:]
                 # x_input = x_input.reshape((len(x_input), 1))
                 X.append(x_input)
                 yy = data[:,pos_y].reshape(-1,1)
