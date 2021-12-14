@@ -730,10 +730,10 @@ class LSTM_model(DL):
 
 
 
-    def cv_analysis(self, fold,mc, neurons_lstm, neurons_dense, pacience, batch,mean_y, q=[]):
+    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y, q=[]):
         '''
         :param fold: the assumed size of divisions
-        :param mc: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
+        :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
         :param q: queue that inform us if paralyse or not
         :return: Considering what zero_problem is mentioned, return thre predictions, real values, errors and computational times needed to train the models
         '''
@@ -758,16 +758,16 @@ class LSTM_model(DL):
         if self.type=='regression':
             model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector)
             # Train the model
-            times = [0 for x in range(mc*2)]
-            cv = [0 for x in range(mc*2)]
-            rmse = [0 for x in range(mc*2)]
-            nmbe = [0 for x in range(mc*2)]
+            times = [0 for x in range(rep*2)]
+            cv = [0 for x in range(rep*2)]
+            rmse = [0 for x in range(rep*2)]
+            nmbe = [0 for x in range(rep*2)]
             zz= 0
             predictions = []
             reales = []
             for z in range(2):
                 print('Fold number', z)
-                for zz2 in range(mc):
+                for zz2 in range(rep):
                     time_start = time()
                     model = self.__class__.train_model(model,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
@@ -1159,10 +1159,10 @@ class LSTM_model(DL):
 #        return(a)
 
 
-    def optimal_search(self, fold, mc, neurons_dense, neurons_lstm, paciences, batch, mean_y,parallel,top):
+    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, batch, mean_y,parallel,top):
         '''
         :param fold: assumed division of data sample
-        :param mc: repetitions of cv analysis considering the intial or the final of sample
+        :param rep: repetitions of cv analysis considering the intial or the final of sample
         :param parallel: 0 no paralyse
         :param top: number of best solution selected
         :return: errors obtained with the options considered together  with the best solutions
@@ -1183,7 +1183,7 @@ class LSTM_model(DL):
                         options['neurons_dense'].append(neuron_dense)
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
-                        res = self.cv_analysis(fold, mc, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,dict())
+                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,dict())
                         results[w] = np.mean(res['cv_rmse'])
                         deviations[w] = np.std(res['cv_rmse'])
                         w += 1
@@ -1208,7 +1208,7 @@ class LSTM_model(DL):
                         if z < parallel and w<contador:
                             multiprocessing.set_start_method('fork')
                             p = Process(target=self.cv_analysis,
-                                        args=(fold,mc, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
+                                        args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
                             p.start()
 
                             processes.append(p)
@@ -1225,7 +1225,7 @@ class LSTM_model(DL):
                             multiprocessing.set_start_method('fork')
                             q = Queue()
                             p = Process(target=self.cv_analysis,
-                                        args=(fold, mc, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
+                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
                             p.start()
 
                             processes.append(p)
@@ -1233,7 +1233,7 @@ class LSTM_model(DL):
 
                         elif w==contador:
                             p = Process(target=self.cv_analysis,
-                                        args=(fold, mc, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
+                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
                             p.start()
 
                             processes.append(p)
@@ -1446,10 +1446,10 @@ class MyProblem(LSTM_model, Problem):
 
         return F
 
-    def cv_nsga(self,fold,mc, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary, q=[]):
+    def cv_nsga(self,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary, q=[]):
         '''
         :param fold:assumed division of the sample for cv
-        :param mc:repetition of the estimation in each subsample
+        :param rep:repetition of the estimation in each subsample
         :param dictionary: dictionary to fill with the options tested
         :param q:operator to differentiate when there is parallelisation and the results must be a queue
         :return: cv(rmse) and complexity of the model tested
@@ -1461,7 +1461,7 @@ class MyProblem(LSTM_model, Problem):
 
         except KeyError:
             pass
-        cvs = [0 for x in range(mc*2)]
+        cvs = [0 for x in range(rep*2)]
 
         names = self.data.columns
         names = np.delete(names, self.pos_y)
@@ -1488,7 +1488,7 @@ class MyProblem(LSTM_model, Problem):
             reales = []
             for z in range(2):
                 print('Fold number', z)
-                for zz2 in range(mc):
+                for zz2 in range(rep):
                     time_start = time()
                     model = self.__class__.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
                                                        batch)
