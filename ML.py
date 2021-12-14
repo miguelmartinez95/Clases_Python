@@ -926,7 +926,10 @@ class MLP(ML):
         y_realF = pd.DataFrame(y_realF)
         y_realF.index = y_predF.index
 
+        up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
+        low = int(np.min(y_realF)) + int(np.min(y_realF) / 4)
         plt.figure()
+        plt.ylim(low, up)
         plt.plot(y_predF, color='black', label='Prediction')
         plt.plot(y_realF, color='blue', label='Real')
         plt.legend()
