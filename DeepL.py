@@ -702,7 +702,8 @@ class LSTM_model(DL):
 
                 index_val = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test)-1),:]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]-1),:,:]
-                test = test[range(test.shape[0]-math.floor(test.shape[0]/2), test.shape[0]),:,:]
+                #test = test[range(test.shape[0]-math.floor(test.shape[0]/2), test.shape[0]),:,:]
+                test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
                 #index_test = index_test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]-1),:]
                 #index_val = index_test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]-1),:]
                 x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont)
