@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import sys
 sys.path.insert(1,'E:\Documents\Doctorado\Clases_python')
@@ -608,7 +609,7 @@ class LSTM_model(DL):
             predictions.append(yhat)
             #history.append(tt[i,:])
             l1 = l2
-            l2 += n_lags
+            l2 += 1
 
 
         predictions  =np.array(predictions)
@@ -979,6 +980,8 @@ class LSTM_model(DL):
             y_predF = y_pred.copy()
             y_predF = pd.DataFrame(y_predF)
             y_predF.index = self.times
+            y_realF =pd.DataFrame(y_real.copy())
+            y_realF.index = y_predF.index
 
             if len(y_pred<=1) and len(index_hour)>0:
                 y_pred1= np.nan
@@ -1030,6 +1033,8 @@ class LSTM_model(DL):
             y_predF = y_pred.copy()
             y_predF = pd.DataFrame(y_predF)
             y_predF.index = self.times
+            y_realF = pd.DataFrame(y_real.copy())
+            y_realF.index = y_predF.index
 
             # Radiation under the limit
             if len(y_pred <= 1) and len(index_rad) > 0:
@@ -1070,6 +1075,8 @@ class LSTM_model(DL):
             y_predF = y_pred.copy()
             y_predF = pd.DataFrame(y_predF)
             y_predF.index = self.times
+            y_realF =pd.DataFrame(y_real.copy())
+            y_realF.index = y_predF.index
 
             # Outliers and missing values
             o = np.where(y_real2 < self.inf_limit)[0]
@@ -1085,6 +1092,15 @@ class LSTM_model(DL):
 
 
         res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
+
+        y_realF = pd.DataFrame(y_realF)
+        y_realF.index = y_predF.index
+
+        plt.figure()
+        plt.plot(y_predF, color='black', label='Prediction')
+        plt.plot(y_realF, color='blue', label='Real')
+        plt.legend()
+        plt.savefig('plot1.png')
 
         return res
 

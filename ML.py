@@ -17,6 +17,7 @@ import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
+import matplotlib.pyplot as plt
 
 class ML:
     def info(self):
@@ -803,6 +804,8 @@ class MLP(ML):
             y_predF = y_pred.copy()
             y_predF = pd.DataFrame(y_predF)
             y_predF.index = self.times
+            y_realF =pd.DataFrame(y_real.copy())
+            y_realF.index = y_predF.index
 
             if len(y_pred<=1) and len(index_hour)>0:
                 y_pred1= np.nan
@@ -859,6 +862,8 @@ class MLP(ML):
             y_predF = y_pred.copy()
             y_predF = pd.DataFrame(y_predF)
             y_predF.index = self.times
+            y_realF = pd.DataFrame(y_real.copy())
+            y_realF.index = y_predF.index
 
             if len(y_pred<=1) and len(index_rad)>0:
                 y_pred1= np.nan
@@ -900,6 +905,8 @@ class MLP(ML):
             y_predF = y_pred.copy()
             y_predF = pd.DataFrame(y_predF)
             y_predF.index = self.times
+            y_realF =pd.DataFrame(y_real.copy())
+            y_realF.index = y_predF.index
 
             if self.mask == True:
                 o = np.where(y_real2 < self.inf_limit)[0]
@@ -915,6 +922,16 @@ class MLP(ML):
                 raise NameError('Empty prediction')
 
         res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
+
+        y_realF = pd.DataFrame(y_realF)
+        y_realF.index = y_predF.index
+
+        plt.figure()
+        plt.plot(y_predF, color='black', label='Prediction')
+        plt.plot(y_realF, color='blue', label='Real')
+        plt.legend()
+        plt.savefig('plot1.png')
+
         return(res)
 
 
