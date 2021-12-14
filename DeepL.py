@@ -1305,7 +1305,7 @@ class LSTM_model(DL):
             def _do(self, problem, pop, **kwargs):
                 for k in range(len(pop)):
                     x = pop[k].X
-                    if MyProblem.bool4(x[1], x[2]) == 1:
+                    if MyProblem.bool4(x,l_lstm, l_dense) == 1:
                         x[2] = 0
 
                 return pop
@@ -1320,11 +1320,11 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,parallelization=('starmap', pool.starmap))
+                                med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,parallelization=('starmap', pool.starmap))
         else:
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup)
+                                med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
@@ -1409,7 +1409,7 @@ class MyProblem(LSTM_model, Problem):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
 
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data, med, contador,
-                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,**kwargs):
+                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
         self.data = data
         self.med = med
         self.contador = contador
@@ -1419,10 +1419,11 @@ class MyProblem(LSTM_model, Problem):
         self.xlimit_inf = xlimit_inf
         self.xlimit_sup = xlimit_sup
         self.n_var = n_var
+        self.dictionary  =dictionary
 
 
         #igual tengo que meter todos los argumentos de LSTM_model
-        LSTM_model.__init__(horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type)
+        super().__init__(horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type)
         Problem.__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1682,11 +1683,11 @@ class MyProblem(LSTM_model, Problem):
 
         print(x)
 
-        n_lstm = x[range(self.l_lstm)]
-        n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]
+        n_lstm = x[range(self.l_lstm)]*20
+        n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]
 
-        f1, f2 = MyProblem.cv_nsga(5,2, n_lstm, n_dense, n_pacience, self.batch, self.med,dict(),dict())
+        f1, f2 = MyProblem.cv_nsga(5,2, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary,dict())
 
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',

@@ -630,7 +630,7 @@ class MLP(ML):
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
-            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes)
+            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes,self.mask, self.mask_value)
 
             ####################################################################
 
@@ -750,7 +750,133 @@ class MLP(ML):
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
 
+    def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
+                         xlimit_sup, dictionary):
+        '''
+        :param med:
+        :param contador: a operator to count the attempts
+        :param n_processes: how many processes are parallelise
+        :param l_dense:maximun number of layers dense
+        :param batch: batch size
+        :param pop_size: population size selected for NSGA2
+        :param tol: tolearance selected to terminate the process
+        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
+        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
+        :param dictionary: dictionary to stored the options tested
+        :return: options in Pareto front, the optimal selection and the total results
+        '''
+        from pymoo.core.repair import Repair
+        class MyRepair(Repair):
 
+            def _do(self, problem, pop, **kwargs):
+                for k in range(len(pop)):
+                    x = pop[k].X
+                    if MyProblem_mlp.bool4(x[1], x[2]) == 1:
+                        x[2] = 0
+
+                return pop
+
+        from pymoo.algorithms.moo.nsga2 import NSGA2
+        from pymoo.factory import get_problem, get_visualization, get_decomposition
+        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+        from pymoo.optimize import minimize
+
+        if n_processes > 1:
+            pool = multiprocessing.Pool(n_processes)
+            problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit, self.repeat_vector,
+                                self.type, self.data,
+                                med, contador, self.data.shape[1], l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,
+                                parallelization=('starmap', pool.starmap))
+        else:
+            problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit, self.repeat_vector,
+                                self.type, self.data,
+                                med, contador, self.data.shape[1], l_lstm, l_dense, batch, xlimit_inf, xlimit_sup)
+
+        algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(), eliminate_duplicates=True,
+                          sampling=get_sampling("int_random"),
+                          # sampling =g,
+                          # crossover=0.9,
+                          # mutation=0.1)
+                          crossover=get_crossover("int_sbx"),
+                          mutation=get_mutation("int_pm", prob=0.1))
+        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+                                                              n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
+                                                              n_max_gen=None,
+                                                              n_max_evals=12000)
+
+        res = minimize(problem,
+                       algorithm,
+                       termination,
+                       # ("n_gen", 20),
+                       pf=True,
+                       verbose=True,
+                       seed=7)
+
+        if res.F.shape[0] > 1:
+            weights = np.array([0.75, 0.25])
+            I = get_decomposition("pbi").do(res.F, weights).argmin()
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F[I, :]
+            struct = res.X[I, :]
+        else:
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F
+            struct = res.X
+
+        print(dictionary)
+        if n_processes > 1:
+            pool.close()
+        else:
+            pass
+
+        return (obj_T, struct_T, obj, struct, res)
+
+    def optimal_search_nsga2(self, l_lstm, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
+        '''
+        :param l_lstm: maximun layers lstm
+        :param l_dense: maximun layers dense
+        :param batch: batch size
+        :param pop_size: population size for NSGA2
+        :param tol: tolerance to built the pareto front
+        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
+        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param parallel: how many processes are parallelise
+        :return: the options selected for the pareto front, the optimal selection and the total results
+        '''
+        manager = multiprocessing.Manager()
+        if parallel < 2:
+            manager = multiprocessing.Manager()
+            dictionary = manager.dict()
+            contador = manager.list()
+            contador.append(0)
+            obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_lstm, l_dense,
+                                                                            batch, pop_size, tol, xlimit_inf,
+                                                                            xlimit_sup, dictionary)
+
+        elif parallel >= 2:
+            manager = multiprocessing.Manager()
+            dictionary = manager.dict()
+            contador = manager.list()
+            contador.append(0)
+            obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_lstm, l_dense,
+                                                                            batch, pop_size, tol, xlimit_inf,
+                                                                            xlimit_sup, dictionary)
+
+
+        else:
+            raise NameError('Option not considered')
+
+        print('Process finished!!!')
+        print('The selection is', x_obj, 'with a result of', obj)
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        return res
 
 
     def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test):
@@ -936,6 +1062,228 @@ class MLP(ML):
         plt.savefig('plot1.png')
 
         return(res)
+
+
+from pymoo.core.problem import Problem
+class MyProblem_mlp(MLP, Problem):
+    def info(self):
+        print('Class to create a specific problem to use NSGA2 in architectures search.')
+    def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
+                 sup_limit, type, data, med, contador,
+                 n_var, l_lstm, l_dense, batch, xlimit_inf, xlimit_sup, dictionary, **kwargs):
+        self.data = data
+        self.med = med
+        self.contador = contador
+        self.l_lstm = l_lstm
+        self.l_dense = l_dense
+        self.batch = batch
+        self.xlimit_inf = xlimit_inf
+        self.xlimit_sup = xlimit_sup
+        self.n_var = n_var
+        self.dictionary = dictionary
+
+
+        super().__init__(horizont, scalar_y, zero_problem, limits, times, pos_y, n_lags,mask, mask_value,
+                            inf_limit, sup_limit, type)
+        Problem.__init__(n_var=n_var,
+                         n_obj=2,
+                         n_constr=1,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
+                         type_var=np.int,
+                         elementwise_evaluation=True,
+                         **kwargs)
+    @staticmethod
+    def complex_mlp(neurons, max_N, max_H):
+        '''
+        :param max_N: maximun neurons in the network
+        :param max_H: maximum hidden layers in the network
+        :return: complexity of the model
+        '''
+        u = len(neurons)
+        F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
+        return F
+
+    def cv_nsga(self, fold, neurons, pacience, batch, mean_y, dictionary, q=[]):
+        '''
+        :param fold:assumed division of the sample for cv
+        :param dictionary: dictionary to fill with the options tested
+        :param q:operator to differentiate when there is parallelisation and the results must be a queue
+        :return: cv(rmse) and complexity of the model tested
+        '''
+        name1 = tuple([neurons, pacience])
+        try:
+            a0, a1 = dictionary[name1]
+            return a0, a1
+        except KeyError:
+            pass
+        cvs = [0 for x in range(fold)]
+        names = self.data.columns
+        names = np.delete(names, self.pos_y)
+        layers = len(neurons)
+        y = self.data.iloc[:,self.pos_y]
+        x =self.data.drop(self.data.columns[self.pos_y],axis=1)
+
+        if self.zero_problem == 'radiation':
+            place = np.where(x.columns == 'radiation')[0]
+            scalar_rad = self.scalar_x['radiation']
+            res = super().fix_values_0(scalar_rad.inverse_transform(x.iloc[:, place]), self.zero_problem,
+                                       self.limits)
+
+            index_rad = res['indexes_out']
+            if len(index_rad) > 0 and self.horizont == 0:
+                x = x.drop(x.index[index_rad], axis=0)
+                y = y.drop(y.index[index_rad], axis=0)
+            elif len(index_rad) > 0 and self.horizont > 0:
+                x = x.drop(x.index[index_rad - self.horizont], axis=0)
+                y = y.drop(y.index[index_rad - self.horizont], axis=0)
+            else:
+                pass
+            print('*****Night-radiation fixed******')
+        elif self.zero_problem == 'schedule':
+            res = super().fix_values_0(self.times, self.zero_problem, self.limits)
+
+            index_hour = res['indexes_out']
+            if len(index_hour) > 0 and self.horizont == 0:
+                x = x.drop(x.index[index_hour], axis=0)
+                y = y.drop(y.index[index_hour], axis=0)
+            elif len(index_hour) > 0 and self.horizont > 0:
+                x = x.drop(x.index[index_hour - self.horizont], axis=0)
+                y = y.drop(y.index[index_hour - self.horizont], axis=0)
+            else:
+                pass
+            print('*****Night-schedule fixed******')
+        else:
+            pass
+        ######################################3
+
+        res = super().cv_division(x, y, fold)
+
+        x_test = res['x_test']
+        x_train = res['x_train']
+        x_val = res['x_val']
+        y_test = res['y_test']
+        y_train = res['y_train']
+        y_val = res['y_val']
+        indexes = res['indexes']
+        times_test = []
+        tt = self.times
+        for t in range(len(indexes)):
+            times_test.append(tt[indexes[t][0]:indexes[t][1]])
+
+
+        if self.type == 'regression':
+            model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value)
+            # Train the model
+            # Checkpoitn callback
+            es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+            mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            # Train the model
+            times = [0 for x in range(fold)]
+            cv = [0 for x in range(fold)]
+
+            predictions = []
+            reales = []
+            for z in range(fold):
+                print('Fold number', z)
+                x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
+                y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
+                test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
+                test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
+                val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
+                val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
+                time_start = time()
+                model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
+                times[z] = round(time() - time_start, 3)
+                y_pred = model.predict(val_x)
+                y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+                y_real = np.array(self.scalar_y.inverse_transform(val_y))
+                y_real2 = np.array(val_y.copy())
+
+                y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
+                y_predF = y_pred.copy()
+                y_predF = pd.DataFrame(y_predF)
+                y_predF.index = times_test[z]
+                y_realF = y_real.copy()
+                y_realF = pd.DataFrame(y_realF)
+                y_realF.index = times_test[z]
+                predictions.append(y_predF)
+                reales.append(y_realF)
+
+                if self.mask == True:
+                    o = np.where(y_real2 < self.inf_limit)[0]
+                    if len(o) > 0:
+                        y_pred = np.delete(y_pred, o, 0)
+                        y_real = np.delete(y_real, o, 0)
+                cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
+
+            complexity = MyProblem_mlp.complex_mlp(neurons, 50000, 8)
+            dictionary[name1] = np.mean(cvs), complexity
+            res = {'cv(rmse)': np.mean(cv), 'complexity': complexity}
+
+
+            z = Queue()
+            if type(q) == type(z):
+                q.put(np.array([np.mean(cv), np.std(cv)]))
+            else:
+                return (res)
+
+
+        else:
+            data2 = self.data
+            yy = data2.iloc[:, self.pos_y]
+            yy = pd.Series(yy, dtype='category')
+            n_classes = len(yy.cat.categories.to_list())
+            model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask, self.mask_value)
+
+            ####################################################################
+
+            # EN PROCESOO ALGÚN DíA !!!!!!!
+
+            ##########################################################################
+    @staticmethod
+    def bool4(x):
+        '''
+        :x: neurons options
+        :return: 0 if the constraint is fulfilled
+        '''
+
+        if len(x) == 3:
+            if x[1] == 0 and x[2] > 0:
+                a = 1
+            else:
+                a = 0
+        elif len(x) == 4:
+            if x[1] == 0 and x[2] > 0:
+                a = 1
+            elif x[1] == 0 and x[3] > 0:
+                a = 1
+            elif x[2] == 0 and x[3] > 0:
+                a = 1
+            else:
+                a = 0
+        else:
+            raise NameError('Option not considered')
+
+        return (a)
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1))
+        out["G"] = g1
+        print(x)
+
+        n_dense = x[range(self.l_dense)]
+        n_pacience = x[len(x) - 1]
+        f1, f2 = MyProblem_mlp.cv_nsga(5, n_dense, n_pacience, self.batch, self.med, self.dictionary, dict())
+        print(
+            '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
+            self.contador, '\n #########################')
+        self.contador[0] += 1
+        out["F"] = np.column_stack([f1, f2])
+
+
 
 
 class XGB(ML):
