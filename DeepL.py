@@ -483,7 +483,7 @@ class LSTM_model(DL):
                 X.append(x_input)
                 yy = data[:,pos_y].reshape(-1,1)
                 #y.append(yy.iloc[in_end:out_end])
-                y.append(yy[in_end])
+                y.append(yy[out_end])
                 #se selecciona uno
             # move along one time step
             in_start += 1
