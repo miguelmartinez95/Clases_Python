@@ -577,13 +577,13 @@ class LSTM_model(DL):
         '''
 
         # Checkpoitn callback
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-        mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+        #es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+        #mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
         # Train the model
         #model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
         #                   callbacks=[es, mc])
         for i in range(50):
-            model.fit(train_x1, train_y1, epochs=1, batch_size=5,shuffle=False,validation_data=(test_x1, test_y1),callbacks=[es, mc])
+            model.fit(train_x1, train_y1, epochs=1, batch_size=5,shuffle=False)
             model.reset_states()
         # fit network
         return model
