@@ -541,11 +541,11 @@ class LSTM_model(DL):
         n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
 
         model = Sequential()
-        if mask==True:
-            model.add(Masking(mask_value = mask_value,input_shape=(n_timesteps, n_features)))
-            model.add(LSTM(n_timesteps*2, activation='relu', return_sequences=True))
-        else:
-            model.add(LSTM(n_timesteps*2, activation='relu', return_sequences=True, input_shape=(n_timesteps, n_features)))
+        #if mask==True:
+        #    model.add(Masking(mask_value = mask_value,input_shape=(n_timesteps, n_features)))
+        #    model.add(LSTM(n_timesteps*2, activation='relu', return_sequences=True))
+        #else:
+        #    model.add(LSTM(n_timesteps*2, activation='relu', return_sequences=True, input_shape=(n_timesteps, n_features)))
         for k in range(layers_lstm):
             # if repeat_vector==True and k==0:
             #    model.add(LSTM(neurons_lstm[k], activation='relu'))
@@ -553,7 +553,16 @@ class LSTM_model(DL):
             # else:
             #    model.add(LSTM(neurons_lstm[k], activation='relu'))
             #if repeat_vector == True and k == layers_lstm:
-            model.add(LSTM(neurons_lstm[k], activation='relu', batch_input_shape=(batch, n_timesteps, 1), stateful=True))
+            if k==0 and mask==True:
+                model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                model.add(LSTM(neurons_lstm[k], activation='relu', batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
+            elif mask==False:
+                model.add(
+                    LSTM(neurons_lstm[k], activation='relu', batch_input_shape=(batch, n_timesteps, 1), stateful=True,
+                         return_sequences=True))
+            elif k==layers_lstm-1:
+                model.add(
+                    LSTM(neurons_lstm[k], activation='relu', batch_input_shape=(batch, n_timesteps, 1), stateful=True))
             #model.add(TimeDistributed(Dense(1)))
            # else:
            #     model.add(LSTM(neurons_lstm[k], activation='relu'))
