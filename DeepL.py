@@ -491,7 +491,7 @@ class LSTM_model(DL):
         return(np.array(X), np.array(y))
 
     @staticmethod
-    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector):
+    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask, mask_value, repeat_vector):
         '''
         :param mask: True or False
         :param repeat_vector: True or False
@@ -529,7 +529,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense, mask,mask_value, repeat_vector):
+    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask,mask_value, repeat_vector):
         '''
         :param mask: True or False
         :param repeat_vector: True or False
@@ -547,17 +547,21 @@ class LSTM_model(DL):
         else:
             model.add(LSTM(n_features, activation='relu', return_sequences=True, input_shape=(n_timesteps, n_features)))
         for k in range(layers_lstm):
-            if repeat_vector==True and k==0:
-                model.add(LSTM(neurons_lstm[k], activation='relu'))
-                model.add(RepeatVector(n_outputs))
+            # if repeat_vector==True and k==0:
+            #    model.add(LSTM(neurons_lstm[k], activation='relu'))
+            #    model.add(RepeatVector(n_outputs))
+            # else:
+            #    model.add(LSTM(neurons_lstm[k], activation='relu'))
+            if repeat_vector == True and k == layers_lstm:
+                model.add(LSTM(neurons_lstm[k], activation='relu', batch_input_shape=(batch, n_timesteps, 1), stateful=True))
+                model.add(TimeDistributed(Dense(1)))
             else:
                 model.add(LSTM(neurons_lstm[k], activation='relu'))
-
-        for z in range(layers_neurons):
-            if neurons_dense[z]==0:
-                pass
-            else:
-                model.add(Dense(neurons_dense[z], activation='relu'))
+      #  for z in range(layers_neurons):
+      #      if neurons_dense[z]==0:
+      #          pass
+      #      else:
+      #          model.add(Dense(neurons_dense[z], activation='relu'))
 
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
@@ -576,8 +580,11 @@ class LSTM_model(DL):
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
         mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
         # Train the model
-        model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
-                           callbacks=[es, mc])
+        #model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
+        #                   callbacks=[es, mc])
+        for i in range(50):
+            model.fit(train_x1, train_y1, epochs=1, batch_size=5,shuffle=False,validation_data=(test_x1, test_y1),callbacks=[es, mc])
+            model.reset_states()
         # fit network
         return model
 
@@ -608,8 +615,8 @@ class LSTM_model(DL):
             yhat = yhat[0]
             predictions.append(yhat)
             #history.append(tt[i,:])
-            l1 +=1
-            l2 += 1
+            l1 =l2
+            l2 += n_lags
 
 
         predictions  =np.array(predictions)
@@ -757,7 +764,7 @@ class LSTM_model(DL):
 
 
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector)
+            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, batch,self.mask,self.mask_value, self.repeat_vector)
             # Train the model
             times = [0 for x in range(rep*2)]
             cv = [0 for x in range(rep*2)]
@@ -938,12 +945,12 @@ class LSTM_model(DL):
         Instance to train model outside these classes
         '''
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector)
+            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense,batch, self.mask, self.mask_value, self.repeat_vector)
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
         else:
-            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector)
+            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,batch,self.mask, self.mask_value, self.repeat_vector)
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
