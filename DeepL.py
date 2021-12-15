@@ -554,7 +554,7 @@ class LSTM_model(DL):
             #    model.add(LSTM(neurons_lstm[k], activation='relu'))
             #if repeat_vector == True and k == layers_lstm:
             model.add(LSTM(neurons_lstm[k], activation='relu', batch_input_shape=(batch, n_timesteps, 1), stateful=True))
-            model.add(TimeDistributed(Dense(1)))
+            #model.add(TimeDistributed(Dense(1)))
            # else:
            #     model.add(LSTM(neurons_lstm[k], activation='relu'))
       #  for z in range(layers_neurons):
@@ -1489,7 +1489,7 @@ class MyProblem(LSTM_model, Problem):
         times_val = res['time_test']
 
         if self.type == 'regression':
-            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,
+            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,batch,
                                                           self.mask, self.mask_value, self.repeat_vector)
             # Train the model
             zz = 0
