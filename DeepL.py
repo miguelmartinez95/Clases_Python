@@ -543,9 +543,9 @@ class LSTM_model(DL):
         model = Sequential()
         if mask==True:
             model.add(Masking(mask_value = mask_value,input_shape=(n_timesteps, n_features)))
-            model.add(LSTM(n_features, activation='relu', return_sequences=True))
+            model.add(LSTM(n_timesteps*2, activation='relu', return_sequences=True))
         else:
-            model.add(LSTM(n_features*2, activation='relu', return_sequences=True, input_shape=(n_timesteps, n_features)))
+            model.add(LSTM(n_timesteps*2, activation='relu', return_sequences=True, input_shape=(n_timesteps, n_features)))
         for k in range(layers_lstm):
             # if repeat_vector==True and k==0:
             #    model.add(LSTM(neurons_lstm[k], activation='relu'))
