@@ -561,7 +561,8 @@ class LSTM_model(DL):
                          return_sequences=True))
             elif k==layers_lstm-1:
                 #model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True))
-                model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1)
+                model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
+                model.add(TimeDistributed(Dense(1)))
            # else:
            #     model.add(LSTM(neurons_lstm[k], activation='relu'))
       #  for z in range(layers_neurons):
