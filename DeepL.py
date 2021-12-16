@@ -559,9 +559,9 @@ class LSTM_model(DL):
             elif mask==False:
                 model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True, return_sequences=True))
             elif k==layers_lstm-1:
-                model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True))
-                #model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
-                #model.add(TimeDistributed(Dense(1)))
+                #model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True))
+                model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
+                model.add(TimeDistributed(Dense(1)))
            # else:
            #     model.add(LSTM(neurons_lstm[k], activation='relu'))
       #  for z in range(layers_neurons):
@@ -589,7 +589,7 @@ class LSTM_model(DL):
         # Train the model
         #model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
         #                   callbacks=[es, mc])
-        for i in range(20):
+        for i in range(100):
             model.fit(train_x1, train_y1, epochs=1, batch_size=batch,shuffle=False)
             model.reset_states()
         # fit network
@@ -885,9 +885,9 @@ class LSTM_model(DL):
                             y_pred1 = np.delete(y_pred1,o,0)
                             y_real1 = np.delete(y_real1,o, 0)
 
-                        cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                        rmse[z] = evals(y_pred1, y_real1).rmse()
-                        nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+                        cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        rmse[zz] = evals(y_pred1, y_real1).rmse()
+                        nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                     else:
                         y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                         y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit

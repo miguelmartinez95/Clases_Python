@@ -509,39 +509,39 @@ class MLP(ML):
         x=x.reset_index(drop=True)
         y=y.reset_index(drop=True)
 
-        ####################################3
-        if self.zero_problem=='radiation':
-            place = np.where(x.columns == 'radiation')[0]
-            scalar_rad = self.scalar_x['radiation']
-            res = super().fix_values_0(scalar_rad.inverse_transform(x.iloc[:, place]), self.zero_problem,
-                                       self.limits)
-
-            index_rad = res['indexes_out']
-            if len(index_rad)>0 and self.horizont==0:
-                x=x.drop(x.index[index_rad], axis=0)
-                y=y.drop(y.index[index_rad], axis=0)
-            elif len(index_rad)>0 and self.horizont>0:
-                x=x.drop(x.index[index_rad-self.horizont], axis=0)
-                y=y.drop(y.index[index_rad-self.horizont], axis=0)
-            else:
-                pass
-            print('*****Night-radiation fixed******')
-        elif self.zero_problem=='schedule':
-            res = super().fix_values_0(self.times, self.zero_problem, self.limits)
-
-            index_hour = res['indexes_out']
-            if len(index_hour)>0 and self.horizont==0:
-                x=x.drop(x.index[index_hour], axis=0)
-                y=y.drop(y.index[index_hour], axis=0)
-            elif len(index_hour)>0 and self.horizont>0:
-                x=x.drop(x.index[index_hour-self.horizont], axis=0)
-                y=y.drop(y.index[index_hour-self.horizont], axis=0)
-            else:
-                pass
-            print('*****Night-schedule fixed******')
-        else:
-            pass
-        ######################################3
+#        ####################################3
+#        if self.zero_problem=='radiation':
+#    #        place = np.where(x.columns == 'radiation')[0]
+#            scalar_rad = self.scalar_x['radiation']
+#            res = super().fix_values_0(scalar_rad.inverse_transform(x.iloc[:, place]), self.zero_problem,
+#                                       self.limits)
+#
+#            index_rad = res['indexes_out']
+#            if len(index_rad)>0 and self.horizont==0:
+#                x=x.drop(x.index[index_rad], axis=0)
+#                y=y.drop(y.index[index_rad], axis=0)
+#            elif len(index_rad)>0 and self.horizont>0:
+#                x=x.drop(x.index[index_rad-self.horizont], axis=0)
+#                y=y.drop(y.index[index_rad-self.horizont], axis=0)
+#            else:
+#                pass
+#            print('*****Night-radiation fixed******')
+#        elif self.zero_problem=='schedule':
+#            res = super().fix_values_0(self.times, self.zero_problem, self.limits)
+#
+#            index_hour = res['indexes_out']
+#            if len(index_hour)>0 and self.horizont==0:
+#                x=x.drop(x.index[index_hour], axis=0)
+#                y=y.drop(y.index[index_hour], axis=0)
+#            elif len(index_hour)>0 and self.horizont>0:
+#                x=x.drop(x.index[index_hour-self.horizont], axis=0)
+#                y=y.drop(y.index[index_hour-self.horizont], axis=0)
+#            else:
+#                pass
+#            print('*****Night-schedule fixed******')
+#        else:
+#            pass
+#        ######################################3
 
         res = super().cv_division(x, y, fold)
 
@@ -599,15 +599,106 @@ class MLP(ML):
                 y_realF.index = times_test[z]
                 predictions.append(y_predF)
                 reales.append(y_realF)
+                predictions.append(y_predF)
+                reales.append(y_realF)
 
-                if self.mask==True:
-                    o = np.where(y_real2 < self.inf_limit)[0]
-                    if len(o)>0:
-                        y_pred = np.delete(y_pred, o, 0)
-                        y_real = np.delete(y_real, o, 0)
-                cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
-                rmse[z] = evals(y_pred, y_real).rmse()
-                nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
+                if self.zero_problem == 'schedule':
+                    print('*****Night-schedule fixed******')
+
+                    res = super().fix_values_0(times_test[z],
+                                               self.zero_problem, self.limits)
+
+                    y_pred = res['data']
+                    index_hour = res['indexes_out']
+
+
+                    if len(index_hour) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_hour, 0)
+                        y_real1 = np.delete(y_real, index_hour, 0)
+                        y_real2 = np.delete(y_real2, index_hour, 0)
+                    elif len(index_hour) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                        y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                        y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real2 < self.inf_limit)[0]
+
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
+
+                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred1, y_real1).rmse()
+                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+
+                elif self.zero_problem == 'radiation':
+                    print('*****Night-radiation fixed******')
+                    place = np.where(names == 'radiation')[0]
+                    scalar_rad = self.scalar_x['radiation']
+
+                    res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+                                               self.zero_problem, self.limits)
+
+                    index_rad = res['indexes_out']
+
+                    if len(index_rad) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_rad, 0)
+                        y_real1 = np.delete(y_real, index_rad, 0)
+                        y_real2 = np.delete(y_real2, index_rad, 0)
+                    elif len(index_rad) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
+                        y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
+                        y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real2 < self.inf_limit)[0]
+
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
+
+                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred1, y_real1).rmse()
+                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+                else:
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real2 < self.inf_limit)[0]
+
+                        if len(o) > 0:
+                            y_pred2 = np.delete(y_pred, o, 0)
+                            y_real2 = np.delete(y_real, o, 0)
+                        else:
+                            y_pred2 = y_pred
+                            y_real2 = y_real
+
+                    cv[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred2, y_real2).rmse()
+                    nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
+
+               #if self.mask==True:
+               # #   o = np.where(y_real2 < self.inf_limit)[0]
+               #    if len(o)>0:
+               #        y_pred = np.delete(y_pred, o, 0)
+               #        y_real = np.delete(y_real, o, 0)
+               #cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
+               #rmse[z] = evals(y_pred, y_real).rmse()
+               #nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
             res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv,
                  'nmbe':nmbe, 'rmse':rmse,
@@ -771,7 +862,7 @@ class MLP(ML):
             def _do(self, problem, pop, **kwargs):
                 for k in range(len(pop)):
                     x = pop[k].X
-                    if MyProblem_mlp.bool4(x[1], x[2]) == 1:
+                    if MyProblem_mlp.bool4(x) == 1:
                         x[2] = 0
 
                 return pop
@@ -784,18 +875,18 @@ class MLP(ML):
 
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
-                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit, self.repeat_vector,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,
-                                med, contador, self.data.shape[1], l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,
+                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dictionary,
                                 parallelization=('starmap', pool.starmap))
         else:
-            problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
-                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit, self.repeat_vector,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,
-                                med, contador, self.data.shape[1], l_lstm, l_dense, batch, xlimit_inf, xlimit_sup)
+                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup, dictionary)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
@@ -1070,11 +1161,10 @@ class MyProblem_mlp(MLP, Problem):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
     def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
                  sup_limit, type, data, med, contador,
-                 n_var, l_lstm, l_dense, batch, xlimit_inf, xlimit_sup, dictionary, **kwargs):
+                 n_var,l_dense, batch, xlimit_inf, xlimit_sup, dictionary, **kwargs):
         self.data = data
         self.med = med
         self.contador = contador
-        self.l_lstm = l_lstm
         self.l_dense = l_dense
         self.batch = batch
         self.xlimit_inf = xlimit_inf
