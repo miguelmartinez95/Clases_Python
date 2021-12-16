@@ -557,8 +557,7 @@ class LSTM_model(DL):
                 #model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
                 model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
             elif mask==False:
-                model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True,
-                         return_sequences=True))
+                model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True, return_sequences=True))
             elif k==layers_lstm-1:
                 model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True))
                 #model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
@@ -598,7 +597,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def predict_model(model,n_lags, x_val):
+    def predict_model(model,n_lags, x_val,batch):
         '''
         :param model: trained model
         :param n_lags: lags to built lstm blocks
@@ -619,7 +618,7 @@ class LSTM_model(DL):
             input_x = data[l1:l2, :]
             input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
             # forecast the next step
-            yhat = model.predict(input_x, verbose=0)
+            yhat = model.predict(input_x, verbose=0, batch_size=batch)
             yhat = yhat[0]
             predictions.append(yhat)
             #history.append(tt[i,:])
@@ -788,7 +787,7 @@ class LSTM_model(DL):
                     model = self.__class__.train_model(model,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
-                    res = self.__class__.predict_model(model, self.n_lags, x_val[z])
+                    res = self.__class__.predict_model(model, self.n_lags, x_val[z], batch)
                     y_pred = res['y_pred']
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
@@ -966,14 +965,14 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, x_val, y_val,mean_y):
+    def predict(self, model, x_val, y_val,mean_y,batch):
         '''
         :param model: trained model
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
 
-        res = self.__class__.predict_model(model, self.n_lags,  x_val)
+        res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
 
         y_pred = res['y_pred']
 
@@ -1510,7 +1509,7 @@ class MyProblem(LSTM_model, Problem):
                     model = self.__class__.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
                                                        batch)
 
-                    res = self.__class__.predict_model(model, self.n_lags, x_val[z])
+                    res = self.__class__.predict_model(model, self.n_lags, x_val[z],batch)
                     y_pred = res['y_pred']
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
