@@ -554,17 +554,20 @@ class LSTM_model(DL):
             #    model.add(LSTM(neurons_lstm[k], activation='relu'))
             #if repeat_vector == True and k == layers_lstm:
             if k==0 and mask==True:
-                #model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
-          #elif mask==False:
-          #    model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True, return_sequences=True))
-            elif k==layers_lstm-1:
-                #model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True))
-                model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
-                model.add(TimeDistributed(Dense(1)))
+                model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
+            elif k==0 and mask==False:
+                model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
             else:
-                model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True,
-                               return_sequences=True))
+                model.add(LSTM(neurons_lstm[k]))
+          #    model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True, return_sequences=True))
+         #   elif k==layers_lstm-1:
+                #model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True))
+          #      model.add(LSTM(neurons_lstm[k],  batch_input_shape=(batch, n_timesteps, 1), stateful=True,return_sequences=True))
+          #      model.add(TimeDistributed(Dense(1)))
+          #  else:
+           #     model.add(LSTM(neurons_lstm[k], batch_input_shape=(batch, n_timesteps, 1), stateful=True,
+           #                    return_sequences=True))
            # else:
            #     model.add(LSTM(neurons_lstm[k], activation='relu'))
       #  for z in range(layers_neurons):
@@ -587,14 +590,14 @@ class LSTM_model(DL):
         '''
 
         # Checkpoitn callback
-        #es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-        #mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+        mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
         # Train the model
-        #model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
-        #                   callbacks=[es, mc])
-        for i in range(100):
-            model.fit(train_x1, train_y1, epochs=1, batch_size=batch,shuffle=False)
-            model.reset_states()
+        model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
+                           callbacks=[es, mc])
+        #for i in range(10):
+        #    model.fit(train_x1, train_y1, epochs=1, batch_size=batch,shuffle=False)
+        #    model.reset_states()
         # fit network
         return model
 
