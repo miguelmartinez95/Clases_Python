@@ -589,7 +589,7 @@ class LSTM_model(DL):
         # Train the model
         #model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
         #                   callbacks=[es, mc])
-        for i in range(100):
+        for i in range(20):
             model.fit(train_x1, train_y1, epochs=1, batch_size=batch,shuffle=False)
             model.reset_states()
         # fit network
@@ -807,9 +807,7 @@ class LSTM_model(DL):
                                                       self.zero_problem, self.limits)
 
 
-                        y_pred = res['data']
                         index_hour = res['indexes_out']
-
 
                         y_predF = y_pred.copy()
                         y_predF = pd.DataFrame(y_predF)
@@ -1527,7 +1525,6 @@ class MyProblem(LSTM_model, Problem):
                         res = super().fix_values_0(times_val[z],
                                                    self.zero_problem, self.limits)
 
-                        y_pred = res['data']
                         index_hour = res['indexes_out']
 
                         y_predF = y_pred.copy()
