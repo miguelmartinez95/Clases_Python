@@ -483,10 +483,11 @@ class MLP(ML):
             raise NameError('Problems building the MLP')
 
 
-    def cv_analysis(self,fold, neurons, pacience, batch, mean_y, q=[]):
+    def cv_analysis(self,fold, neurons, pacience, batch, mean_y, plot,q=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
+        :param plot: True plots
         :return: predictions, real values, errors and the times needed to train
         '''
         scalar_y =self.scalar_y
@@ -688,20 +689,21 @@ class MLP(ML):
                     rmse[z] = evals(y_pred2, y_real2).rmse()
                     nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
 
-                s = int(np.max(y_realF) + 15)
-                i = int(np.min(y_realF) - 15)
-                a =np.round(cv[z],2)
-                plt.figure()
-                plt.ylim(i, s)
-                plt.plot(y_predF, color='black', label='Prediction')
-                plt.plot(y_realF, color='blue', label='Real')
-                plt.legend()
-                plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
-                a = 'Subsample-'
-                b = str(z) + '.png'
-                plot_name = a + b
-                plt.show()
-                plt.savefig(plot_name)
+                if plot==True:
+                    s = int(np.max(y_realF) + 15)
+                    i = int(np.min(y_realF) - 15)
+                    a =np.round(cv[z],2)
+                    plt.figure()
+                    plt.ylim(i, s)
+                    plt.plot(y_predF, color='black', label='Prediction')
+                    plt.plot(y_realF, color='blue', label='Real')
+                    plt.legend()
+                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                    a = 'Subsample-'
+                    b = str(z) + '.png'
+                    plot_name = a + b
+                    plt.show()
+                    plt.savefig(plot_name)
                #if self.mask==True:
                # #   o = np.where(y_real2 < self.inf_limit)[0]
                #    if len(o)>0:
@@ -761,7 +763,7 @@ class MLP(ML):
                 for i in range(len(paciences)):
                     options['neurons'].append(neuron)
                     options['pacience'].append(paciences[i])
-                    res = self.cv_analysis( fold, neuron , paciences[i],batch,mean_y)
+                    res = self.cv_analysis(fold, neuron , paciences[i],batch,mean_y,False)
                     results[w]=np.mean(res['cv_rmse'])
                     deviations[w]=np.std(res['cv_rmse'])
                     w +=1
@@ -783,7 +785,7 @@ class MLP(ML):
                     if z < parallel and w < contador:
                         multiprocessing.set_start_method('fork')
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y, q))
+                                    args=(fold, neuron, paciences[i], batch, mean_y,False, q))
                         p.start()
                         processes.append(p)
                         z1 =z+ 1
@@ -799,13 +801,13 @@ class MLP(ML):
                         #multiprocessing.set_start_method('spawn', force=True)
                         q = Queue()
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y, q))
+                                    args=(fold, neuron, paciences[i], batch, mean_y,False, q))
                         p.start()
                         processes.append(p)
                         z1 = 1
                     elif w >= contador:
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y, q))
+                                    args=(fold, neuron, paciences[i], batch, mean_y,False, q))
                         p.start()
                         processes.append(p)
                         for p in processes:
