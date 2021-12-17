@@ -696,9 +696,9 @@ class MLP(ML):
                 plt.plot(y_predF, color='black', label='Prediction')
                 plt.plot(y_realF, color='blue', label='Real')
                 plt.legend()
-                plt.title("CV(RMSE)={}".format(str(a)))
+                plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                 a = 'Subsample-'
-                b = str(z) + '.csv'
+                b = str(z) + '.png'
                 plot_name = a + b
                 plt.show()
                 plt.savefig(plot_name)
