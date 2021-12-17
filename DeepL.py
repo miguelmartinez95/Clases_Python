@@ -914,12 +914,13 @@ class LSTM_model(DL):
 
                     s = int(np.max(y_realF) + 15)
                     i = int(np.min(y_realF) - 15)
+                    er = cv[zz]
                     plt.figure()
                     plt.ylim(i, s)
                     plt.plot(y_predF, color='black', label='Prediction')
                     plt.plot(y_realF, color='blue', label='Real')
                     plt.legend()
-                    plt.title('Subsample',zz, 'CV(RMSE):{}'.format(cv[zz]))
+                    plt.title('Subsample',zz, 'CV(RMSE):{}'.format(er))
                     a = 'Subsample-'
                     b= str(zz) + '.csv'
                     plot_name = a+b
