@@ -690,13 +690,13 @@ class MLP(ML):
 
                 s = int(np.max(y_realF) + 15)
                 i = int(np.min(y_realF) - 15)
-                a =cv[z]
+                a =np.round(cv[z],2)
                 plt.figure()
                 plt.ylim(i, s)
                 plt.plot(y_predF, color='black', label='Prediction')
                 plt.plot(y_realF, color='blue', label='Real')
                 plt.legend()
-                plt.title('Subsample', z, 'CV(RMSE)',a)
+                plt.title("Subsample" %z + 'CV(RMSE)' %a)
                 a = 'Subsample-'
                 b = str(z) + '.csv'
                 plot_name = a + b
