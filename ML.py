@@ -490,7 +490,7 @@ class MLP(ML):
         :return: predictions, real values, errors and the times needed to train
         '''
         scalar_y =self.scalar_y
-        names = self.data.columns
+        names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
 
 
         print('##########################'
