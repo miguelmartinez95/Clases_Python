@@ -942,13 +942,12 @@ class LSTM_model(DL):
                                                                       "The average time to train is", np.mean(times)))
 
             z = Queue()
-            if type(q)==type(z):
-                q.put(np.mean(cv))
+            if type(q) == type(z):
+                q.put(np.array([np.mean(cv), np.std(cv)]))
             else:
-                return (res_final)
+                return (res)
 
-
-        ###################################################################################################
+    ###################################################################################################
         #FALTARÍA CLASIFICACION !!!!!!!!!!!!!!!!!
         ###################################################################################################
 
@@ -1470,7 +1469,7 @@ class MyProblem(LSTM_model, Problem):
 
         return F
 
-    def cv_nsga(self,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary, q=[]):
+    def cv_nsga(self,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param rep:repetition of the estimation in each subsample
@@ -1645,11 +1644,11 @@ class MyProblem(LSTM_model, Problem):
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
 
 
-            z = Queue()
-            if type(q) == type(z):
-                q.put(np.mean(cvs))
-            else:
-                return (res_final)
+        #    z = Queue()
+        #    if type(q) == type(z):
+        #        q.put(np.mean(cvs))
+        #    else:
+        #        return (res_final)
 
     @staticmethod
     def bool4(x, l_lstm, l_dense):
@@ -1708,7 +1707,7 @@ class MyProblem(LSTM_model, Problem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]
 
-        f1, f2 = MyProblem.cv_nsga(5,2, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary,dict())
+        f1, f2 = MyProblem.cv_nsga(5,2, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
 
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',

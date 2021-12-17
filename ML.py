@@ -700,7 +700,7 @@ class MLP(ML):
                #rmse[z] = evals(y_pred, y_real).rmse()
                #nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
-            res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv,
+            res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv, 'std_cv':np.std(cv),
                  'nmbe':nmbe, 'rmse':rmse,
                  'times_comp':times}
             print(("The model with", layers," layers", neurons, "neurons and a pacience of",pacience,"has: \n"
