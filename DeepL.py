@@ -570,11 +570,11 @@ class LSTM_model(DL):
            #                    return_sequences=True))
            # else:
            #     model.add(LSTM(neurons_lstm[k], activation='relu'))
-      #  for z in range(layers_neurons):
-      #      if neurons_dense[z]==0:
-      #          pass
-      #      else:
-      #          model.add(Dense(neurons_dense[z], activation='relu'))
+        for z in range(layers_neurons):
+            if neurons_dense[z]==0:
+                pass
+            else:
+                model.add(Dense(neurons_dense[z], activation='relu'))
 
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
@@ -802,6 +802,15 @@ class LSTM_model(DL):
                     y_real2 = y_val[z].copy()
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
+                    y_predF = y_pred.copy()
+                    y_predF = pd.DataFrame(y_predF)
+                    y_predF.index = times_val[z]
+                    y_realF = y_real.copy()
+                    y_realF = pd.DataFrame(y_realF)
+                    y_realF.index = times_val[z]
 
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
@@ -854,21 +863,10 @@ class LSTM_model(DL):
                         place = np.where(names == 'radiation')[0]
                         scalar_rad = self.scalar_x['radiation']
 
-                        y_pred[np.where(y_pred < self.inf_limit)[0]]=self.inf_limit
-                        y_pred[np.where(y_pred > self.sup_limit)[0]]=self.sup_limit
-
-
                         res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:,self.n_lags-1,place]),
                                                       self.zero_problem, self.limits)
 
                         index_rad = res['indexes_out']
-
-                        y_predF = y_pred.copy()
-                        y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_val[z]
-                        y_realF = y_real.copy()
-                        y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = times_val[z]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -895,8 +893,6 @@ class LSTM_model(DL):
                         rmse[zz] = evals(y_pred1, y_real1).rmse()
                         nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                     else:
-                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
                         # Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
@@ -908,12 +904,6 @@ class LSTM_model(DL):
                             y_pred2 = y_pred
                             y_real2 = y_real
 
-                        y_predF = y_pred.copy()
-                        y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_val[z]
-                        y_realF = y_real.copy()
-                        y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = times_val[z]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -922,7 +912,21 @@ class LSTM_model(DL):
                         rmse[zz] = evals(y_pred2, y_real2).rmse()
                         nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
 
+                    s = int(np.max(y_realF) + 15)
+                    i = int(np.min(y_realF) - 15)
+                    plt.figure()
+                    plt.ylim(i, s)
+                    plt.plot(y_predF, color='black', label='Prediction')
+                    plt.plot(y_realF, color='blue', label='Real')
+                    plt.legend()
+                    plt.title('Subsample',zz, 'CV(RMSE):{}'.format(cv[zz]))
+                    a = 'Subsample-'
+                    b= str(zz) + '.csv'
+                    plot_name = a+b
+                    plt.savefig(plot_name)
+
                     zz +=1
+
 
 
             res_final = {'preds': predictions, 'reals':reales, 'times_val':times_val, 'cv_rmse':cv,
