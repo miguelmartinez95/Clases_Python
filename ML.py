@@ -332,7 +332,7 @@ class ML:
         :param freq: amount of values in a hour
         :return: the variable y with missing value in the days considered as outliers
         '''
-        step = freq
+        step = int(60/freq)
         y = self.data.iloc[:, self.pos_y]
         hour = self.times.hour
         start = np.where(hour == 0)[0][0]
