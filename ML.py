@@ -119,7 +119,7 @@ class ML:
             'Unknown situation with nights'
 
         res = {'indexes_out': ii}
-        return (res)
+        return res
 
     @staticmethod
     def cortes(x, D, lim):
