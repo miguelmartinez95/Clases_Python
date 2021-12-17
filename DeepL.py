@@ -916,7 +916,7 @@ class LSTM_model(DL):
                     if plot == True:
                         s = int(np.max(y_realF) + 15)
                         i = int(np.min(y_realF) - 15)
-                        a = np.round(cv[z], 2)
+                        a = np.round(cv[zz], 2)
                         plt.figure()
                         plt.ylim(i, s)
                         plt.plot(y_predF, color='black', label='Prediction')
