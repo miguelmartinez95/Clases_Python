@@ -363,8 +363,6 @@ class ML:
         for t in range(int(24 * step)):
             grid.append(t)
 
-        print(grid)
-
         fd_y2 = fd_y.copy()
         missing = []
         for t in range(fd_y.shape[0]):
@@ -382,9 +380,7 @@ class ML:
             fd_y3 = pd.DataFrame(fd_y2.copy())
             index2 = fd_y3.index
 
-        print(fd_y2.shape)
         fd = fd_y2.tolist()
-        print(fd.shape)
 
         fd1 = skfda.FDataGrid(fd, grid)
 
@@ -398,6 +394,7 @@ class ML:
         o_final = np.intersect1d(o1, o2)
 
         print('El número de outliers detectado es:',len(o_final))
+
         # diff = 0
         if len(o_final) > 0:
             out = index2[o_final]
