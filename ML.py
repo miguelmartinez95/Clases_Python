@@ -394,7 +394,7 @@ class ML:
         o2 = np.where(oo2 == -1)[0]
         o_final = np.intersect1d(o1, o2)
 
-        print(len(o_final))
+        print('El número de outliers detectado es:',len(o_final))
         # diff = 0
         if len(o_final) > 0:
             out = index2[o_final]
@@ -407,9 +407,6 @@ class ML:
         Y = fd_y.flatten()
 
         Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
-
-        print(Y.shape)
-        print(self.data.shape)
 
         Y.index = self.data.index
         self.data.iloc[:, self.pos_y] = Y

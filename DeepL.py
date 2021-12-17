@@ -381,7 +381,7 @@ class DL:
         o2 = np.where(oo2 ==-1)[0]
         o_final = np.intersect1d(o1,o2)
 
-        print(len(o_final))
+        print('El número de outliers detectado es:',len(o_final))
         if len(o_final)>0:
             out = index2[o_final]
 
