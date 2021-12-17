@@ -923,6 +923,7 @@ class LSTM_model(DL):
                     a = 'Subsample-'
                     b= str(zz) + '.csv'
                     plot_name = a+b
+                    plt.show()
                     plt.savefig(plot_name)
 
                     zz +=1
@@ -989,29 +990,32 @@ class LSTM_model(DL):
         y_real2 = y_val.copy()
         y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
+        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+        y_predF = y_pred.copy()
+        y_predF = pd.DataFrame(y_predF)
+        y_predF.index = self.times
+        y_realF = pd.DataFrame(y_real.copy())
+        y_realF.index = y_predF.index
+
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
 
             res = super().fix_values_0(self.times,
                                        self.zero_problem, self.limits)
 
             index_hour = res['indexes_out']
 
-            y_predF = y_pred.copy()
-            y_predF = pd.DataFrame(y_predF)
-            y_predF.index = self.times
-            y_realF =pd.DataFrame(y_real.copy())
-            y_realF.index = y_predF.index
-
-            if len(y_pred<=1) and len(index_hour)>0:
-                y_pred1= np.nan
-                y_real1=y_real
-            elif len(y_pred<=1) and len(index_hour)==0:
-                y_pred1= y_real
-                y_real1=y_real
-
+            #if len(y_pred<=1) and len(index_hour)>0:
+            #    y_pred1= np.nan
+            #    y_real1=y_real
+            #elif len(y_pred>1) and len(index_hour)==0:
+            #    y_pred1= y_real
+            #    y_real1=y_real
+            if len(y_pred <= 1):
+                y_pred1 = np.nan
+                y_real1 = y_real
             else:
 
                 if len(index_hour) > 0 and self.horizont == 0:
@@ -1045,27 +1049,21 @@ class LSTM_model(DL):
             place = np.where(x_val.columns == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
 
-            y_predF = y_pred.copy()
-            y_predF = pd.DataFrame(y_predF)
-            y_predF.index = self.times
-            y_realF = pd.DataFrame(y_real.copy())
-            y_realF.index = y_predF.index
-
             # Radiation under the limit
-            if len(y_pred <= 1) and len(index_rad) > 0:
+            #if len(y_pred <= 1) and len(index_rad) > 0:
+            #    y_pred1 = np.nan
+            #    y_real1 = y_real
+            #elif len(y_pred <= 1) and len(index_rad) == 0:
+            #    y_pred1 = y_real
+            #    y_real1 = y_real
+            if len(y_pred <= 1):
                 y_pred1 = np.nan
                 y_real1 = y_real
-            elif len(y_pred <= 1) and len(index_rad) == 0:
-                y_pred1 = y_real
-                y_real1 = y_real
-
             else:
 
                 if len(index_rad) > 0 and self.horizont == 0:
@@ -1091,15 +1089,6 @@ class LSTM_model(DL):
             else:
                 raise NameError('Empty prediction')
         else:
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
-            y_predF = y_pred.copy()
-            y_predF = pd.DataFrame(y_predF)
-            y_predF.index = self.times
-            y_realF =pd.DataFrame(y_real.copy())
-            y_realF.index = y_predF.index
-
             # Outliers and missing values
             o = np.where(y_real2 < self.inf_limit)[0]
             y_pred = np.delete(y_pred, o, 0)
@@ -1111,7 +1100,6 @@ class LSTM_model(DL):
                 r2 = evals(y_pred, y_real).r2()
             else:
                 raise NameError('Empty prediction')
-
 
         res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
 
@@ -1125,6 +1113,7 @@ class LSTM_model(DL):
         plt.plot(y_predF, color='black', label='Prediction')
         plt.plot(y_realF, color='blue', label='Real')
         plt.legend()
+        plt.show()
         plt.savefig('plot1.png')
 
         return res

@@ -691,6 +691,19 @@ class MLP(ML):
                     rmse[z] = evals(y_pred2, y_real2).rmse()
                     nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
 
+                s = int(np.max(y_realF) + 15)
+                i = int(np.min(y_realF) - 15)
+                plt.figure()
+                plt.ylim(i, s)
+                plt.plot(y_predF, color='black', label='Prediction')
+                plt.plot(y_realF, color='blue', label='Real')
+                plt.legend()
+                plt.title('Subsample', z, 'CV(RMSE):{}'.format(cv[z]))
+                a = 'Subsample-'
+                b = str(z) + '.csv'
+                plot_name = a + b
+                plt.show()
+                plt.savefig(plot_name)
                #if self.mask==True:
                # #   o = np.where(y_real2 < self.inf_limit)[0]
                #    if len(o)>0:
@@ -1010,31 +1023,33 @@ class MLP(ML):
         y_real2 = np.array(y_val.copy())
         y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
+        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+        y_predF = y_pred.copy()
+        y_predF = pd.DataFrame(y_predF)
+        y_predF.index = self.times
+        y_realF = pd.DataFrame(y_real.copy())
+        y_realF.index = y_predF.index
+
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
             res = super().fix_values_0( self.times,  self.zero_problem, self.limits)
             index_hour = res['indexes_out']
 
-            y_predF = y_pred.copy()
-            y_predF = pd.DataFrame(y_predF)
-            y_predF.index = self.times
-            y_realF =pd.DataFrame(y_real.copy())
-            y_realF.index = y_predF.index
-
-            if len(y_pred<=1) and len(index_hour)>0:
+           # if len(y_pred<=1) and len(index_hour)>0:
+           #     y_pred1= np.nan
+           #     y_real1=y_real
+           # elif len(y_pred>1) and len(index_hour)==0:
+           #     y_pred1= y_real
+           #     y_real1=y_real
+           #     if self.mask == True:
+           #         o = np.where(y_real2 < self.inf_limit)[0]
+           #         if len(o)>0:
+           #             y_pred1 = np.delete(y_pred1, o, 0)
+           #             y_real1 = np.delete(y_real1, o, 0)
+            if len(y_pred<=1):
                 y_pred1= np.nan
                 y_real1=y_real
-            elif len(y_pred<=1) and len(index_hour)==0:
-                y_pred1= y_real
-                y_real1=y_real
-                if self.mask == True:
-                    o = np.where(y_real2 < self.inf_limit)[0]
-                    if len(o)>0:
-                        y_pred1 = np.delete(y_pred1, o, 0)
-                        y_real1 = np.delete(y_real1, o, 0)
             else:
                 if len(index_hour) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_hour, 0)
@@ -1064,8 +1079,6 @@ class MLP(ML):
 
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
             place = np.where(x_val.columns == 'radiation')[0]
             scalar_x = self.scalar_x
@@ -1076,23 +1089,21 @@ class MLP(ML):
             index_rad=res['indexes_out']
 
             index_rad = res['indexes_out']
-            y_predF = y_pred.copy()
-            y_predF = pd.DataFrame(y_predF)
-            y_predF.index = self.times
-            y_realF = pd.DataFrame(y_real.copy())
-            y_realF.index = y_predF.index
 
-            if len(y_pred<=1) and len(index_rad)>0:
-                y_pred1= np.nan
-                y_real1=y_real
-            elif len(y_pred<=1) and len(index_rad)==0:
-                y_pred1= y_real
-                y_real1=y_real
-                if self.mask == True:
-                    o = np.where(y_real2 < self.inf_limit)[0]
-                    if len(o)>0:
-                        y_pred1 = np.delete(y_pred1, o, 0)
-                        y_real1 = np.delete(y_real1, o, 0)
+            #if len(y_pred<=1) and len(index_rad)>0:
+            #    y_pred1= np.nan
+            #    y_real1=y_real
+            #elif len(y_pred<=1) and len(index_rad)==0:
+            #    y_pred1= y_real
+            #    y_real1=y_real
+            #    if self.mask == True:
+            #        o = np.where(y_real2 < self.inf_limit)[0]
+            #        if len(o)>0:
+            #            y_pred1 = np.delete(y_pred1, o, 0)
+            #            y_real1 = np.delete(y_real1, o, 0)
+            if len(y_pred <= 1):
+                y_pred1 = np.nan
+                y_real1 = y_real
             else:
 
                 if len(index_rad) > 0 and self.horizont == 0:
@@ -1116,15 +1127,6 @@ class MLP(ML):
             else:
                 raise NameError('Empty prediction')
         else:
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
-            y_predF = y_pred.copy()
-            y_predF = pd.DataFrame(y_predF)
-            y_predF.index = self.times
-            y_realF =pd.DataFrame(y_real.copy())
-            y_realF.index = y_predF.index
-
             if self.mask == True:
                 o = np.where(y_real2 < self.inf_limit)[0]
                 if len(o)>0:
@@ -1152,7 +1154,7 @@ class MLP(ML):
         plt.legend()
         plt.savefig('plot1.png')
 
-        return(res)
+        return res
 
 
 from pymoo.core.problem import Problem
