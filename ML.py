@@ -837,7 +837,6 @@ class MLP(ML):
                     zz = a[0]
                 else:
                     zz= a[0][0]
-
                 top_results['error'].append(r1[zz])
                 top_results['std'].append(d1[zz])
                 top_results['neurons'].append(options['neurons'][zz])
