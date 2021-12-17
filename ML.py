@@ -641,7 +641,7 @@ class MLP(ML):
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
 
-                    res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:, place]),
+                    res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
 
                     index_rad = res['indexes_out']
