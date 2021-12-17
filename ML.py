@@ -697,7 +697,7 @@ class MLP(ML):
                 plt.plot(y_realF, color='blue', label='Real')
                 plt.legend()
                 #plt.title("Subsample" %z + 'CV(RMSE)' %a)
-                plt.title("Subsample {z} - CV(RMSE)={a}".format(z=z, a=a))
+                plt.title("Subsample {z} - CV(RMSE)={a}".format(z=str(z), a=str(a)))
                 a = 'Subsample-'
                 b = str(z) + '.csv'
                 plot_name = a + b
