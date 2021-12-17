@@ -177,8 +177,8 @@ class ML:
 
     def introduce_lags(self, lags, var_lag):
         '''
-        :param lags: amount of lags
-        :param var_lag: label of lagged variables
+        :param lags: amount of lags for each n_lags selected in MLP
+        :param var_lag: label of lagged variables. Amount of variables starting by the end
         :return: data lagged
         '''
         if self.n_lags>0:
