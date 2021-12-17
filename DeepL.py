@@ -751,11 +751,12 @@ class LSTM_model(DL):
 
 
 
-    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y, q=[]):
+    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y,plot, q=[]):
         '''
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
         :param q: queue that inform us if paralyse or not
+        :param plot: True plots
         :return: Considering what zero_problem is mentioned, return thre predictions, real values, errors and computational times needed to train the models
         '''
 
@@ -912,20 +913,22 @@ class LSTM_model(DL):
                         rmse[zz] = evals(y_pred2, y_real2).rmse()
                         nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
 
-                    s = int(np.max(y_realF) + 15)
-                    i = int(np.min(y_realF) - 15)
-                    er = cv[zz]
-                    plt.figure()
-                    plt.ylim(i, s)
-                    plt.plot(y_predF, color='black', label='Prediction')
-                    plt.plot(y_realF, color='blue', label='Real')
-                    plt.legend()
-                    plt.title('Subsample',zz, 'CV(RMSE):{}'.format(er))
-                    a = 'Subsample-'
-                    b= str(zz) + '.csv'
-                    plot_name = a+b
-                    plt.show()
-                    plt.savefig(plot_name)
+                    if plot == True:
+                        s = int(np.max(y_realF) + 15)
+                        i = int(np.min(y_realF) - 15)
+                        a = np.round(cv[z], 2)
+                        plt.figure()
+                        plt.ylim(i, s)
+                        plt.plot(y_predF, color='black', label='Prediction')
+                        plt.plot(y_realF, color='blue', label='Real')
+                        plt.legend()
+                        plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                        a = 'Subsample-'
+                        b = str(z) + '.png'
+                        plot_name = a + b
+                        plt.show()
+                        plt.savefig(plot_name)
+
 
                     zz +=1
 
@@ -1195,7 +1198,7 @@ class LSTM_model(DL):
                         options['neurons_dense'].append(neuron_dense)
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
-                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,dict())
+                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False,dict())
                         results[w] = np.mean(res['cv_rmse'])
                         deviations[w] = np.std(res['cv_rmse'])
                         w += 1
@@ -1220,7 +1223,7 @@ class LSTM_model(DL):
                         if z < parallel and w<contador:
                             multiprocessing.set_start_method('fork')
                             p = Process(target=self.cv_analysis,
-                                        args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
+                                        args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
                             p.start()
 
                             processes.append(p)
@@ -1237,7 +1240,7 @@ class LSTM_model(DL):
                             multiprocessing.set_start_method('fork')
                             q = Queue()
                             p = Process(target=self.cv_analysis,
-                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
+                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
                             p.start()
 
                             processes.append(p)
@@ -1245,7 +1248,7 @@ class LSTM_model(DL):
 
                         elif w==contador:
                             p = Process(target=self.cv_analysis,
-                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y, q))
+                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
                             p.start()
 
                             processes.append(p)
