@@ -474,7 +474,7 @@ class LSTM_model(DL):
             if horizont ==0:
                 out_end = in_end
             else:
-                out_end = (in_end)+horizont
+                out_end = in_end+horizont
 
             # ensure we have enough data for this instance
             if out_end < len(data):
@@ -487,7 +487,7 @@ class LSTM_model(DL):
                 if horizont==0:
                     y.append(yy[out_end])
                 else:
-                    y.append(yy[(in_end):out_end])
+                    y.append(yy[in_end:out_end])
                 #se selecciona uno
             # move along one time step
             #in_start += 1
