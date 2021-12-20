@@ -569,7 +569,7 @@ class LSTM_model(DL):
             elif k==0 and mask==False:
                 model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
             else:
-                model.add(LSTM(neurons_lstm[k],return_sequences=True))
+                model.add(LSTM(neurons_lstm[k]))
 
         #for z in range(layers_neurons):
         #    if neurons_dense[z]==0:
@@ -578,7 +578,7 @@ class LSTM_model(DL):
         #        model.add(Dense(neurons_dense[z], activation='relu'))
 #
         #model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
-        model.add(TimeDistributed(Dense(1)))
+        model.add(TimeDistributed(Dense(n_outputs)))
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
         model.summary()
 
@@ -812,7 +812,7 @@ class LSTM_model(DL):
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
 
-                    y_real = y_val[z]
+                    y_real = y_val[z][:,:,0]
                     y_real2 = y_val[z].copy()
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
