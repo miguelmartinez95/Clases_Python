@@ -472,9 +472,9 @@ class LSTM_model(DL):
             # define the end of the input sequence
             in_end = in_start + n_lags
             if horizont ==0:
-                out_end = in_end-1
+                out_end = in_end
             else:
-                out_end = (in_end-1)+horizont
+                out_end = (in_end)+horizont
 
             # ensure we have enough data for this instance
             if out_end < len(data):
@@ -491,7 +491,7 @@ class LSTM_model(DL):
                 #se selecciona uno
             # move along one time step
             #in_start += 1
-            in_start += (horizont-1)
+            in_start += (horizont)
 
         return(np.array(X), np.array(y))
 
