@@ -484,7 +484,7 @@ class LSTM_model(DL):
                 X.append(x_input)
                 yy = data[:,pos_y].reshape(-1,1)
                 #y.append(yy.iloc[in_end:out_end])
-                if horizont<2:
+                if horizont==0:
                     y.append(yy[out_end])
                 else:
                     y.append(yy[(in_end):out_end])
@@ -835,12 +835,12 @@ class LSTM_model(DL):
 
                         index_hour = res['indexes_out']
 
-                        y_predF = y_pred.copy()
-                        y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_val[z]
-                        y_realF = y_real.copy()
-                        y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = times_val[z]
+                        #y_predF = y_pred.copy()
+                        #y_predF = pd.DataFrame(y_predF)
+                        #y_predF.index = times_val[z]
+                        #y_realF = y_real.copy()
+                        #y_realF = pd.DataFrame(y_realF)
+                        #y_realF.index = times_val[z]
 
 
                         predictions.append(y_predF)
