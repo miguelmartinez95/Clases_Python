@@ -745,10 +745,6 @@ class LSTM_model(DL):
 
                 times_val.append(index_val[:,0])
 
-                print(y_val.shape)
-                print(y_train.shape)
-
-
                 X_test.append(x_test)
                 X_train.append(x_train)
                 X_val.append(x_val)
@@ -805,6 +801,9 @@ class LSTM_model(DL):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
+                    print(x_train[z].shape)
+                    print(y_train[z].shape)
+                    print(y_test[z].shape)
                     model = self.__class__.train_model(model,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
