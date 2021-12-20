@@ -569,7 +569,7 @@ class LSTM_model(DL):
             elif k==0 and mask==False:
                 model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
             else:
-                model.add(LSTM(neurons_lstm[k]),return_sequences=True)
+                model.add(LSTM(neurons_lstm[k],return_sequences=True))
 
         #for z in range(layers_neurons):
         #    if neurons_dense[z]==0:
