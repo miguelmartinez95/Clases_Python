@@ -801,14 +801,14 @@ class LSTM_model(DL):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
-                    print(x_train[z].shape)
-                    print(y_train[z].shape)
-                    print(y_test[z].shape)
                     model = self.__class__.train_model(model,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
+                    print(x_val[z].shape)
+                    print(y_val[z].shape)
                     res = self.__class__.predict_model(model, self.n_lags, x_val[z], batch)
                     y_pred = res['y_pred']
+                    print(y_pred.shape)
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
 
