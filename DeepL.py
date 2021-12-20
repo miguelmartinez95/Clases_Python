@@ -745,6 +745,10 @@ class LSTM_model(DL):
 
                 times_val.append(index_val[:,0])
 
+                print(y_val.shape)
+                print(y_train.shape)
+
+
                 X_test.append(x_test)
                 X_train.append(x_train)
                 X_val.append(x_val)
