@@ -576,7 +576,7 @@ class LSTM_model(DL):
         #        pass
         #    else:
         #        model.add(Dense(neurons_dense[z], activation='relu'))
-#
+#vbn
         #model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
         model.add(TimeDistributed(Dense(n_outputs)))
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
