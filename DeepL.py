@@ -483,7 +483,10 @@ class LSTM_model(DL):
                 X.append(x_input)
                 yy = data[:,pos_y].reshape(-1,1)
                 #y.append(yy.iloc[in_end:out_end])
-                y.append(yy[out_end])
+                if horizont<2:
+                    y.append(yy[out_end])
+                else:
+                    y.append(yy[in_end:out_end])
                 #se selecciona uno
             # move along one time step
             in_start += 1
@@ -1198,7 +1201,7 @@ class LSTM_model(DL):
                         options['neurons_dense'].append(neuron_dense)
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
-                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False,dict())
+                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False)
                         results[w] = np.mean(res['cv_rmse'])
                         deviations[w] = np.std(res['cv_rmse'])
                         w += 1
