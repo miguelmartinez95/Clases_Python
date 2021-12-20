@@ -560,7 +560,10 @@ class LSTM_model(DL):
             #if repeat_vector == True and k == layers_lstm:
             if k==0 and mask==True:
                 model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
+                if layers_lstm==1:
+                    model.add(LSTM(neurons_lstm[k]))
+                else:
+                    model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
             elif k==0 and mask==False:
                 model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
             else:
@@ -741,6 +744,11 @@ class LSTM_model(DL):
                 index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
                 #index_test = np.delete(index_test, range(n_lags), axis=0)
                 index_val = np.delete(index_val, range(n_lags), axis=0)
+
+                diff = len(index_test) - (y_val.shape[0] * y_val.shape[1])
+                if diff > 0:
+                    index_test = np.delete(index_test, range(len(index_test) - diff, len(index_test)))
+
                 times_val.append(index_val[:,0])
 
                 X_test.append(x_test)
