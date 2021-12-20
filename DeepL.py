@@ -741,7 +741,7 @@ class LSTM_model(DL):
 
                 diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
                 if diff > 0:
-                    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)))
+                    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)), axis=0)
 
                 times_val.append(index_val[:,0])
 
