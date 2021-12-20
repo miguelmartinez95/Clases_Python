@@ -491,7 +491,7 @@ class LSTM_model(DL):
                 #se selecciona uno
             # move along one time step
             #in_start += 1
-            in_start += horizont
+            in_start += (horizont-1)
 
         return(np.array(X), np.array(y))
 
