@@ -562,10 +562,10 @@ class LSTM_model(DL):
             #if repeat_vector == True and k == layers_lstm:
             if k==0 and mask==True:
                 model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                #if layers_lstm==1:
-                #    model.add(LSTM(neurons_lstm[k]))
-                #else:
-                model.add(LSTM(neurons_lstm[k], return_sequences=True))
+                if layers_lstm==1:
+                    model.add(LSTM(neurons_lstm[k]))
+                else:
+                    model.add(LSTM(neurons_lstm[k], return_sequences=True))
             elif k==0 and mask==False:
                 model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
             else:
