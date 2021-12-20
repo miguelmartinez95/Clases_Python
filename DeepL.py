@@ -578,7 +578,7 @@ class LSTM_model(DL):
         #        model.add(Dense(neurons_dense[z], activation='relu'))
 #
         #model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
-        model.add(TimeDistributed(Dense(n_outputs)))
+        model.add(TimeDistributed(Dense(1)))
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
         model.summary()
 
