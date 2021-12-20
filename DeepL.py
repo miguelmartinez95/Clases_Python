@@ -593,7 +593,10 @@ class LSTM_model(DL):
         :param model: model architecture built
         :return: model trained
         '''
-
+        print(train_x1.shape)
+        print(train_y1.shape)
+        print(test_x1.shape)
+        print(test_y1.shape)
         # Checkpoitn callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
         mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
