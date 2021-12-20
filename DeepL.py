@@ -539,6 +539,8 @@ class LSTM_model(DL):
         :param mask: True or False
         :param repeat_vector: True or False
         :return: the model architecture built to be trained
+
+        CAREFUL: with masking at least two lstm layers are required
         '''
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
@@ -737,9 +739,9 @@ class LSTM_model(DL):
                 #index_test = np.delete(index_test, range(n_lags), axis=0)
                 index_val = np.delete(index_val, range(n_lags), axis=0)
 
-                diff = len(index_test) - (y_val.shape[0] * y_val.shape[1])
+                diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
                 if diff > 0:
-                    index_test = np.delete(index_test, range(len(index_test) - diff, len(index_test)))
+                    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)))
 
                 times_val.append(index_val[:,0])
 
