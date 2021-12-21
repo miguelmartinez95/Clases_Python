@@ -15,6 +15,7 @@ from time import time
 from keras.layers import LSTM
 from keras.layers import Masking
 from keras.layers import RepeatVector
+from keras.layers import Dropout
 from keras.layers import TimeDistributed
 import skfda
 import math
@@ -407,9 +408,10 @@ class LSTM_model(DL):
         print('Class to built LSTM models.')
 
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type):
         super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit)
         self.repeat_vector = repeat_vector
+        self.dropout = dropout
         self.type = type
 
 
@@ -496,12 +498,17 @@ class LSTM_model(DL):
         return(np.array(X), np.array(y))
 
     @staticmethod
-    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask, mask_value, repeat_vector):
+    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask, mask_value, repeat_vector, dropout):
         '''
         :param mask: True or False
         :param repeat_vector: True or False
         :return: the model architecture built to be trained
         '''
+
+
+        print('No finished')
+
+
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
 
@@ -534,7 +541,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask,mask_value, repeat_vector):
+    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask,mask_value, repeat_vector,dropout):
         '''
         :param mask: True or False
         :param repeat_vector: True or False
@@ -582,11 +589,20 @@ class LSTM_model(DL):
             else:
                 model.add(LSTM(neurons_lstm[k],return_sequences=True,activation='relu'))
 
-        for z in range(layers_neurons):
-            if neurons_dense[z]==0:
-                pass
+        if layers_neurons>0:
+            if dropout>0:
+                for z in range(layers_neurons):
+                    if neurons_dense[z]==0:
+                        pass
+                    else:
+                        model.add(Dense(neurons_dense[z], activation='relu'))
+                        model.add(Dropout(dropout))
             else:
-                model.add(Dense(neurons_dense[z], activation='relu'))
+                for z in range(layers_neurons):
+                    if neurons_dense[z]==0:
+                        pass
+                    else:
+                        model.add(Dense(neurons_dense[z], activation='relu'))
 #vbn
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
         #model.add(TimeDistributed(Dense(1)))
@@ -800,7 +816,7 @@ class LSTM_model(DL):
 
 
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, batch,self.mask,self.mask_value, self.repeat_vector)
+            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, batch,self.mask,self.mask_value, self.repeat_vector, self.dropout)
             # Train the model
             times = [0 for x in range(rep*2)]
             cv = [0 for x in range(rep*2)]
@@ -993,12 +1009,12 @@ class LSTM_model(DL):
         Instance to train model outside these classes
         '''
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense,batch, self.mask, self.mask_value, self.repeat_vector)
+            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense,batch, self.mask, self.mask_value, self.repeat_vector, self.dropout)
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
         else:
-            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,batch,self.mask, self.mask_value, self.repeat_vector)
+            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,batch,self.mask, self.mask_value, self.repeat_vector, self.dropout)
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
