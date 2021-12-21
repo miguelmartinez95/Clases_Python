@@ -560,29 +560,38 @@ class LSTM_model(DL):
             # else:
             #    model.add(LSTM(neurons_lstm[k], activation='relu'))
             #if repeat_vector == True and k == layers_lstm:
-            if k==0 and mask==True:
-                model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                #if layers_lstm==1:
-                model.add(LSTM(neurons_lstm[k],return_sequences=True))
-               # else:
-               #     model.add(LSTM(neurons_lstm[k], return_sequences=True))
-            elif k==0 and mask==False:
-                model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
-            elif k==layers_lstm-1:
-                model.add(LSTM(neurons_lstm[k]))
+            if k==0 and repeat_vector==True:
+                if mask==True:
+                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                    model.add(LSTM(neurons_lstm[k]))
+                    model.add(RepeatVector(n_timesteps))
+                else:
+                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features)))
+                    model.add(RepeatVector(n_timesteps))
+
+            elif k==0 and repeat_vector==False:
+                if mask == True:
+                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                    model.add(LSTM(neurons_lstm[k], return_sequences=True))
+                else:
+                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), return_sequences=True))
+               #     elif k==layers_lstm-1:
+                #model.add(LSTM(neurons_lstm[k]))
+            #elif k==layers_lstm-1:
+
             else:
                 model.add(LSTM(neurons_lstm[k],return_sequences=True))
 
 
-        for z in range(layers_neurons):
-            if neurons_dense[z]==0:
-                pass
-            else:
-                model.add(Dense(neurons_dense[z], activation='relu'))
+        #for z in range(layers_neurons):
+        #    if neurons_dense[z]==0:
+        #        pass
+        #    else:
+        #        model.add(Dense(neurons_dense[z], activation='relu'))
 #vbn
         #model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
-        #model.add(TimeDistributed(Dense(n_outputs)))
-        model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
+        model.add(TimeDistributed(Dense(1)))
+        #model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
         model.summary()
 
