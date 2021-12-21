@@ -643,11 +643,11 @@ class LSTM_model(DL):
 
         predictions  =np.array(predictions)
         print(predictions.shape)
-        if len(predictions.shape)>2:
-            y_pred = predictions[:,:,0]
-        else:
-            y_pred = predictions
-
+        #if len(predictions.shape)>2:
+        #    y_pred = predictions[:,:,0]
+        #else:
+        #    y_pred = predictions
+        y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
         res = {'y_pred': y_pred}
         return res
 
