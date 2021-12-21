@@ -11,11 +11,14 @@ from keras.layers import Dense
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from datetime import datetime
+import matplotlib.ticker as ticker
+from matplotlib.dates import DateFormatter
 from time import time
 from keras.layers import LSTM
 from keras.layers import Masking
 from keras.layers import RepeatVector
 from keras.layers import Dropout
+from keras.constraints import maxnorm
 from keras.layers import TimeDistributed
 import skfda
 import math
@@ -595,7 +598,7 @@ class LSTM_model(DL):
                     if neurons_dense[z]==0:
                         pass
                     else:
-                        model.add(Dense(neurons_dense[z], activation='relu'))
+                        model.add(Dense(neurons_dense[z], activation='relu', kernel_constraint=maxnorm(3)))
                         model.add(Dropout(dropout))
             else:
                 for z in range(layers_neurons):
@@ -959,14 +962,18 @@ class LSTM_model(DL):
                         nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
 
                     if plot == True:
-                        s = int(np.max(y_realF) + 15)
-                        i = int(np.min(y_realF) - 15)
+                        s = int(np.max(y_realF) + 10)
+                        i = int(np.min(y_realF) - 10)
                         a = np.round(cv[zz], 2)
-                        plt.figure()
+                        plt.figure(figsize=(12, 10))
+                        ax = plt.axes()
                         plt.ylim(i, s)
                         plt.plot(y_predF, color='black', label='Prediction')
                         plt.plot(y_realF, color='blue', label='Real')
                         plt.legend()
+                        date_form = DateFormatter("%d-%H:%M")
+                        ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
+                        ax.xaxis.set_major_formatter(date_form)
                         plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                         a = 'Subsample-'
                         b = str(z) + '.png'
