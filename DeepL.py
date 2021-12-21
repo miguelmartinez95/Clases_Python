@@ -843,8 +843,8 @@ class LSTM_model(DL):
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
 
-                    y_real = y_val[z][:,:,0]
-                    y_real2 = y_val[z].copy()
+                    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    y_real2 = y_real.copy()
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
