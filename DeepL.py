@@ -1002,7 +1002,7 @@ class LSTM_model(DL):
             if type(q) == type(z):
                 q.put(np.array([np.mean(cv), np.std(cv)]))
             else:
-                return (res)
+                return (res_final)
 
     ###################################################################################################
         #FALTARÍA CLASIFICACION !!!!!!!!!!!!!!!!!
