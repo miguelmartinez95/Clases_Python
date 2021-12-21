@@ -907,6 +907,10 @@ class LSTM_model(DL):
                             y_pred1 = np.delete(y_pred1,o,0)
                             y_real1 = np.delete(y_real1,o, 0)
 
+
+                        print(y_predF.shape)
+                        print(y_pred2.shape)
+
                         cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                         rmse[zz] = evals(y_pred1, y_real1).rmse()
                         nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
@@ -925,11 +929,6 @@ class LSTM_model(DL):
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
-
-
-                        print(y_predF.shape)
-                        print(y_pred2.shape)
-
 
                         cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                         rmse[zz] = evals(y_pred2, y_real2).rmse()
