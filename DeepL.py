@@ -909,7 +909,7 @@ class LSTM_model(DL):
 
 
                         print(y_predF.shape)
-                        print(y_pred2.shape)
+                        print(y_pred1.shape)
 
                         cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                         rmse[zz] = evals(y_pred1, y_real1).rmse()
