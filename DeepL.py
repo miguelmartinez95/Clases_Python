@@ -568,17 +568,20 @@ class LSTM_model(DL):
                #     model.add(LSTM(neurons_lstm[k], return_sequences=True))
             elif k==0 and mask==False:
                 model.add(LSTM(neurons_lstm[k], return_sequences=True, input_shape=(n_timesteps, n_features)))
+            elif k==layers_lstm-1:
+                model.add(LSTM(neurons_lstm[k]))
             else:
                 model.add(LSTM(neurons_lstm[k],return_sequences=True))
 
-        #for z in range(layers_neurons):
-        #    if neurons_dense[z]==0:
-        #        pass
-        #    else:
-        #        model.add(Dense(neurons_dense[z], activation='relu'))
+
+        for z in range(layers_neurons):
+            if neurons_dense[z]==0:
+                pass
+            else:
+                model.add(Dense(neurons_dense[z], activation='relu'))
 #vbn
         #model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
-        model.add(TimeDistributed(Dense(n_outputs)))
+        #model.add(TimeDistributed(Dense(n_outputs)))
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
         model.summary()
