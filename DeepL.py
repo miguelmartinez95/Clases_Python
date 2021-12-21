@@ -926,6 +926,11 @@ class LSTM_model(DL):
                         predictions.append(y_predF)
                         reales.append(y_realF)
 
+
+                        print(y_predF.shape)
+                        print(y_pred2.shape)
+
+
                         cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                         rmse[zz] = evals(y_pred2, y_real2).rmse()
                         nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
