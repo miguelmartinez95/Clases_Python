@@ -905,9 +905,9 @@ class LSTM_model(DL):
                             nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                         else:
                             print('Missing values are detected when we are evaluating the predictions')
-                            cv[zz] = np.nan
-                            rmse[zz] = np.nan
-                            nmbe[zz] = np.nan
+                            cv[zz] = 9999
+                            rmse[zz] = 9999
+                            nmbe[zz] = 9999
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
                         place = np.where(names == 'radiation')[0]
@@ -949,9 +949,9 @@ class LSTM_model(DL):
                             nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                         else:
                             print('Missing values are detected when we are evaluating the predictions')
-                            cv[zz] = np.nan
-                            rmse[zz] = np.nan
-                            nmbe[zz] = np.nan
+                            cv[zz] = 9999
+                            rmse[zz] = 9999
+                            nmbe[zz] = 9999
                     else:
 
                         predictions.append(y_predF)
@@ -973,9 +973,9 @@ class LSTM_model(DL):
                             nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
                         else:
                             print('Missing values are detected when we are evaluating the predictions')
-                            cv[zz] = np.nan
-                            rmse[zz] = np.nan
-                            nmbe[zz] = np.nan
+                            cv[zz] = 9999
+                            rmse[zz] = 9999
+                            nmbe[zz] = 9999
 
                     if plot == True:
                         s = int(np.max(y_realF) + 10)
