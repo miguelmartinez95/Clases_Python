@@ -943,6 +943,9 @@ class LSTM_model(DL):
                         nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                     else:
 
+                        predictions.append(y_predF)
+                        reales.append(y_realF)
+
                         # Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
 
@@ -953,9 +956,8 @@ class LSTM_model(DL):
                             y_pred2 = y_pred
                             y_real2 = y_real
 
-
-                        predictions.append(y_predF)
-                        reales.append(y_realF)
+                        print(np.sum(np.isnan(y_pred2)))
+                        print(np.sum(np.isnan(y_real2)))
 
                         cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                         rmse[zz] = evals(y_pred2, y_real2).rmse()
