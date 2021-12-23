@@ -958,7 +958,6 @@ class LSTM_model(DL):
 
                         print(np.sum(np.isnan(y_pred2)))
                         print(np.sum(np.isnan(y_real2)))
-
                         cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                         rmse[zz] = evals(y_pred2, y_real2).rmse()
                         nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
