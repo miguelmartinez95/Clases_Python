@@ -899,10 +899,15 @@ class LSTM_model(DL):
                             y_pred1 = np.delete(y_pred1,o,0)
                             y_real1 = np.delete(y_real1,o, 0)
 
-                        cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                        rmse[zz] = evals(y_pred1, y_real1).rmse()
-                        nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
-
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            rmse[zz] = evals(y_pred1, y_real1).rmse()
+                            nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[zz] = np.nan
+                            rmse[zz] = np.nan
+                            nmbe[zz] = np.nan
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
                         place = np.where(names == 'radiation')[0]
@@ -938,9 +943,15 @@ class LSTM_model(DL):
                         print(y_predF.shape)
                         print(y_pred1.shape)
 
-                        cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                        rmse[zz] = evals(y_pred1, y_real1).rmse()
-                        nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            rmse[zz] = evals(y_pred1, y_real1).rmse()
+                            nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[zz] = np.nan
+                            rmse[zz] = np.nan
+                            nmbe[zz] = np.nan
                     else:
 
                         predictions.append(y_predF)
@@ -956,11 +967,15 @@ class LSTM_model(DL):
                             y_pred2 = y_pred
                             y_real2 = y_real
 
-                        print(np.sum(np.isnan(y_pred2)))
-                        print(np.sum(np.isnan(y_real2)))
-                        cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                        rmse[zz] = evals(y_pred2, y_real2).rmse()
-                        nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
+                        if np.sum(np.isnan(y_pred2))==0 and np.sum(np.isnan(y_real2))==0:
+                            cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                            rmse[zz] = evals(y_pred2, y_real2).rmse()
+                            nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[zz] = np.nan
+                            rmse[zz] = np.nan
+                            nmbe[zz] = np.nan
 
                     if plot == True:
                         s = int(np.max(y_realF) + 10)
@@ -994,9 +1009,9 @@ class LSTM_model(DL):
 
             print(("The model with", layers_lstm, " layers lstm,",layers_neurons,'layers dense', neurons_dense, "neurons denses,", neurons_lstm,"neurons_lstm and a pacience of", pacience, "has: \n"
                                                                                                         "The average CV(RMSE) is",
-                   np.mean(cv), " \n"
-                                "The average NMBE is", np.mean(nmbe), "\n"
-                                                                      "The average RMSE is", np.mean(rmse), "\n"
+                   np.nanmean(cv), " \n"
+                                "The average NMBE is", np.nanmean(nmbe), "\n"
+                                                                      "The average RMSE is", np.nanmean(rmse), "\n"
                                                                       "The average time to train is", np.mean(times)))
 
             z = Queue()
