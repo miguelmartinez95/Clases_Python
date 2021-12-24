@@ -324,7 +324,7 @@ class DL:
 
     def fda_outliers(self, freq):
         '''
-        :param freq: amount of values in a hour
+        :param freq: amount of values in a hour (value to divide 60 and the result is the amount of data in a hour)
         :return: the variable y with missing value in the days considered as outliers
         '''
         step = int(60/freq)
@@ -333,12 +333,12 @@ class DL:
         start = np.where(hour==0)[0][0]
 
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
-            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-step]
+            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-step]
         elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
-                end =len(y)
+                end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             else:
-                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-step]
+                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-step]
         else:
             end=[]
             raise NameError('Problem with the limit of sample creating the functional sample')
