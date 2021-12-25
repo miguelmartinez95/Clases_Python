@@ -358,14 +358,20 @@ class DL:
 
         fd_y2 = fd_y.copy()
         missing = []
+        missing_p = []
         for t in range(fd_y.shape[0]):
             if np.sum(np.isnan(fd_y[t,:])) > 0:
                 missing.append(t)
+                missing_p.append(np.where(np.isnan(fd_y[t,:]))[0])
 
         if len(missing)>0:
             fd_y3 = pd.DataFrame(fd_y2.copy())
-            fd_y2 = np.delete(fd_y2, missing, 0)
-            fd_y3 = fd_y3.drop(missing, 0)
+            #fd_y3 = pd.DataFrame(fd_y2.copy())
+            #fd_y2 = np.delete(fd_y2, missing, 0)
+            #fd_y3 = fd_y3.drop(missing, 0)
+            for j in range(len(missing)):
+                fd_y3.iloc[missing[j], missing_p[j]]=self.mask_value
+            #fd_y3 = fd_y3.drop(missing, 0)
             index2 = fd_y3.index
             print(missing)
             print(index2)
