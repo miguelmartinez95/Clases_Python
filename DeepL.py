@@ -366,6 +366,7 @@ class DL:
 
         if len(missing)>0:
             fd_y3 = pd.DataFrame(fd_y2.copy())
+            fd_y2 = pd.DataFrame(fd_y2.copy())
             #fd_y3 = pd.DataFrame(fd_y2.copy())
             #fd_y2 = np.delete(fd_y2, missing, 0)
             #fd_y3 = fd_y3.drop(missing, 0)
