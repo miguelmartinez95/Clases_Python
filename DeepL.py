@@ -331,6 +331,7 @@ class DL:
         y = self.data.iloc[:, self.pos_y]
         hour=self.times.hour
         start = np.where(hour==0)[0][0]
+        print(y.shape)
 
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-step]
