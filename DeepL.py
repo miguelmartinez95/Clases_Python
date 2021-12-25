@@ -366,13 +366,13 @@ class DL:
 
         if len(missing)>0:
             fd_y3 = pd.DataFrame(fd_y2.copy())
-            fd_y2 = pd.DataFrame(fd_y2.copy())
+            #fd_y2 = pd.DataFrame(fd_y2.copy())
             #fd_y3 = pd.DataFrame(fd_y2.copy())
             #fd_y2 = np.delete(fd_y2, missing, 0)
             #fd_y3 = fd_y3.drop(missing, 0)
             for j in range(len(missing)):
                 fd_y3.iloc[missing[j], missing_p[j]]=self.mask_value
-                fd_y2.iloc[missing[j], missing_p[j]]=self.mask_value
+                fd_y2[missing[j], missing_p[j]]=self.mask_value
             #fd_y3 = fd_y3.drop(missing, 0)
             index2 = fd_y3.index
             print(missing)
