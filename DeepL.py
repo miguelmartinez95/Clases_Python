@@ -336,14 +336,14 @@ class DL:
 
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
-            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
+            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-d]
         elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
                 end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             else:
                 d = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] - np.where(hour == 23)[0][
                     len(np.where(hour == 23)[0]) - 1]
-                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-d]
+                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-d]
         else:
             end=[]
             raise NameError('Problem with the limit of sample creating the functional sample')
@@ -355,7 +355,7 @@ class DL:
         y_short = y.iloc[range(start,end)]
         if len(y_short) % (step*24)!=0:
             print(len(y_short))
-            print(len(y_short/(step*24)))
+            print(len(y_short)/(step*24))
             raise NameError('Sample size not it is well divided among days')
 
         fd_y = DL.cortes(y_short, len(y_short), int(24*step)).transpose()
