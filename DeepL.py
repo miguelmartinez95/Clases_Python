@@ -331,15 +331,19 @@ class DL:
         y = self.data.iloc[:, self.pos_y]
         hour=self.times.hour
         start = np.where(hour==0)[0][0]
-        print(y.shape)
+
+
 
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
-            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-step]
+            d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
+            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
         elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
                 end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             else:
-                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-step]
+                d = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] - np.where(hour == 23)[0][
+                    len(np.where(hour == 23)[0]) - 1]
+                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-d]
         else:
             end=[]
             raise NameError('Problem with the limit of sample creating the functional sample')
@@ -349,8 +353,9 @@ class DL:
         y2 = y.iloc[range(end, len(y))]
 
         y_short = y.iloc[range(start,end)]
-        print(len(y_short))
-        print(y_short.index)
+        if len(y_short) % (step*24)!=0:
+            raise NameError('Sample size not it is well divided among days')
+
         fd_y = DL.cortes(y_short, len(y_short), int(24*step)).transpose()
         print(fd_y.shape)
         grid = []
