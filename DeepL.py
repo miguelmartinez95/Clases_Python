@@ -329,6 +329,7 @@ class DL:
         '''
         step = int(60/freq)
         y = self.data.iloc[:, self.pos_y]
+        long=len(y)
         hour=self.times.hour
         start = np.where(hour==0)[0][0]
 
@@ -336,23 +337,23 @@ class DL:
 
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
-            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-d]
+            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
         elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
                 end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             else:
                 d = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] - np.where(hour == 23)[0][
                     len(np.where(hour == 23)[0]) - 1]
-                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-d]
+                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-d]
         else:
             end=[]
             raise NameError('Problem with the limit of sample creating the functional sample')
 
 
-        y1 = y.iloc[range(start)]
-        y2 = y.iloc[range(end, len(y))]
+        y1 = y.iloc[range(start+1)]
+        y2 = y.iloc[range(end-1, len(y))]
 
-        y_short = y.iloc[range(start,end)]
+        y_short = y.iloc[range(start+1,end-1)]
         if len(y_short) % (step*24)!=0:
             print(len(y_short))
             print(len(y_short)/(step*24))
@@ -414,6 +415,11 @@ class DL:
         Y = fd_y.flatten()
 
         Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
+        if len(Y) != long:
+            print(len(Y))
+            print(long)
+            raise NameError('Sample size error in the second joint')
+
         Y.index=self.data.index
         self.data.iloc[:,self.pos_y] = Y
 
