@@ -354,6 +354,8 @@ class DL:
 
         y_short = y.iloc[range(start,end)]
         if len(y_short) % (step*24)!=0:
+            print(len(y_short))
+            print(len(y_short/(step*24)))
             raise NameError('Sample size not it is well divided among days')
 
         fd_y = DL.cortes(y_short, len(y_short), int(24*step)).transpose()
