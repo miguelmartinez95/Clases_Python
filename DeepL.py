@@ -1320,6 +1320,7 @@ class LSTM_model(DL):
                             processes.append(p)
                             z1 =z+ 1
                         if z == parallel and w < contador:
+                            p.close()
                             for p in processes:
                                 p.join()
 
@@ -1344,7 +1345,7 @@ class LSTM_model(DL):
                             p.start()
 
                             processes.append(p)
-
+                            p.close()
                             for p in processes:
                                 p.join()
 
