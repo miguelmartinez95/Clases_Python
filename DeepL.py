@@ -1311,7 +1311,7 @@ class LSTM_model(DL):
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
                         if z < parallel and w<contador:
-                            multiprocessing.set_start_method('fork')
+                            #multiprocessing.set_start_method('fork')
                             p = Process(target=self.cv_analysis,
                                         args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
                             p.start()
@@ -1327,7 +1327,7 @@ class LSTM_model(DL):
                                 res2.append(q.get()[1])
 
                             processes=[]
-                            multiprocessing.set_start_method('fork')
+                            #multiprocessing.set_start_method('fork')
                             q = Queue()
                             p = Process(target=self.cv_analysis,
                                         args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
