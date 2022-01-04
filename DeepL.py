@@ -1784,7 +1784,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         else:
             raise NameError('Option not considered')
 
-        return (a)
+        return(a)
 
 
     def _evaluate(self, x, out, *args, **kwargs):
