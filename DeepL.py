@@ -1510,8 +1510,8 @@ class LSTM_model(DL):
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
         return res
 
-from pymoo.core.problem import Problem
-class MyProblem(LSTM_model, Problem):
+from pymoo.core.problem import ElementwiseProblem
+class MyProblem(LSTM_model, ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
 
@@ -1533,13 +1533,13 @@ class MyProblem(LSTM_model, Problem):
 
         #igual tengo que meter todos los argumentos de LSTM_model
         LSTM_model.__init__(self,data,horizont,scalar_y,scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type)
-        Problem.__init__(self,n_var=self.n_var,
+        ElementwiseProblem.__init__(self,n_var=self.n_var,
                          n_obj=2,
                          n_constr=1,
                          xl=self.xlimit_inf,
                          xu=self.xlimit_sup,
                          type_var=np.int,
-                         elementwise_evaluation=True,
+                         #elementwise_evaluation=True,
                          **kwargs)
 
 
