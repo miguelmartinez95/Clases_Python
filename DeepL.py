@@ -1421,9 +1421,13 @@ class LSTM_model(DL):
                             x1[r]=0
                     elif len(r)>1:
                         x1[r] = 0
+                    x=np.concatenate(x1,x[len(x)-1])
 
 
                 return pop
+
+        print('no problems with neurons size1!!!!')
+
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.factory import get_problem, get_visualization, get_decomposition
         from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
@@ -1448,6 +1452,8 @@ class LSTM_model(DL):
                           # mutation=0.1)
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1))
+        print('no problems with neurons size2!!!!')
+
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size/2), nth_gen=int(pop_size/4), n_max_gen=None,
                                                               n_max_evals=12000)
@@ -1588,7 +1594,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         #layers_neurons = len(neurons_dense)
         neurons_lstm_short = neurons_lstm[neurons_lstm>0]
         neurons_dense_short = neurons_dense[neurons_dense>0]
-        print('no problems with neurons size1!!!!')
+
         res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
 
         x_test = np.array(res['x_test'])
@@ -1604,7 +1610,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm_short, neurons_dense_short,batch,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 
-            print('no problems with neurons size2!!!!')
+
             # Train the model
             zz = 0
             predictions = []
