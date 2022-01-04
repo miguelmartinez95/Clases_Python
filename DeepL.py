@@ -1603,6 +1603,8 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         if self.type == 'regression':
             model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm_short, neurons_dense_short,batch,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
+
+            print('no problems with neurons size!!!!')
             # Train the model
             zz = 0
             predictions = []
