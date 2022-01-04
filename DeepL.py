@@ -1412,8 +1412,16 @@ class LSTM_model(DL):
             def _do(self, problem, pop, **kwargs):
                 for k in range(len(pop)):
                     x = pop[k].X
-                    if MyProblem.bool4(x,l_lstm, l_dense) == 1:
-                        x[2] = 0
+                    x1 = x[range(l_lstm+l_dense)]
+                    r=MyProblem.bool4(x1,l_lstm, l_dense)
+                    if r == 0:
+                        pass
+                    elif len(r)==1:
+                        if r!=0:
+                            x1[r]=0
+                    elif len(r)>1:
+                        x1[r] = 0
+
 
                 return pop
         from pymoo.algorithms.moo.nsga2 import NSGA2
@@ -1744,47 +1752,56 @@ class MyProblem(LSTM_model, ElementwiseProblem):
     def bool4(x, l_lstm, l_dense):
         '''
         :x: neurons options
+        l_lstm: number of values that represent lstm neurons
+        l_dense: number of values that represent dense neurons
         :return: 0 if the constraint is fulfilled
         '''
 
         x1 = x[range(l_lstm)]
         x2 = x[range(l_lstm, l_lstm+l_dense)]
 
-        if len(x1)==3:
-            if x1[1] == 0 and x1[2] > 0:
-                a = 1
-            else:
-                a = 0
-        elif len(x1)==4:
-            if x1[1] == 0 and x1[2] > 0:
-                a = 1
-            elif x1[1] == 0 and x1[3] > 0:
-                a = 1
-            elif x1[2] == 0 and x1[3] > 0:
-                a = 1
-            else:
-                a = 0
-        else:
-            raise NameError('Option not considered')
-
         if len(x2)==3:
             if x2[1] == 0 and x2[2] > 0:
-                a = 1
+                a = np.array(2)
             else:
                 a = 0
         elif len(x2)==4:
             if x2[1] == 0 and x2[2] > 0:
-                a = 1
+                a = np.array(2)
+                if x2[3] > 0:
+                    a = np.array([2,3])
             elif x2[1] == 0 and x2[3] > 0:
-                a = 1
+                a = np.array(3)
             elif x2[2] == 0 and x2[3] > 0:
-                a = 1
+                a = np.array(3)
             else:
                 a = 0
         else:
             raise NameError('Option not considered')
 
-        return(a)
+        if len(x1)==3:
+            if x1[1] == 0 and x1[2] > 0:
+                a = np.array(2)
+            else:
+                a = 0
+        elif len(x1)==4:
+            if x1[1] == 0 and x1[2] > 0:
+                a = np.array(2)
+                if x2[3] > 0:
+                    a = np.array([2, 3])
+            elif x1[1] == 0 and x1[3] > 0:
+                a=np.array(3)
+            elif x1[2] == 0 and x1[3] > 0:
+                a = np.array(3)
+            else:
+                a = 0
+        else:
+            raise NameError('Option not considered')
+
+
+
+
+        return a
 
 
     def _evaluate(self, x, out, *args, **kwargs):
