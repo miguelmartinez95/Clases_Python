@@ -1748,7 +1748,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         '''
 
         x1 = x[range(l_lstm)]
-        x2 = x[range(l_lstm, l_dense)]
+        x2 = x[range(l_lstm, l_lstm+l_dense)]
 
         if len(x1)==3:
             if x1[1] == 0 and x1[2] > 0:
