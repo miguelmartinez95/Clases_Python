@@ -1533,7 +1533,7 @@ class MyProblem(LSTM_model, Problem):
 
         #igual tengo que meter todos los argumentos de LSTM_model
         super().__init__(data,horizont,scalar_y,scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type)
-        Problem.__init__(n_var=self.n_var,
+        super().__init__(n_var=self.n_var,
                          n_obj=2,
                          n_constr=1,
                          xl=self.xlimit_inf,
