@@ -1574,8 +1574,10 @@ class MyProblem(LSTM_model, Problem):
 
         names = self.data.columns
         names = np.delete(names, self.pos_y)
-        layers_lstm = len(neurons_lstm)
-        layers_neurons = len(neurons_dense)
+        #layers_lstm = len(neurons_lstm)
+        #layers_neurons = len(neurons_dense)
+        neurons_lstm_short = neurons_lstm[neurons_lstm>0]
+        neurons_dense_short = neurons_dense[neurons_dense>0]
 
         res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
 
@@ -1589,7 +1591,7 @@ class MyProblem(LSTM_model, Problem):
         times_val = res['time_test']
 
         if self.type == 'regression':
-            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,batch,
+            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm_short, neurons_dense_short,batch,
                                                           self.mask, self.mask_value, self.repeat_vector)
             # Train the model
             zz = 0
@@ -1725,7 +1727,7 @@ class MyProblem(LSTM_model, Problem):
 
                     zz += 1
 
-            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 50000, 8)
+            complexity = MyProblem.complex(neurons_lstm_short,neurons_dense_short, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
 
