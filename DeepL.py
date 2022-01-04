@@ -1588,7 +1588,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         #layers_neurons = len(neurons_dense)
         neurons_lstm_short = neurons_lstm[neurons_lstm>0]
         neurons_dense_short = neurons_dense[neurons_dense>0]
-
+        print('no problems with neurons size1!!!!')
         res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
 
         x_test = np.array(res['x_test'])
@@ -1604,7 +1604,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm_short, neurons_dense_short,batch,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 
-            print('no problems with neurons size!!!!')
+            print('no problems with neurons size2!!!!')
             # Train the model
             zz = 0
             predictions = []
