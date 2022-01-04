@@ -1427,11 +1427,11 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,parallelization=('starmap', pool.starmap))
+                                self.scalar_x,self.dropout,med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,parallelization=('starmap', pool.starmap))
         else:
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary)
+                                self.scalar_x, self.dropout,med, contador,self.data.shape[1],l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
@@ -1515,9 +1515,11 @@ class MyProblem(LSTM_model, Problem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
 
-    def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data, med, contador,
+    def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
         self.data = data
+        self.scalar_x = scalar_x
+        self.dropout = dropout
         self.med = med
         self.contador = contador
         self.l_lstm = l_lstm
@@ -1530,7 +1532,7 @@ class MyProblem(LSTM_model, Problem):
 
 
         #igual tengo que meter todos los argumentos de LSTM_model
-        super().__init__(horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type)
+        super().__init__(data,horizont,scalar_y,scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type)
         Problem.__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1592,7 +1594,7 @@ class MyProblem(LSTM_model, Problem):
 
         if self.type == 'regression':
             model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm_short, neurons_dense_short,batch,
-                                                          self.mask, self.mask_value, self.repeat_vector)
+                                                          self.mask, self.mask_value, self.repeat_vector,self.dropout)
             # Train the model
             zz = 0
             predictions = []
