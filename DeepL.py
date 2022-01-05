@@ -1591,7 +1591,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         :param q:operator to differentiate when there is parallelisation and the results must be a queue
         :return: cv(rmse) and complexity of the model tested
         '''
-        name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, pacience)))
+        name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, np.array([pacience]))))
 
         try:
             a0, a1 = dictionary[name1]
