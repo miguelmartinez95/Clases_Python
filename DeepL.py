@@ -574,6 +574,12 @@ class LSTM_model(DL):
 
         CAREFUL: with masking at least two lstm layers are required
         '''
+
+        if any(neurons_lstm==0):
+            neurons_lstm = neurons_lstm[neurons_lstm>0]
+        if any(neurons_dense==0):
+            neurons_dense = neurons_dense[neurons_dense>0]
+
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
 
@@ -1547,11 +1553,11 @@ class MyProblem(LSTM_model, ElementwiseProblem):
 
         #igual tengo que meter todos los argumentos de LSTM_model
         LSTM_model.__init__(self,data,horizont,scalar_y,scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type)
-        ElementwiseProblem.__init__(self,n_var=self.n_var,
+        ElementwiseProblem.__init__(self,n_var=n_var,
                          n_obj=2,
                          n_constr=1,
-                         xl=self.xlimit_inf,
-                         xu=self.xlimit_sup,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
                          type_var=np.int,
                          #elementwise_evaluation=True,
                          **kwargs)
@@ -1592,8 +1598,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         names = np.delete(names, self.pos_y)
         #layers_lstm = len(neurons_lstm)
         #layers_neurons = len(neurons_dense)
-        neurons_lstm_short = neurons_lstm[neurons_lstm>0]
-        neurons_dense_short = neurons_dense[neurons_dense>0]
+
 
         res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
 
@@ -1607,7 +1612,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         times_val = res['time_test']
 
         if self.type == 'regression':
-            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm_short, neurons_dense_short,batch,
+            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,batch,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 
 
@@ -1772,7 +1777,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             if x2[1] == 0 and x2[2] > 0:
                 a = np.array(2)
             else:
-                a = 0
+                a = np.array(0)
         elif len(x2)==4:
             if x2[1] == 0 and x2[2] > 0:
                 a = np.array(2)
@@ -1783,7 +1788,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             elif x2[2] == 0 and x2[3] > 0:
                 a = np.array(3)
             else:
-                a = 0
+                a = np.array(0)
         else:
             raise NameError('Option not considered')
 
@@ -1791,7 +1796,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             if x1[1] == 0 and x1[2] > 0:
                 a = np.array(2)
             else:
-                a = 0
+                a = np.array(0)
         elif len(x1)==4:
             if x1[1] == 0 and x1[2] > 0:
                 a = np.array(2)
@@ -1802,12 +1807,9 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             elif x1[2] == 0 and x1[3] > 0:
                 a = np.array(3)
             else:
-                a = 0
+                a = np.array(0)
         else:
             raise NameError('Option not considered')
-
-
-
 
         return a
 
@@ -1822,7 +1824,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]
 
-        f1, f2 = MyProblem.cv_nsga(5,2, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = MyProblem.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
 
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
