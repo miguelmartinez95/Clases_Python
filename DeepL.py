@@ -1537,9 +1537,9 @@ class MyProblem(LSTM_model, ElementwiseProblem):
 
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
-        self.data = data
-        self.scalar_x = scalar_x
-        self.dropout = dropout
+        #self.data = data
+        #self.scalar_x = scalar_x
+        #self.dropout = dropout
         self.med = med
         self.contador = contador
         self.l_lstm = l_lstm
