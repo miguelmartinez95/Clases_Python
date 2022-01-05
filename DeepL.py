@@ -2110,7 +2110,7 @@ class MyProblem(ElementwiseProblem):
             complexity = MyProblem.complex(neurons_lstm,neurons_dense, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
-            return res_final['csv'], res_final['complexity']
+            return res_final['cvs'], res_final['complexity']
 #
 #
         #    z = Queue()
