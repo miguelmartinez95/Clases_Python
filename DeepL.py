@@ -1879,7 +1879,7 @@ class MyProblem(ElementwiseProblem):
         self.pos_y = pos_y
         self.mask = mask
         self.mask_value = mask_value
-        self.nlags=n_lags
+        self.n_lags=n_lags
         self.inf_limit = inf_limit
         self.sup_limit = sup_limit
         self.repeat_vector = repeat_vector
