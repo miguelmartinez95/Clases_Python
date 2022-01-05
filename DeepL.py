@@ -1850,7 +1850,7 @@ from pymoo.core.problem import ElementwiseProblem
 #
 
 
-class MyProblem(LSTM_model, ElementwiseProblem):
+class MyProblem(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
 #
