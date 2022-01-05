@@ -1540,6 +1540,17 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         #self.data = data
         #self.scalar_x = scalar_x
         #self.dropout = dropout
+        #igual tengo que meter todos los argumentos de LSTM_model
+        LSTM_model.__init__(self,data,horizont,scalar_y,scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type)
+        ElementwiseProblem.__init__(self,n_var=n_var,
+                         n_obj=2,
+                         n_constr=1,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
+                         type_var=np.int,
+                         #elementwise_evaluation=True,
+                         **kwargs)
+
         self.med = med
         self.contador = contador
         self.l_lstm = l_lstm
@@ -1551,16 +1562,6 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         self.dictionary  =dictionary
 
 
-        #igual tengo que meter todos los argumentos de LSTM_model
-        LSTM_model.__init__(self,data,horizont,scalar_y,scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type)
-        ElementwiseProblem.__init__(self,n_var=n_var,
-                         n_obj=2,
-                         n_constr=1,
-                         xl=xlimit_inf,
-                         xu=xlimit_sup,
-                         type_var=np.int,
-                         #elementwise_evaluation=True,
-                         **kwargs)
 
 
 
