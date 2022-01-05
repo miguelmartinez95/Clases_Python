@@ -1957,10 +1957,10 @@ class MyProblem(ElementwiseProblem):
         y_train = np.array(res['y_train'])
         y_val = np.array(res['y_val'])
         #
-        times_val = res['time_test']
+        times_val = res['time_val']
 #
         if self.type == 'regression':
-            model = self.__class__.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,batch,
+            model = LSTM_model.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,batch,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 #
 #
@@ -1972,10 +1972,10 @@ class MyProblem(ElementwiseProblem):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
-                    model = self.__class__.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
+                    model = LSTM_model.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
                                                        batch)
 #
-                    res = self.__class__.predict_model(model, self.n_lags, x_val[z],batch)
+                    res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
                     y_pred = res['y_pred']
 #
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
@@ -1990,7 +1990,7 @@ class MyProblem(ElementwiseProblem):
                         y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                         y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 #
-                        res = super().fix_values_0(times_val[z],
+                        res = DL.fix_values_0(times_val[z],
                                                    self.zero_problem, self.limits)
 #
                         index_hour = res['indexes_out']
@@ -2035,7 +2035,7 @@ class MyProblem(ElementwiseProblem):
                         y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                         y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 #
-                        res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+                        res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
                                                    self.zero_problem, self.limits)
 #
                         index_rad = res['indexes_out']
