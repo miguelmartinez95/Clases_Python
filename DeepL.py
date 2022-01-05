@@ -1601,6 +1601,10 @@ class MyProblem(LSTM_model, ElementwiseProblem):
             pass
         cvs = [0 for x in range(rep*2)]
 
+        print(type(self.data))
+        print(self.data.head())
+
+
         names = self.data.columns
         names = np.delete(names, self.pos_y)
         #layers_lstm = len(neurons_lstm)
