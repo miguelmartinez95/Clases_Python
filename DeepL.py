@@ -1427,7 +1427,7 @@ class LSTM_model(DL):
                             x1[r]=0
                     elif len(r)>1:
                         x1[r] = 0
-                    x=np.concatenate(x1,x[len(x)-1])
+                    x=np.concatenate((x1,x[len(x)-1]))
 
 
                 return pop
