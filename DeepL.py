@@ -1432,7 +1432,6 @@ class LSTM_model(DL):
 
                 return pop
 
-        print('no problems with neurons size1!!!!')
 
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.factory import get_problem, get_visualization, get_decomposition
@@ -1440,6 +1439,7 @@ class LSTM_model(DL):
         from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
         from pymoo.optimize import minimize
 
+        print('DATA is', type(self.data))
 
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
@@ -1458,7 +1458,6 @@ class LSTM_model(DL):
                           # mutation=0.1)
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1))
-        print('no problems with neurons size2!!!!')
 
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size/2), nth_gen=int(pop_size/4), n_max_gen=None,
@@ -1856,6 +1855,15 @@ class MyProblem(ElementwiseProblem):
 #
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
+        super().__init__(n_var=n_var,
+                         n_obj=2,
+                         n_constr=1,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
+                         type_var=np.int,
+                         # elementwise_evaluation=True,
+                         **kwargs)
+        #
         #self.data = data
         #self.scalar_x = scalar_x
         #self.dropout = dropout
@@ -1887,15 +1895,7 @@ class MyProblem(ElementwiseProblem):
         self.n_var = n_var
         self.dictionary  =dictionary
 #
-        super().__init__(n_var=n_var,
-                         n_obj=2,
-                         n_constr=1,
-                         xl=xlimit_inf,
-                         xu=xlimit_sup,
-                         type_var=np.int,
-                         #elementwise_evaluation=True,
-                         **kwargs)
-#
+
 #
 #
 #
