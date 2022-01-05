@@ -1504,24 +1504,24 @@ class LSTM_model(DL):
         :param parallel: how many processes are parallelise
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
+
+      #  if parallel<2:
         manager = multiprocessing.Manager()
-        if parallel<2:
-            manager = multiprocessing.Manager()
-            dictionary = manager.dict()
-            contador = manager.list()
-            contador.append(0)
-            obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary)
+        dictionary = manager.dict()
+        contador = manager.list()
+        contador.append(0)
+        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary)
 
-        elif parallel>=2:
-            manager = multiprocessing.Manager()
-            dictionary = manager.dict()
-            contador = manager.list()
-            contador.append(0)
-            obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary)
+ #      elif parallel>=2:
+ #          manager = multiprocessing.Manager()
+ #          dictionary = manager.dict()
+ #          contador = manager.list()
+ #          contador.append(0)
+ #          obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary)
 
 
-        else:
-            raise NameError('Option not considered')
+        #else:
+        #    raise NameError('Option not considered')
 
 
         print('Process finished!!!')
@@ -1894,13 +1894,7 @@ class MyProblem(ElementwiseProblem):
         self.xlimit_sup = xlimit_sup
         self.n_var = n_var
         self.dictionary  =dictionary
-#
 
-#
-#
-#
-#
-#
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
         '''
