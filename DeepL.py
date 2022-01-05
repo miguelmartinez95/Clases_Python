@@ -1571,6 +1571,12 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         :param max_H: maximum hidden layers in the network
         :return: complexity of the model
         '''
+        if any(neurons_lstm == 0):
+            neurons_lstm = neurons_lstm[neurons_lstm > 0]
+        if any(neurons_dense == 0):
+            neurons_dense = neurons_dense[neurons_dense > 0]
+
+
         u = len(neurons_lstm) + len(neurons_dense)
 
         F = 0.25 * (u / max_H) + 0.75 * np.sum(np.concatenate((neurons_lstm, neurons_dense))) / max_N
@@ -1750,7 +1756,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
 
                     zz += 1
 
-            complexity = MyProblem.complex(neurons_lstm_short,neurons_dense_short, 50000, 8)
+            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
 
@@ -1824,7 +1830,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]
 
-        f1, f2 = MyProblem.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
 
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
