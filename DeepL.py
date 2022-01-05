@@ -1980,31 +1980,41 @@ class MyProblem(ElementwiseProblem):
 #
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
 #
-                    y_real = y_val[z]
-                    y_real2 = y_val[z].copy()
+                    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    y_real2 = y_real.copy()
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 #
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
+                    y_predF = y_pred.copy()
+                    y_predF = pd.DataFrame(y_predF)
+                    y_predF.index = times_val[z]
+                    y_realF = y_real.copy()
+                    y_realF = pd.DataFrame(y_realF)
+                    y_realF.index = times_val[z]
+
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
-#
+
                         y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                         y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-#
+
                         res = DL.fix_values_0(times_val[z],
                                                    self.zero_problem, self.limits)
-#
+
                         index_hour = res['indexes_out']
-#
-                        y_predF = y_pred.copy()
-                        y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_val[z]
-                        y_realF = y_real.copy()
-                        y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = y_predF.index
-#
+
+                        # y_predF = y_pred.copy()
+                        # y_predF = pd.DataFrame(y_predF)
+                        # y_predF.index = times_val[z]
+                        # y_realF = y_real.copy()
+                        # y_realF = pd.DataFrame(y_realF)
+                        # y_realF.index = times_val[z]
+
                         predictions.append(y_predF)
                         reales.append(y_realF)
-#
+
                         if len(index_hour) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_hour, 0)
                             y_real1 = np.delete(y_real, index_hour, 0)
@@ -2016,37 +2026,31 @@ class MyProblem(ElementwiseProblem):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-#
+
                         # Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
-#
+
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-#
-                        cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-#
-#
+
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cvs[zz] = 9999
+
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
                         place = np.where(names == 'radiation')[0]
                         scalar_rad = self.scalar_x['radiation']
-#
-                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-#
+
                         res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
                                                    self.zero_problem, self.limits)
-#
+
                         index_rad = res['indexes_out']
-#
-                        y_predF = y_pred.copy()
-                        y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_val[z]
-                        y_realF = y_real.copy()
-                        y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = y_predF.index
-#
+
                         predictions.append(y_predF)
                         reales.append(y_realF)
                         if len(index_rad) > 0 and self.horizont == 0:
@@ -2060,43 +2064,48 @@ class MyProblem(ElementwiseProblem):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-#
+
                         # Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
-#
+
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-#
-                        cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-#
+
+                        print(y_predF.shape)
+                        print(y_pred1.shape)
+
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cvs[zz] = 9999
+
                     else:
-                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-#
+
+                        predictions.append(y_predF)
+                        reales.append(y_realF)
+
                         # Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
-#
+
                         if len(o) > 0:
                             y_pred2 = np.delete(y_pred, o, 0)
                             y_real2 = np.delete(y_real, o, 0)
                         else:
                             y_pred2 = y_pred
                             y_real2 = y_real
-#
-                        y_predF = y_pred.copy()
-                        y_predF = pd.DataFrame(y_predF)
-                        y_predF.index = times_val[z]
-                        y_realF = y_real.copy()
-                        y_realF = pd.DataFrame(y_realF)
-                        y_realF.index = y_predF.index
-#
-                        predictions.append(y_predF)
-                        reales.append(y_realF)
-#
-                        cvs[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-#
-                    zz += 1
+
+                        if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+                            cvs[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cvs[zz] = 9999
+
+
+                zz += 1
 #
             complexity = MyProblem.complex(neurons_lstm,neurons_dense, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
