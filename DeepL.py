@@ -1602,7 +1602,7 @@ class MyProblem(LSTM_model, ElementwiseProblem):
         cvs = [0 for x in range(rep*2)]
 
         print(type(self.data))
-        print(self.data.head())
+        print(self.data)
 
 
         names = self.data.columns
