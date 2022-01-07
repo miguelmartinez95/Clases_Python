@@ -1528,18 +1528,21 @@ class MyRepair(Repair):
             x1 = xx[range(self.l_lstm)]
             x2 = xx[range(self.l_lstm, self.l_lstm + self.l_dense)]
             r_lstm, r_dense = MyProblem.bool4(xx, self.l_lstm, self.l_dense)
-            if r_lstm == 0:
-                pass
-            elif len(r_lstm) == 1:
-                if r_lstm != 0:
+
+
+            if len(r_lstm) == 1:
+                if r_lstm == 0:
+                    pass
+                elif r_lstm != 0:
                     x1[r_lstm] = 0
             elif len(r_lstm) > 1:
                 x1[r_lstm] = 0
 
-            if r_dense == 0:
-                pass
-            elif len(r_dense) == 1:
-                if r_dense != 0:
+
+            if len(r_dense) == 1:
+                if r_dense == 0:
+                    pass
+                elif r_dense != 0:
                     x2[r_dense] = 0
             elif len(r_dense) > 1:
                 x2[r_dense] = 0
