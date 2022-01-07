@@ -646,6 +646,7 @@ class LSTM_model(DL):
     @staticmethod
     def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch):
         from pathlib import Path
+        import random
 
         '''
         :param model: model architecture built
@@ -658,7 +659,7 @@ class LSTM_model(DL):
 
         h_path = Path('./best_models')
         h_path.mkdir(exist_ok=True)
-        h = h_path / f'best_{np.randint(0, 1000000)}_model.h5'
+        h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
 
         # Checkpoitn callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
