@@ -1386,6 +1386,14 @@ class MyProblem(ElementwiseProblem):
 #
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
+        super().__init__(n_var=n_var,
+                         n_obj=2,
+                         n_constr=1,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
+                         type_var=np.int,
+                         #elementwise_evaluation=True,
+                         **kwargs)
 
         self.data=data
         self.horizont = horizont
@@ -1411,15 +1419,7 @@ class MyProblem(ElementwiseProblem):
         self.xlimit_inf = xlimit_inf
         self.xlimit_sup = xlimit_sup
         self.n_var = n_var
-        self.dictionary  =dictionary
-        super().__init__(n_var=n_var,
-                         n_obj=2,
-                         n_constr=1,
-                         xl=xlimit_inf,
-                         xu=xlimit_sup,
-                         type_var=np.int,
-                         #elementwise_evaluation=True,
-                         **kwargs)
+        self.dictionary =dictionary
 
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
