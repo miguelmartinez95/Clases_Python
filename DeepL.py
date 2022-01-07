@@ -1450,6 +1450,7 @@ class LSTM_model(DL):
         from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
         from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
         from pymoo.optimize import minimize
+        from pymoo.core.problem import starmap_parallelized_eval
 
         print('DATA is', type(self.data))
 
@@ -1457,7 +1458,7 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,parallelization=('starmap', pool.starmap))
+                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
@@ -1873,7 +1874,7 @@ class MyProblem(ElementwiseProblem):
                          xl=xlimit_inf,
                          xu=xlimit_sup,
                          type_var=np.int,
-                         elementwise_evaluation=True,
+                         #elementwise_evaluation=True,
                          **kwargs)
         #
         #self.data = data
