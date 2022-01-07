@@ -1430,7 +1430,7 @@ class LSTM_model(DL):
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary)
 
-        algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(), eliminate_duplicates=True,
+        algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           # sampling =g,
                           # crossover=0.9,
