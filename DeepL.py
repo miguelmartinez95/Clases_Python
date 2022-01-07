@@ -1375,6 +1375,7 @@ class MyRepair(Repair):
                 x2[r_dense] = 0
             x = np.concatenate((x1, x2, np.array([x[len(x) - 1]])))
             pop[k].X = x
+
         return pop
 
 
@@ -1427,6 +1428,7 @@ class MyProblem(ElementwiseProblem):
         :param max_H: maximum hidden layers in the network
         :return: complexity of the model
         '''
+
         if any(neurons_lstm == 0):
             neurons_lstm = neurons_lstm[neurons_lstm > 0]
         if any(neurons_dense == 0):
@@ -1697,7 +1699,7 @@ class MyProblem(ElementwiseProblem):
 
 
 
-        f1, f2 = self.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = MyProblem.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
