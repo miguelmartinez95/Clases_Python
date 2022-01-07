@@ -1694,12 +1694,14 @@ class MyProblem(ElementwiseProblem):
         n_lstm = x[range(self.l_lstm)]*10
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*10
         n_pacience = x[len(x)-1]*10
-#
-        f1, f2 = self.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
-#
+
         print(
             '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
+
+        f1, f2 = self.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+#
+
         self.contador[0] += 1
 #
         out["F"] = np.column_stack([f1, f2])
