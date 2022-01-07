@@ -1418,16 +1418,28 @@ class LSTM_model(DL):
             def _do(self, problem, pop, **kwargs):
                 for k in range(len(pop)):
                     x = pop[k].X
-                    x1 = x[range(l_lstm+l_dense)]
-                    r=MyProblem.bool4(x1,l_lstm, l_dense)
-                    if r == 0:
+                    xx = x[range(l_lstm+l_dense)]
+                    x1 = xx[range(l_lstm)]
+                    x2 = xx[range(l_lstm,l_lstm+l_dense)]
+                    r_lstm, r_dense=MyProblem.bool4(xx,l_lstm, l_dense)
+                    if r_lstm == 0:
                         pass
-                    elif len(r)==1:
-                        if r!=0:
-                            x1[r]=0
-                    elif len(r)>1:
-                        x1[r] = 0
-                    x=np.concatenate((x1,np.array([x[len(x)-1]])))
+                    elif len(r_lstm)==1:
+                        if r_lstm!=0:
+                            x1[r_lstm]=0
+                    elif len(r_lstm)>1:
+                        x1[r_lstm] = 0
+
+                    if r_dense == 0:
+                        pass
+                    elif len(r_dense)==1:
+                        if r_dense!=0:
+                            x2[r_dense]=0
+                    elif len(r_dense)>1:
+                        x2[r_dense] = 0
+
+                    x=np.concatenate((x1,x2,np.array([x[len(x)-1]])))
+                    pop[k].X = x
 
 
                 return pop
@@ -2126,44 +2138,56 @@ class MyProblem(ElementwiseProblem):
         x2 = x[range(l_lstm, l_lstm+l_dense)]
 #
         if len(x2)==3:
-            if x2[1] == 0 and x2[2] > 0:
-                a = np.array(2)
+            if x2[0] == 0 and x2[1] > 0:
+                a_dense = np.array(1)
+                if x2[2] > 0:
+                    a_dense = np.array([1,2])
+            elif x2[1] == 0 and x2[2] > 0:
+                a_dense = np.array(2)
             else:
-                a = np.array(0)
+                a_dense = np.array(0)
         elif len(x2)==4:
-            if x2[1] == 0 and x2[2] > 0:
-                a = np.array(2)
+            if x2[0] == 0 and x2[1] > 0:
+                a_dense = np.array(1)
+                if x2[2] > 0:
+                    a_dense = np.array([1,2])
+            elif x2[0] == 0 and x2[2] > 0:
+                a_dense = np.array(2)
+            elif x2[0] == 0 and x2[3] > 0:
+                a_dense = np.array(3)
+            elif x2[1] == 0 and x2[2] > 0:
+                a_dense = np.array(2)
                 if x2[3] > 0:
-                    a = np.array([2,3])
+                    a_dense = np.array([2,3])
             elif x2[1] == 0 and x2[3] > 0:
-                a = np.array(3)
+                a_dense = np.array(3)
             elif x2[2] == 0 and x2[3] > 0:
-                a = np.array(3)
+                a_dense = np.array(3)
             else:
-                a = np.array(0)
+                a_dense = np.array(0)
         else:
             raise NameError('Option not considered')
 #
         if len(x1)==3:
             if x1[1] == 0 and x1[2] > 0:
-                a = np.array(2)
+                a_lstm = np.array(2)
             else:
-                a = np.array(0)
+                a_lstm = np.array(0)
         elif len(x1)==4:
             if x1[1] == 0 and x1[2] > 0:
-                a = np.array(2)
+                a_lstm = np.array(2)
                 if x2[3] > 0:
-                    a = np.array([2, 3])
+                    a_lstm = np.array([2, 3])
             elif x1[1] == 0 and x1[3] > 0:
-                a=np.array(3)
+                a_lstm=np.array(3)
             elif x1[2] == 0 and x1[3] > 0:
-                a = np.array(3)
+                a_lstm = np.array(3)
             else:
-                a = np.array(0)
+                a_lstm = np.array(0)
         else:
             raise NameError('Option not considered')
 #
-        return a
+        return a_lstm, a_dense
 #
 #
     def _evaluate(self, x, out, *args, **kwargs):
