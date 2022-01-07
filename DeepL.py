@@ -645,6 +645,8 @@ class LSTM_model(DL):
 
     @staticmethod
     def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch):
+        from pathlib import Path
+
         '''
         :param model: model architecture built
         :return: model trained
@@ -653,9 +655,14 @@ class LSTM_model(DL):
         print(train_y1.shape)
         print(test_x1.shape)
         print(test_y1.shape)
+
+        h_path = Path('./best_models')
+        h_path.mkdir(exist_ok=True)
+        h = h_path / f'best_{np.randint(0, 1000000)}_model.h5'
+
         # Checkpoitn callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-        mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+        mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
         # Train the model
         model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
                            callbacks=[es, mc])
