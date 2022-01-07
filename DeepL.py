@@ -1395,8 +1395,6 @@ class LSTM_model(DL):
         res = {'errors': results, 'options': options, 'best': top_results}
         return res
 
-
-
     def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary):
         '''
         :param med:
@@ -1412,38 +1410,6 @@ class LSTM_model(DL):
         :param dictionary: dictionary to stored the options tested
         :return: options in Pareto front, the optimal selection and the total results
         '''
-        from pymoo.core.repair import Repair
-        class MyRepair(Repair):
-
-            def _do(self, problem, pop, **kwargs):
-                for k in range(len(pop)):
-                    x = pop[k].X
-                    xx = x[range(l_lstm+l_dense)]
-                    x1 = xx[range(l_lstm)]
-                    x2 = xx[range(l_lstm,l_lstm+l_dense)]
-                    r_lstm, r_dense=MyProblem.bool4(xx,l_lstm, l_dense)
-                    if r_lstm == 0:
-                        pass
-                    elif len(r_lstm)==1:
-                        if r_lstm!=0:
-                            x1[r_lstm]=0
-                    elif len(r_lstm)>1:
-                        x1[r_lstm] = 0
-
-                    if r_dense == 0:
-                        pass
-                    elif len(r_dense)==1:
-                        if r_dense!=0:
-                            x2[r_dense]=0
-                    elif len(r_dense)>1:
-                        x2[r_dense] = 0
-
-                    x=np.concatenate((x1,x2,np.array([x[len(x)-1]])))
-                    pop[k].X = x
-
-
-                return pop
-
 
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.factory import get_problem, get_visualization, get_decomposition
@@ -1541,6 +1507,39 @@ class LSTM_model(DL):
         print('The selection is', x_obj, 'with a result of', obj)
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
         return res
+
+from pymoo.core.repair import Repair
+class MyRepair(Repair):
+    def __init__(self,l_lstm, l_dense):
+        self.l_lstm=l_lstm
+        self.l_dense = l_dense
+
+    def _do(self, problem, pop, **kwargs):
+        for k in range(len(pop)):
+            x = pop[k].X
+            xx = x[range(self.l_lstm + self.l_dense)]
+            x1 = xx[range(self.l_lstm)]
+            x2 = xx[range(self.l_lstm, self.l_lstm + self.l_dense)]
+            r_lstm, r_dense = MyProblem.bool4(xx, self.l_lstm, self.l_dense)
+            if r_lstm == 0:
+                pass
+            elif len(r_lstm) == 1:
+                if r_lstm != 0:
+                    x1[r_lstm] = 0
+            elif len(r_lstm) > 1:
+                x1[r_lstm] = 0
+
+            if r_dense == 0:
+                pass
+            elif len(r_dense) == 1:
+                if r_dense != 0:
+                    x2[r_dense] = 0
+            elif len(r_dense) > 1:
+                x2[r_dense] = 0
+            x = np.concatenate((x1, x2, np.array([x[len(x) - 1]])))
+            pop[k].X = x
+        return pop
+
 
 from pymoo.core.problem import ElementwiseProblem
 #class MyProblem(LSTM_model, ElementwiseProblem):
