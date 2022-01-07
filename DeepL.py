@@ -1385,14 +1385,7 @@ class MyProblem(ElementwiseProblem):
 #
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
-        super().__init__(n_var=n_var,
-                         n_obj=2,
-                         n_constr=1,
-                         xl=xlimit_inf,
-                         xu=xlimit_sup,
-                         type_var=np.int,
-                         #elementwise_evaluation=True,
-                         **kwargs)
+
         self.data=data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -1418,6 +1411,14 @@ class MyProblem(ElementwiseProblem):
         self.xlimit_sup = xlimit_sup
         self.n_var = n_var
         self.dictionary  =dictionary
+        super().__init__(n_var=n_var,
+                         n_obj=2,
+                         n_constr=1,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
+                         type_var=np.int,
+                         #elementwise_evaluation=True,
+                         **kwargs)
 
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
@@ -1697,7 +1698,7 @@ class MyProblem(ElementwiseProblem):
         f1, f2 = self.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
 #
         print(
-            '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
+            '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
         self.contador[0] += 1
 #
