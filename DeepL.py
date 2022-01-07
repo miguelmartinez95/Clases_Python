@@ -2140,51 +2140,51 @@ class MyProblem(ElementwiseProblem):
 #
         if len(x2)==3:
             if x2[0] == 0 and x2[1] > 0:
-                a_dense = np.array(1)
+                a_dense = np.array([1])
                 if x2[2] > 0:
                     a_dense = np.array([1,2])
             elif x2[1] == 0 and x2[2] > 0:
-                a_dense = np.array(2)
+                a_dense = np.array([2])
             else:
-                a_dense = np.array(0)
+                a_dense = np.array([0])
         elif len(x2)==4:
             if x2[0] == 0 and x2[1] > 0:
-                a_dense = np.array(1)
+                a_dense = np.array([1])
                 if x2[2] > 0:
                     a_dense = np.array([1,2])
             elif x2[0] == 0 and x2[2] > 0:
-                a_dense = np.array(2)
+                a_dense = np.array([2])
             elif x2[0] == 0 and x2[3] > 0:
-                a_dense = np.array(3)
+                a_dense = np.array([3])
             elif x2[1] == 0 and x2[2] > 0:
-                a_dense = np.array(2)
+                a_dense = np.array([2])
                 if x2[3] > 0:
                     a_dense = np.array([2,3])
             elif x2[1] == 0 and x2[3] > 0:
-                a_dense = np.array(3)
+                a_dense = np.array([3])
             elif x2[2] == 0 and x2[3] > 0:
-                a_dense = np.array(3)
+                a_dense = np.array([3])
             else:
-                a_dense = np.array(0)
+                a_dense = np.array([0])
         else:
             raise NameError('Option not considered')
 #
         if len(x1)==3:
             if x1[1] == 0 and x1[2] > 0:
-                a_lstm = np.array(2)
+                a_lstm = np.array([2])
             else:
-                a_lstm = np.array(0)
+                a_lstm = np.array([0])
         elif len(x1)==4:
             if x1[1] == 0 and x1[2] > 0:
-                a_lstm = np.array(2)
+                a_lstm = np.array([2])
                 if x2[3] > 0:
                     a_lstm = np.array([2, 3])
             elif x1[1] == 0 and x1[3] > 0:
-                a_lstm=np.array(3)
+                a_lstm=np.array([3])
             elif x1[2] == 0 and x1[3] > 0:
-                a_lstm = np.array(3)
+                a_lstm = np.array([3])
             else:
-                a_lstm = np.array(0)
+                a_lstm = np.array([0])
         else:
             raise NameError('Option not considered')
 #
