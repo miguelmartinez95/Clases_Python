@@ -1861,7 +1861,7 @@ class MyProblem(ElementwiseProblem):
                          xl=xlimit_inf,
                          xu=xlimit_sup,
                          type_var=np.int,
-                         # elementwise_evaluation=True,
+                         elementwise_evaluation=True,
                          **kwargs)
         #
         #self.data = data
