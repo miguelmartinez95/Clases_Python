@@ -507,40 +507,6 @@ class MLP(ML):
         x=x.reset_index(drop=True)
         y=y.reset_index(drop=True)
 
-#        ####################################3
-#        if self.zero_problem=='radiation':
-#    #        place = np.where(x.columns == 'radiation')[0]
-#            scalar_rad = self.scalar_x['radiation']
-#            res = super().fix_values_0(scalar_rad.inverse_transform(x.iloc[:, place]), self.zero_problem,
-#                                       self.limits)
-#
-#            index_rad = res['indexes_out']
-#            if len(index_rad)>0 and self.horizont==0:
-#                x=x.drop(x.index[index_rad], axis=0)
-#                y=y.drop(y.index[index_rad], axis=0)
-#            elif len(index_rad)>0 and self.horizont>0:
-#                x=x.drop(x.index[index_rad-self.horizont], axis=0)
-#                y=y.drop(y.index[index_rad-self.horizont], axis=0)
-#            else:
-#                pass
-#            print('*****Night-radiation fixed******')
-#        elif self.zero_problem=='schedule':
-#            res = super().fix_values_0(self.times, self.zero_problem, self.limits)
-#
-#            index_hour = res['indexes_out']
-#            if len(index_hour)>0 and self.horizont==0:
-#                x=x.drop(x.index[index_hour], axis=0)
-#                y=y.drop(y.index[index_hour], axis=0)
-#            elif len(index_hour)>0 and self.horizont>0:
-#                x=x.drop(x.index[index_hour-self.horizont], axis=0)
-#                y=y.drop(y.index[index_hour-self.horizont], axis=0)
-#            else:
-#                pass
-#            print('*****Night-schedule fixed******')
-#        else:
-#            pass
-#        ######################################3
-
         res = super().cv_division(x, y, fold)
 
         x_test =res['x_test']
@@ -704,14 +670,6 @@ class MLP(ML):
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
-               #if self.mask==True:
-               # #   o = np.where(y_real2 < self.inf_limit)[0]
-               #    if len(o)>0:
-               #        y_pred = np.delete(y_pred, o, 0)
-               #        y_real = np.delete(y_real, o, 0)
-               #cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
-               #rmse[z] = evals(y_pred, y_real).rmse()
-               #nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
             res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv, 'std_cv':np.std(cv),
                  'nmbe':nmbe, 'rmse':rmse,
@@ -755,7 +713,7 @@ class MLP(ML):
         options = {'neurons':[], 'pacience':[]}
         w=0
         contador= len(neurons) * len(paciences)-1
-        if parallel == 0:
+        if parallel <2:
             for t in range(len(neurons)):
                 print('##################### Option ####################', w)
                 neuron = neurons[t]
@@ -790,6 +748,7 @@ class MLP(ML):
                         processes.append(p)
                         z1 =z+ 1
                     elif z == parallel and w < contador:
+                        p.close()
                         for p in processes:
                             p.join()
                         for v in range(len(processes)):
@@ -797,19 +756,20 @@ class MLP(ML):
                             res2.append(q.get()[1])
 
                         processes = []
-                        multiprocessing.set_start_method('fork')
-                        #multiprocessing.set_start_method('spawn', force=True)
+                        # multiprocessing.set_start_method('fork')
+                        # multiprocessing.set_start_method('spawn')
                         q = Queue()
                         p = Process(target=self.cv_analysis,
                                     args=(fold, neuron, paciences[i], batch, mean_y,False, q))
                         p.start()
                         processes.append(p)
                         z1 = 1
-                    elif w >= contador:
+                    elif w == contador:
                         p = Process(target=self.cv_analysis,
                                     args=(fold, neuron, paciences[i], batch, mean_y,False, q))
                         p.start()
                         processes.append(p)
+                        p.close()
                         for p in processes:
                             p.join()
                             #res2.append(q.get())
@@ -868,16 +828,6 @@ class MLP(ML):
         :param dictionary: dictionary to stored the options tested
         :return: options in Pareto front, the optimal selection and the total results
         '''
-        from pymoo.core.repair import Repair
-        class MyRepair(Repair):
-
-            def _do(self, problem, pop, **kwargs):
-                for k in range(len(pop)):
-                    x = pop[k].X
-                    if MyProblem_mlp.bool4(x) == 1:
-                        x[2] = 0
-
-                return pop
 
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.factory import get_problem, get_visualization, get_decomposition
