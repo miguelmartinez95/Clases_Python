@@ -1441,7 +1441,7 @@ class MyProblem(ElementwiseProblem):
 #
         return F
 #
-    def cv_nsga(self,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
+    def cv_nsga(self,data,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param rep:repetition of the estimation in each subsample
@@ -1459,13 +1459,13 @@ class MyProblem(ElementwiseProblem):
             pass
         cvs = [0 for x in range(rep*2)]
 #
-        print(type(self.data))
-        print(self.data)
+        print(type(data))
+        print(data)
 #
 #
-        names = self.data.columns
+        names = data.columns
         names = np.delete(names, self.pos_y)
-        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
+        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags)
 #
         x_test = np.array(res['x_test'])
         x_train = np.array(res['x_train'])
@@ -1699,7 +1699,7 @@ class MyProblem(ElementwiseProblem):
 
 
 
-        f1, f2 = MyProblem.cv_nsga(5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_nsga(self.data,5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
