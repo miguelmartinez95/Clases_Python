@@ -1704,7 +1704,7 @@ class MyProblem(ElementwiseProblem):
 
 
 
-        f1, f2 = self.cv_nsga(self.data,5,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_nsga(self.data,10,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
