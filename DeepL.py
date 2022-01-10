@@ -1306,7 +1306,7 @@ class LSTM_model(DL):
             obj = res.F
             struct = res.X
 
-        print('The number of evaluations were', contador)
+        print('The number of evaluations were:', contador)
         if n_processes>1:
             pool.close()
         else:
@@ -1333,6 +1333,11 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary)
+
+        np.savetxt('objectives_selected.txt', obj)
+        np.savetxt('x_selected.txt', x_obj)
+        np.savetxt('objectives.txt', obj_total)
+        np.savetxt('x.txt', x_obj_total)
 
         print('Process finished!!!')
         print('The selection is', x_obj, 'with a result of', obj)
