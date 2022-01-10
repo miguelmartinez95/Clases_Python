@@ -1312,7 +1312,7 @@ class LSTM_model(DL):
         else:
             pass
 
-        return (obj_T, struct_T, obj, struct, res)
+        return (obj, struct,obj_T, struct_T,  res)
 
     def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel):
         '''
