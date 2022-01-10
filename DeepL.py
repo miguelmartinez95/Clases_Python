@@ -1306,7 +1306,7 @@ class LSTM_model(DL):
             obj = res.F
             struct = res.X
 
-        print(dictionary)
+        print('The number of evaluations were', contador)
         if n_processes>1:
             pool.close()
         else:
