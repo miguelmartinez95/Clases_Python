@@ -813,125 +813,6 @@ class MLP(ML):
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
 
-    def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
-                         xlimit_sup, dictionary):
-        '''
-        :param med:
-        :param contador: a operator to count the attempts
-        :param n_processes: how many processes are parallelise
-        :param l_dense:maximun number of layers dense
-        :param batch: batch size
-        :param pop_size: population size selected for NSGA2
-        :param tol: tolearance selected to terminate the process
-        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
-        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
-        :param dictionary: dictionary to stored the options tested
-        :return: options in Pareto front, the optimal selection and the total results
-        '''
-
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.factory import get_problem, get_visualization, get_decomposition
-        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
-        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
-        from pymoo.optimize import minimize
-
-        if n_processes > 1:
-            pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
-                                self.mask,
-                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-                                self.type, self.data,
-                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dictionary,
-                                parallelization=('starmap', pool.starmap))
-        else:
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
-                                self.mask,
-                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-                                self.type, self.data,
-                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup, dictionary)
-
-        algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(), eliminate_duplicates=True,
-                          sampling=get_sampling("int_random"),
-                          # sampling =g,
-                          # crossover=0.9,
-                          # mutation=0.1)
-                          crossover=get_crossover("int_sbx"),
-                          mutation=get_mutation("int_pm", prob=0.1))
-        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
-                                                              n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
-                                                              n_max_gen=None,
-                                                              n_max_evals=12000)
-
-        res = minimize(problem,
-                       algorithm,
-                       termination,
-                       # ("n_gen", 20),
-                       pf=True,
-                       verbose=True,
-                       seed=7)
-
-        if res.F.shape[0] > 1:
-            weights = np.array([0.75, 0.25])
-            I = get_decomposition("pbi").do(res.F, weights).argmin()
-            obj_T = res.F
-            struct_T = res.X
-            obj = res.F[I, :]
-            struct = res.X[I, :]
-        else:
-            obj_T = res.F
-            struct_T = res.X
-            obj = res.F
-            struct = res.X
-
-        print(dictionary)
-        if n_processes > 1:
-            pool.close()
-        else:
-            pass
-
-        return (obj_T, struct_T, obj, struct, res)
-
-    def optimal_search_nsga2(self, l_lstm, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
-        '''
-        :param l_lstm: maximun layers lstm
-        :param l_dense: maximun layers dense
-        :param batch: batch size
-        :param pop_size: population size for NSGA2
-        :param tol: tolerance to built the pareto front
-        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
-        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
-        :param parallel: how many processes are parallelise
-        :return: the options selected for the pareto front, the optimal selection and the total results
-        '''
-        manager = multiprocessing.Manager()
-        if parallel < 2:
-            manager = multiprocessing.Manager()
-            dictionary = manager.dict()
-            contador = manager.list()
-            contador.append(0)
-            obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_lstm, l_dense,
-                                                                            batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dictionary)
-
-        elif parallel >= 2:
-            manager = multiprocessing.Manager()
-            dictionary = manager.dict()
-            contador = manager.list()
-            contador.append(0)
-            obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_lstm, l_dense,
-                                                                            batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dictionary)
-
-
-        else:
-            raise NameError('Option not considered')
-
-        print('Process finished!!!')
-        print('The selection is', x_obj, 'with a result of', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
-        return res
-
-
     def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test):
         '''
         :param x_train: x to train
@@ -1105,6 +986,109 @@ class MLP(ML):
 
         return res
 
+    def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
+                         xlimit_sup, dictionary):
+        '''
+        :param med:
+        :param contador: a operator to count the attempts
+        :param n_processes: how many processes are parallelise
+        :param l_dense:maximun number of layers dense
+        :param batch: batch size
+        :param pop_size: population size selected for NSGA2
+        :param tol: tolearance selected to terminate the process
+        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
+        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
+        :param dictionary: dictionary to stored the options tested
+        :return: options in Pareto front, the optimal selection and the total results
+        '''
+
+        from pymoo.algorithms.moo.nsga2 import NSGA2
+        from pymoo.factory import get_problem, get_visualization, get_decomposition
+        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+        from pymoo.optimize import minimize
+        from pymoo.core.problem import starmap_parallelized_eval
+
+        if n_processes > 1:
+            pool = multiprocessing.Pool(n_processes)
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+                                self.type, self.data,
+                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+        else:
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+                                self.type, self.data,
+                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup, dictionary)
+
+        algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_dense), eliminate_duplicates=True,
+                          sampling=get_sampling("int_random"),
+                          # sampling =g,
+                          # crossover=0.9,
+                          # mutation=0.1)
+                          crossover=get_crossover("int_sbx"),
+                          mutation=get_mutation("int_pm", prob=0.1))
+        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+                                                              n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
+                                                              n_max_gen=None,
+                                                              n_max_evals=12000)
+
+        res = minimize(problem,
+                       algorithm,
+                       termination,
+                       # ("n_gen", 20),
+                       pf=True,
+                       verbose=True,
+                       seed=7)
+
+        if res.F.shape[0] > 1:
+            weights = np.array([0.75, 0.25])
+            I = get_decomposition("pbi").do(res.F, weights).argmin()
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F[I, :]
+            struct = res.X[I, :]
+        else:
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F
+            struct = res.X
+
+        print(dictionary)
+        if n_processes > 1:
+            pool.close()
+        else:
+            pass
+
+        return (obj_T, struct_T, obj, struct, res)
+
+    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
+        '''
+        :param l_dense: maximun layers dense
+        :param batch: batch size
+        :param pop_size: population size for NSGA2
+        :param tol: tolerance to built the pareto front
+        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
+        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param parallel: how many processes are parallelise
+        :return: the options selected for the pareto front, the optimal selection and the total results
+        '''
+
+        manager = multiprocessing.Manager()
+        dictionary = manager.dict()
+        contador = manager.list()
+        contador.append(0)
+        obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_dense,
+                                                                            batch, pop_size, tol, xlimit_inf,
+                                                                            xlimit_sup, dictionary)
+
+
+        print('Process finished!!!')
+        print('The selection is', x_obj, 'with a result of', obj)
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        return res
 
 from pymoo.core.problem import Problem
 class MyProblem_mlp(MLP, Problem):
@@ -1323,6 +1307,35 @@ class MyProblem_mlp(MLP, Problem):
             self.contador, '\n #########################')
         self.contador[0] += 1
         out["F"] = np.column_stack([f1, f2])
+
+
+from pymoo.core.repair import Repair
+class MyRepair(Repair):
+    def info(self):
+        print('Class defining a function to repair the possible error of the genetic algorithm. If a layer is zero the next layer cannot have positive neurons')
+
+    def __init__(self,l_dense):
+        self.l_dense = l_dense
+
+    def _do(self, problem, pop, **kwargs):
+        for k in range(len(pop)):
+            x = pop[k].X
+            x1 = x[range(self.l_dense)]
+            r_dense = MyProblem.bool4(x, self.l_dense)
+
+            if len(r_dense) == 1:
+                if r_dense == 0:
+                    pass
+                elif r_dense != 0:
+                    x1[r_dense] = 0
+            elif len(r_dense) > 1:
+                x1[r_dense] = 0
+            x = np.concatenate((x1, np.array([x[len(x) - 1]])))
+            pop[k].X = x
+
+        return pop
+
+
 
 
 
