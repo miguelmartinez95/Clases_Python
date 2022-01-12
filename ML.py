@@ -1078,7 +1078,7 @@ class MLP(ML):
             obj = res.F
             struct = res.X
 
-        print(dictionary)
+        print('The number of evaluations were:', contador)
         if n_processes > 1:
             pool.close()
         else:
@@ -1149,7 +1149,7 @@ class MyProblem_mlp(MLP, Problem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
     def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
-                 sup_limit, type, data,scalar_x,, med, contador,
+                 sup_limit, type, data,scalar_x, med, contador,
                  n_var,l_dense, batch, xlimit_inf, xlimit_sup, dictionary, **kwargs):
 
         super().__init__(n_var=n_var,
@@ -1199,7 +1199,7 @@ class MyProblem_mlp(MLP, Problem):
         F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
         return F
 
-    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y, dictionary, q=[]):
+    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param dictionary: dictionary to fill with the options tested
@@ -1366,12 +1366,6 @@ class MyProblem_mlp(MLP, Problem):
             return res_final['cvs'], res_final['complexity']
 
 
-            z = Queue()
-            if type(q) == type(z):
-                q.put(np.array([np.mean(cv), np.std(cv)]))
-            else:
-                return (res)
-
 
         else:
             data2 = self.data
@@ -1439,45 +1433,22 @@ class MyProblem_mlp(MLP, Problem):
     #
 
     def _evaluate(self, x, out, *args, **kwargs):
-        g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1))
+        g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1),self.l_dense)
         out["G"] = g1
         print(x)
 
         n_dense = x[range(self.l_dense)]
         n_pacience = x[len(x) - 1]
-        f1, f2 = MyProblem_mlp.cv_nsga(5, n_dense, n_pacience, self.batch, self.med, self.dictionary, dict())
+        f1, f2 = MyProblem_mlp.cv_nsga(self.data, 10, n_dense, n_pacience, self.batch, self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
             self.contador, '\n #########################')
         self.contador[0] += 1
+
         out["F"] = np.column_stack([f1, f2])
 
 
-from pymoo.core.repair import Repair
-class MyRepair(Repair):
-    def info(self):
-        print('Class defining a function to repair the possible error of the genetic algorithm. If a layer is zero the next layer cannot have positive neurons')
 
-    def __init__(self,l_dense):
-        self.l_dense = l_dense
-
-    def _do(self, problem, pop, **kwargs):
-        for k in range(len(pop)):
-            x = pop[k].X
-            x1 = x[range(self.l_dense)]
-            r_dense = MyProblem.bool4(x, self.l_dense)
-
-            if len(r_dense) == 1:
-                if r_dense == 0:
-                    pass
-                elif r_dense != 0:
-                    x1[r_dense] = 0
-            elif len(r_dense) > 1:
-                x1[r_dense] = 0
-            x = np.concatenate((x1, np.array([x[len(x) - 1]])))
-            pop[k].X = x
-
-        return pop
 
 
 
