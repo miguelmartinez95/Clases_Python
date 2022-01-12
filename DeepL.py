@@ -1599,9 +1599,6 @@ class MyProblem(ElementwiseProblem):
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
 
-                        print(y_predF.shape)
-                        print(y_pred1.shape)
-
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
 

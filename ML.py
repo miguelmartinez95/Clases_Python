@@ -1336,9 +1336,12 @@ class MyProblem_mlp(MLP, Problem):
                             y_pred1 = y_pred
                             y_real1 = y_real
 
-                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred1, y_real1).rmse()
-                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                        cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+
+                    else:
+                        print('Missing values are detected when we are evaluating the predictions')
+                        cvs[z] = 9999
                 else:
                     if self.mask == True:
                         # Outliers and missing values
@@ -1351,12 +1354,16 @@ class MyProblem_mlp(MLP, Problem):
                             y_pred2 = y_pred
                             y_real2 = y_real
 
-                    cv[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred2, y_real2).rmse()
-                    nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
+                    if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+                        cvs[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                    else:
+                        print('Missing values are detected when we are evaluating the predictions')
+                        cvs[z] = 9999
+
             complexity = MyProblem_mlp.complex_mlp(neurons, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
-            res = {'cv(rmse)': np.mean(cv), 'complexity': complexity}
+            res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
+            return res_final['cvs'], res_final['complexity']
 
 
             z = Queue()
