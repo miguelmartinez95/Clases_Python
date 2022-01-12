@@ -1039,10 +1039,17 @@ class LSTM_model(DL):
                 y_real1 = np.delete(y_real1, o, 0)
 
             if len(y_pred1)>0:
-                cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                rmse = evals(y_pred1, y_real1).rmse()
-                r2 = evals(y_pred1, y_real1).r2()
+                if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
+                    rmse = evals(y_pred1, y_real1).rmse()
+                    r2 = evals(y_pred1, y_real1).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
             else:
                 raise NameError('Empty prediction')
 
@@ -1077,10 +1084,17 @@ class LSTM_model(DL):
 
 
             if len(y_pred1)>0:
-                cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                rmse = evals(y_pred1, y_real1).rmse()
-                r2 = evals(y_pred1, y_real1).r2()
+                if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
+                    rmse = evals(y_pred1, y_real1).rmse()
+                    r2 = evals(y_pred1, y_real1).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
             else:
                 raise NameError('Empty prediction')
         else:
@@ -1089,10 +1103,17 @@ class LSTM_model(DL):
             y_pred = np.delete(y_pred, o, 0)
             y_real = np.delete(y_real, o, 0)
             if len(y_pred)>0:
-                cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                rmse = evals(y_pred, y_real).rmse()
-                nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                r2 = evals(y_pred, y_real).r2()
+                if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
+                    cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                    rmse = evals(y_pred, y_real).rmse()
+                    nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                    r2 = evals(y_pred, y_real).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
             else:
                 raise NameError('Empty prediction')
 
@@ -1316,7 +1337,7 @@ class LSTM_model(DL):
 
     def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel):
         '''
-        :param l_lstm: maximun layers lstm
+        :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
         :param batch: batch size
         :param pop_size: population size for NSGA2
@@ -1465,7 +1486,6 @@ class MyProblem(ElementwiseProblem):
         cvs = [0 for x in range(rep*2)]
 #
         print(type(data))
-        print(data)
 #
 #
         names = data.columns
@@ -1488,8 +1508,6 @@ class MyProblem(ElementwiseProblem):
 #
             # Train the model
             zz = 0
-            predictions = []
-            reales = []
             for z in range(2):
                 print('Fold number', z)
                 for zz2 in range(rep):
@@ -1519,16 +1537,11 @@ class MyProblem(ElementwiseProblem):
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
 
-                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
                         res = DL.fix_values_0(times_val[z],
                                                    self.zero_problem, self.limits)
 
                         index_hour = res['indexes_out']
 
-                        predictions.append(y_predF)
-                        reales.append(y_realF)
 
                         if len(index_hour) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_hour, 0)
@@ -1566,8 +1579,7 @@ class MyProblem(ElementwiseProblem):
 
                         index_rad = res['indexes_out']
 
-                        predictions.append(y_predF)
-                        reales.append(y_realF)
+
                         if len(index_rad) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
                             y_real1 = np.delete(y_real, index_rad, 0)
@@ -1599,8 +1611,6 @@ class MyProblem(ElementwiseProblem):
 
                     else:
 
-                        predictions.append(y_predF)
-                        reales.append(y_realF)
 
                         # Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
@@ -1678,7 +1688,7 @@ class MyProblem(ElementwiseProblem):
         elif len(x1)==4:
             if x1[1] == 0 and x1[2] > 0:
                 a_lstm = np.array([2])
-                if x2[3] > 0:
+                if x1[3] > 0:
                     a_lstm = np.array([2, 3])
             elif x1[1] == 0 and x1[3] > 0:
                 a_lstm=np.array([3])

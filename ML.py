@@ -572,7 +572,6 @@ class MLP(ML):
                     res = super().fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
 
-                    y_pred = res['data']
                     index_hour = res['indexes_out']
 
 
@@ -899,10 +898,17 @@ class MLP(ML):
                         y_real1 = np.delete(y_real1, o, 0)
 
             if len(y_pred1)>0:
-                cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                rmse = evals(y_pred1, y_real1).rmse()
-                r2 = evals(y_pred1, y_real1).r2()
+                if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
+                    rmse = evals(y_pred1, y_real1).rmse()
+                    r2 = evals(y_pred1, y_real1).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
             else:
                 raise NameError('Empty prediction')
 
@@ -950,10 +956,17 @@ class MLP(ML):
                         y_pred1 = np.delete(y_pred1, o, 0)
                         y_real1 = np.delete(y_real1, o, 0)
             if len(y_pred1)>0:
-                cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                rmse = evals(y_pred1, y_real1).rmse()
-                r2 = evals(y_pred1, y_real1).r2()
+                if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
+                    rmse = evals(y_pred1, y_real1).rmse()
+                    r2 = evals(y_pred1, y_real1).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
             else:
                 raise NameError('Empty prediction')
         else:
@@ -963,10 +976,17 @@ class MLP(ML):
                     y_pred = np.delete(y_pred, o, 0)
                     y_real = np.delete(y_real, o, 0)
             if len(y_pred)>0:
-                cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                rmse = evals(y_pred, y_real).rmse()
-                nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                r2 = evals(y_pred, y_real).r2()
+                if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
+                    cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                    rmse = evals(y_pred, y_real).rmse()
+                    nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                    r2 = evals(y_pred, y_real).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
             else:
                 raise NameError('Empty prediction')
 
@@ -1008,6 +1028,8 @@ class MLP(ML):
         from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
         from pymoo.optimize import minimize
         from pymoo.core.problem import starmap_parallelized_eval
+
+        print('DATA is', type(self.data))
 
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
@@ -1062,7 +1084,7 @@ class MLP(ML):
         else:
             pass
 
-        return (obj_T, struct_T, obj, struct, res)
+        return (obj, struct, obj_T, struct_T, res)
 
     def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
         '''
@@ -1085,19 +1107,74 @@ class MLP(ML):
                                                                             xlimit_sup, dictionary)
 
 
+        np.savetxt('objectives_selected.txt', obj)
+        np.savetxt('x_selected.txt', x_obj)
+        np.savetxt('objectives.txt', obj_total)
+        np.savetxt('x.txt', x_obj_total)
+
         print('Process finished!!!')
         print('The selection is', x_obj, 'with a result of', obj)
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
         return res
+
+from pymoo.core.repair import Repair
+class MyRepair(Repair):
+    def info(self):
+        print('Class defining a function to repair the possible error of the genetic algorithm. If a layer is zero the next layer cannot have positive neurons')
+
+    def __init__(self,l_dense):
+        self.l_dense = l_dense
+
+    def _do(self, problem, pop, **kwargs):
+        for k in range(len(pop)):
+            x = pop[k].X
+            x2 = x[range(self.l_dense)]
+            r_dense = MyProblem_mlp.bool4(x, self.l_dense)
+
+            if len(r_dense) == 1:
+                if r_dense == 0:
+                    pass
+                elif r_dense != 0:
+                    x2[r_dense] = 0
+            elif len(r_dense) > 1:
+                x2[r_dense] = 0
+            x = np.concatenate((x2, np.array([x[len(x) - 1]])))
+            pop[k].X = x
+
+        return pop
+
 
 from pymoo.core.problem import Problem
 class MyProblem_mlp(MLP, Problem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
     def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
-                 sup_limit, type, data, med, contador,
+                 sup_limit, type, data,scalar_x,, med, contador,
                  n_var,l_dense, batch, xlimit_inf, xlimit_sup, dictionary, **kwargs):
+
+        super().__init__(n_var=n_var,
+                         n_obj=2,
+                         n_constr=1,
+                         xl=xlimit_inf,
+                         xu=xlimit_sup,
+                         type_var=np.int,
+                         # elementwise_evaluation=True,
+                         **kwargs)
+
         self.data = data
+        self.horizont = horizont
+        self.scalar_y = scalar_y
+        self.scalar_x = scalar_x
+        self.zero_problem = zero_problem
+        self.limits = limits
+        self.times = times
+        self.pos_y = pos_y
+        self.mask = mask
+        self.mask_value = mask_value
+        self.n_lags = n_lags
+        self.inf_limit = inf_limit
+        self.sup_limit = sup_limit
+        self.type = type
         self.med = med
         self.contador = contador
         self.l_dense = l_dense
@@ -1108,16 +1185,6 @@ class MyProblem_mlp(MLP, Problem):
         self.dictionary = dictionary
 
 
-        super().__init__(horizont, scalar_y, zero_problem, limits, times, pos_y, n_lags,mask, mask_value,
-                            inf_limit, sup_limit, type)
-        Problem.__init__(n_var=n_var,
-                         n_obj=2,
-                         n_constr=1,
-                         xl=xlimit_inf,
-                         xu=xlimit_sup,
-                         type_var=np.int,
-                         elementwise_evaluation=True,
-                         **kwargs)
     @staticmethod
     def complex_mlp(neurons, max_N, max_H):
         '''
@@ -1125,11 +1192,14 @@ class MyProblem_mlp(MLP, Problem):
         :param max_H: maximum hidden layers in the network
         :return: complexity of the model
         '''
+        if any(neurons == 0):
+            neurons = neurons[neurons > 0]
+
         u = len(neurons)
         F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
         return F
 
-    def cv_nsga(self, fold, neurons, pacience, batch, mean_y, dictionary, q=[]):
+    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y, dictionary, q=[]):
         '''
         :param fold:assumed division of the sample for cv
         :param dictionary: dictionary to fill with the options tested
@@ -1143,44 +1213,14 @@ class MyProblem_mlp(MLP, Problem):
         except KeyError:
             pass
         cvs = [0 for x in range(fold)]
+        print(type(data))
+
         names = self.data.columns
         names = np.delete(names, self.pos_y)
+
         layers = len(neurons)
         y = self.data.iloc[:,self.pos_y]
         x =self.data.drop(self.data.columns[self.pos_y],axis=1)
-
-        if self.zero_problem == 'radiation':
-            place = np.where(x.columns == 'radiation')[0]
-            scalar_rad = self.scalar_x['radiation']
-            res = super().fix_values_0(scalar_rad.inverse_transform(x.iloc[:, place]), self.zero_problem,
-                                       self.limits)
-
-            index_rad = res['indexes_out']
-            if len(index_rad) > 0 and self.horizont == 0:
-                x = x.drop(x.index[index_rad], axis=0)
-                y = y.drop(y.index[index_rad], axis=0)
-            elif len(index_rad) > 0 and self.horizont > 0:
-                x = x.drop(x.index[index_rad - self.horizont], axis=0)
-                y = y.drop(y.index[index_rad - self.horizont], axis=0)
-            else:
-                pass
-            print('*****Night-radiation fixed******')
-        elif self.zero_problem == 'schedule':
-            res = super().fix_values_0(self.times, self.zero_problem, self.limits)
-
-            index_hour = res['indexes_out']
-            if len(index_hour) > 0 and self.horizont == 0:
-                x = x.drop(x.index[index_hour], axis=0)
-                y = y.drop(y.index[index_hour], axis=0)
-            elif len(index_hour) > 0 and self.horizont > 0:
-                x = x.drop(x.index[index_hour - self.horizont], axis=0)
-                y = y.drop(y.index[index_hour - self.horizont], axis=0)
-            else:
-                pass
-            print('*****Night-schedule fixed******')
-        else:
-            pass
-        ######################################3
 
         res = super().cv_division(x, y, fold)
 
@@ -1191,24 +1231,19 @@ class MyProblem_mlp(MLP, Problem):
         y_train = res['y_train']
         y_val = res['y_val']
         indexes = res['indexes']
+
         times_test = []
         tt = self.times
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
 
-
         if self.type == 'regression':
-            model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value)
-            # Train the model
+            model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value)
+
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             # Train the model
-            times = [0 for x in range(fold)]
-            cv = [0 for x in range(fold)]
-
-            predictions = []
-            reales = []
             for z in range(fold):
                 print('Fold number', z)
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
@@ -1217,13 +1252,13 @@ class MyProblem_mlp(MLP, Problem):
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
                 val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
-                time_start = time()
+
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
-                times[z] = round(time() - time_start, 3)
                 y_pred = model.predict(val_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                y_real = np.array(self.scalar_y.inverse_transform(val_y))
-                y_real2 = np.array(val_y.copy())
+                y_real = val_y
+                y_real2 = np.array(y_real.copy())
+                y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
                 y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                 y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
@@ -1234,16 +1269,91 @@ class MyProblem_mlp(MLP, Problem):
                 y_realF = y_real.copy()
                 y_realF = pd.DataFrame(y_realF)
                 y_realF.index = times_test[z]
-                predictions.append(y_predF)
-                reales.append(y_realF)
 
-                if self.mask == True:
-                    o = np.where(y_real2 < self.inf_limit)[0]
-                    if len(o) > 0:
-                        y_pred = np.delete(y_pred, o, 0)
-                        y_real = np.delete(y_real, o, 0)
-                cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
 
+                if self.zero_problem == 'schedule':
+                    print('*****Night-schedule fixed******')
+
+                    res = super().fix_values_0(times_test[z],
+                                               self.zero_problem, self.limits)
+
+                    index_hour = res['indexes_out']
+
+                    if len(index_hour) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_hour, 0)
+                        y_real1 = np.delete(y_real, index_hour, 0)
+                        y_real2 = np.delete(y_real2, index_hour, 0)
+                    elif len(index_hour) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                        y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                        y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real2 < self.inf_limit)[0]
+
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                        cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+
+
+                elif self.zero_problem == 'radiation':
+                    print('*****Night-radiation fixed******')
+                    place = np.where(names == 'radiation')[0]
+                    scalar_rad = self.scalar_x['radiation']
+
+                    res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
+                                               self.zero_problem, self.limits)
+
+                    index_rad = res['indexes_out']
+
+                    if len(index_rad) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_rad, 0)
+                        y_real1 = np.delete(y_real, index_rad, 0)
+                        y_real2 = np.delete(y_real2, index_rad, 0)
+                    elif len(index_rad) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
+                        y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
+                        y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real2 < self.inf_limit)[0]
+
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
+
+                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred1, y_real1).rmse()
+                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+                else:
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real2 < self.inf_limit)[0]
+
+                        if len(o) > 0:
+                            y_pred2 = np.delete(y_pred, o, 0)
+                            y_real2 = np.delete(y_real, o, 0)
+                        else:
+                            y_pred2 = y_pred
+                            y_real2 = y_real
+
+                    cv[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred2, y_real2).rmse()
+                    nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
             complexity = MyProblem_mlp.complex_mlp(neurons, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             res = {'cv(rmse)': np.mean(cv), 'complexity': complexity}
@@ -1268,31 +1378,58 @@ class MyProblem_mlp(MLP, Problem):
             # EN PROCESOO ALGÚN DíA !!!!!!!
 
             ##########################################################################
+
     @staticmethod
-    def bool4(x):
+    def bool4(x,l_dense):
         '''
         :x: neurons options
+        l_dense: number of values that represent dense neurons
         :return: 0 if the constraint is fulfilled
         '''
+        #
+        x2 = x[range(l_dense)]
 
-        if len(x) == 3:
-            if x[1] == 0 and x[2] > 0:
-                a = 1
+        #
+        if len(x2) == 2:
+            if x2[0] == 0 and x2[1] > 0:
+                a_dense = np.array([1])
             else:
-                a = 0
-        elif len(x) == 4:
-            if x[1] == 0 and x[2] > 0:
-                a = 1
-            elif x[1] == 0 and x[3] > 0:
-                a = 1
-            elif x[2] == 0 and x[3] > 0:
-                a = 1
+                a_dense = np.array([0])
+        elif len(x2) == 3:
+            if x2[0] == 0 and x2[1] > 0:
+                a_dense = np.array([1])
+                if x2[2] > 0:
+                    a_dense = np.array([1, 2])
+            elif x2[1] == 0 and x2[2] > 0:
+                a_dense = np.array([2])
             else:
-                a = 0
+                a_dense = np.array([0])
+        elif len(x2) == 4:
+            if x2[0] == 0 and x2[1] > 0:
+                a_dense = np.array([1])
+                if x2[2] > 0:
+                    a_dense = np.array([1, 2])
+            elif x2[0] == 0 and x2[2] > 0:
+                a_dense = np.array([2])
+            elif x2[0] == 0 and x2[3] > 0:
+                a_dense = np.array([3])
+            elif x2[1] == 0 and x2[2] > 0:
+                a_dense = np.array([2])
+                if x2[3] > 0:
+                    a_dense = np.array([2, 3])
+            elif x2[1] == 0 and x2[3] > 0:
+                a_dense = np.array([3])
+            elif x2[2] == 0 and x2[3] > 0:
+                a_dense = np.array([3])
+            else:
+                a_dense = np.array([0])
         else:
             raise NameError('Option not considered')
 
-        return (a)
+        #
+        return a_dense
+
+    #
 
     def _evaluate(self, x, out, *args, **kwargs):
         g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1))
