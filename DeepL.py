@@ -518,7 +518,7 @@ class LSTM_model(DL):
         return(np.array(X), np.array(y))
 
     @staticmethod
-    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask, mask_value, repeat_vector, dropout):
+    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout):
         '''
         :param mask: True or False
         :param repeat_vector: True or False
@@ -560,7 +560,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense,batch, mask,mask_value, repeat_vector,dropout):
+    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense, mask,mask_value, repeat_vector,dropout):
         '''
         :param mask: True or False
         :param repeat_vector: True or False
@@ -765,7 +765,7 @@ class LSTM_model(DL):
 
 
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, batch,self.mask,self.mask_value, self.repeat_vector, self.dropout)
+            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
             # Train the model
             times = [0 for x in range(rep*2)]
             cv = [0 for x in range(rep*2)]
@@ -968,12 +968,12 @@ class LSTM_model(DL):
         Instance to train model outside these classes
         '''
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense,batch, self.mask, self.mask_value, self.repeat_vector, self.dropout)
+            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
         else:
-            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,batch,self.mask, self.mask_value, self.repeat_vector, self.dropout)
+            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout)
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
@@ -1502,7 +1502,7 @@ class MyProblem(ElementwiseProblem):
         times_val = res['time_val']
 #
         if self.type == 'regression':
-            model = LSTM_model.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,batch,
+            model = LSTM_model.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 #
 #
