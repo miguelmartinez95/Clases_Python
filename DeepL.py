@@ -877,9 +877,9 @@ class LSTM_model(DL):
                             y_pred1 = np.delete(y_pred1,o,0)
                             y_real1 = np.delete(y_real1,o, 0)
 
-
-                        print(y_predF.shape)
-                        print(y_pred1.shape)
+                        if len(o)>0:
+                            y_pred1 = np.delete(y_pred1,o,0)
+                            y_real1 = np.delete(y_real1,o, 0)
 
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
@@ -1072,6 +1072,10 @@ class LSTM_model(DL):
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
                     y_real2 = np.delete(y_real2, index_rad, 0)
+                elif len(index_rad) > 0 and self.horizont > 0:
+                    y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
+                    y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
+                    y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
@@ -1081,7 +1085,6 @@ class LSTM_model(DL):
                 o = np.where(y_real2 < self.inf_limit)[0]
                 y_pred1 = np.delete(y_pred1, o, 0)
                 y_real1 = np.delete(y_real1, o, 0)
-
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
