@@ -236,6 +236,7 @@ class ML:
                 y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
                 y=pd.DataFrame(y.transpose())
 
+
                 print(gap)
 
                 if gap>0:
