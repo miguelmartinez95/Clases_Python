@@ -338,24 +338,38 @@ class ML:
         hour = self.times.hour
         start = np.where(hour == 0)[0][0]
 
-        if np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] > np.where(hour == 23)[0][
-            len(np.where(hour == 23)[0]) - 1]:
-            end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
-        elif np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] < np.where(hour == 23)[0][
-            len(np.where(hour == 23)[0]) - 1]:
-            if np.sum(hour[np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1]:np.where(hour == 23)[0][
-                len(np.where(hour == 23)[0]) - 1]] == 23) == step:
-                end = len(y)
+#        if np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] > np.where(hour == 23)[0][
+#            len(np.where(hour == 23)[0]) - 1]:
+#            end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
+#        elif np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] < np.where(hour == 23)[0][
+#            len(np.where(hour == 23)[0]) - 1]:
+#            if np.sum(hour[np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1]:np.where(hour == 23)[0][
+#                len(np.where(hour == 23)[0]) - 1]] == 23) == step:
+#                end = len(y)
+#            else:
+#                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
+#        else:
+#            end = []
+#            raise NameError('Problem with the limit of sample creating the functional sample')
+#
+        if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
+            d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
+            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
+        elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
+            if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
+                end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             else:
-                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
+                d = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] - np.where(hour == 23)[0][
+                    len(np.where(hour == 23)[0]) - 1]
+                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-d]
         else:
-            end = []
+            end=[]
             raise NameError('Problem with the limit of sample creating the functional sample')
 
-        y1 = y.iloc[range(start)]
-        y2 = y.iloc[range(end, len(y))]
+        y1 = y.iloc[range(start+1)]
+        y2 = y.iloc[range(end-1, len(y))]
 
-        y_short = y.iloc[range(start,end)]
+        y_short = y.iloc[range(start+1,end-1)]
 
 
         fd_y = ML.cortes(y_short, len(y_short), int(24 * step)).transpose()
