@@ -241,8 +241,8 @@ class ML:
                 print(gap)
 
                 if gap>0:
-                    X=X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
-                    index1 = np.delete(index1, range(X.shape[0] - gap, X.shape[0]))
+                    X=X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
+                    index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
 
                 X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
                 index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
