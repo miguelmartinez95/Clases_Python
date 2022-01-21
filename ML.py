@@ -336,6 +336,7 @@ class ML:
         step = int(60/freq)
         y = self.data.iloc[:, self.pos_y]
         hour = self.times.hour
+        long=len(y)
         start = np.where(hour == 0)[0][0]
 
 #        if np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] > np.where(hour == 23)[0][
@@ -370,7 +371,10 @@ class ML:
         y2 = y.iloc[range(end-1, len(y))]
 
         y_short = y.iloc[range(start+1,end-1)]
-
+        if len(y_short) % (step*24)!=0:
+            print(len(y_short))
+            print(len(y_short)/(step*24))
+            raise NameError('Sample size not it is well divided among days')
 
         fd_y = ML.cortes(y_short, len(y_short), int(24 * step)).transpose()
 
@@ -378,16 +382,36 @@ class ML:
         for t in range(int(24 * step)):
             grid.append(t)
 
+        #fd_y2 = fd_y.copy()
+        #missing = []
+        #for t in range(fd_y.shape[0]):
+        #    if np.sum(np.isnan(fd_y[t, :])) > 0:
+        #        missing.append(t)
+
+        #if len(missing) > 0:
+        #    fd_y3 = pd.DataFrame(fd_y2.copy())
+        #    fd_y2 = np.delete(fd_y2, missing, 0)
+        #    fd_y3 = fd_y3.drop(missing, 0)#
+        #    index2 = fd_y3.index
+        #    print(missing)
+        #    print(index2)
+        #else:
+        #    fd_y3 = pd.DataFrame(fd_y2.copy())
+        #    index2 = fd_y3.index
+
         fd_y2 = fd_y.copy()
         missing = []
+        missing_p = []
         for t in range(fd_y.shape[0]):
             if np.sum(np.isnan(fd_y[t, :])) > 0:
                 missing.append(t)
+                missing_p.append(np.where(np.isnan(fd_y[t, :]))[0])
 
         if len(missing) > 0:
             fd_y3 = pd.DataFrame(fd_y2.copy())
-            fd_y2 = np.delete(fd_y2, missing, 0)
-            fd_y3 = fd_y3.drop(missing, 0)
+            for j in range(len(missing)):
+                fd_y3.iloc[missing[j], missing_p[j]] = self.mask_value
+                fd_y2[missing[j], missing_p[j]] = self.mask_value
             index2 = fd_y3.index
             print(missing)
             print(index2)
@@ -422,6 +446,10 @@ class ML:
         Y = fd_y.flatten()
 
         Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
+        if len(Y) != long:
+            print(len(Y))
+            print(long)
+            raise NameError('Sample size error in the second joint')
 
         Y.index = self.data.index
         self.data.iloc[:, self.pos_y] = Y
