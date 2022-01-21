@@ -226,11 +226,14 @@ class ML:
             for t in range(self.horizont):
                 y =y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
+                y = y.set_index(X.index)
 
             if self.pos_y == 0:
                 self.data = pd.concat([y, X], axis=1)
             else:
                 self.data = pd.concat([X,y], axis=1)
+
+
 
         print('Horizont adjusted!')
 
