@@ -1335,19 +1335,20 @@ class MyProblem_mlp(MLP, Problem):
             self.contador, '\n #########################')
         self.contador[0] += 1
         out["F"] = np.column_stack([f1, f2])
-        +++
-class XGB(ML):
-    def info(self):
-        print(('Class to built XGB models. \n'))
-    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
-        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
-class SVM(ML):
-    def info(self):
-        print(('Class to built SVM models. \n'))
-    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
-        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
-class RF(ML):
-    def info(self):
-        print(('Class to built RF models. \n'))
-    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
-        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
+
+#class XGB(ML):
+#    def info(self):
+#        print(('Class to built XGB models. \n'))
+#    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
+#        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
+#class SVM(ML):
+#    def info(self):
+#        print(('Class to built SVM models. \n'))
+#    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
+#        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
+#class RF(ML):
+#    def info(self):
+#        print(('Class to built RF models. \n'))
+#    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
+#        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
+#
