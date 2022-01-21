@@ -238,8 +238,6 @@ class ML:
                 y=pd.DataFrame(y.transpose())
 
 
-                print(gap)
-
                 if gap>0:
                     X=X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
                     index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
