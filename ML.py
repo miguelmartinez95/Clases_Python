@@ -242,6 +242,7 @@ class ML:
         '''
         scalars = dict()
         names = list(groups.keys())
+        print(self.data.shape)
         if x==True and y==True:
             try:
                 for i in range(len(groups)):
