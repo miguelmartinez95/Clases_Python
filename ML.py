@@ -131,6 +131,31 @@ class ML:
                 if i == D:
                     break
         return (Y)
+
+
+    @staticmethod
+    def cortes_onebyone(x, D, lim):
+        '''
+        :param x:
+        :param D: length of data
+        :param lim: dimension of the curves
+        :return: data divided in curves of specific length
+        '''
+        Y = np.zeros((lim, int(D / lim)))
+        i = 0
+        s = 0
+        while i <= D:
+            if D - i < lim:
+                Y = np.delete(Y, s - 1, 1)
+                break
+            else:
+                Y[:, s] = x[i:(i + lim)]
+                i += 1
+                s += 1
+                if i == D:
+                    break
+        return (Y)
+
     @staticmethod
     def ts(new_data, look_back, pred_col, names, lag):
         '''
@@ -205,7 +230,7 @@ class ML:
 
                 index1 =X.index
 
-                y = pd.DataFrame(self.cortes(y, len(y), self.n_steps))
+                y = pd.DataFrame(self.cortes_onebyone(y, len(y), self.n_steps).transpose())
                 X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
                 index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
 
