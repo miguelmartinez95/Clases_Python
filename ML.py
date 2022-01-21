@@ -156,7 +156,6 @@ class ML:
                 s += 1
                 if i == D:
                     gap=0
-
                     break
         return (Y,gap)
 
@@ -236,8 +235,10 @@ class ML:
 
                 y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
                 y=pd.DataFrame(y.transpose())
+
+                print(gap)
+
                 if gap>0:
-                    print(gap)
                     X=X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
 
                 X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
