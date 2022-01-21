@@ -210,6 +210,8 @@ class ML:
                 index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
 
                 X = X.reset_index(drop=True)
+                print(y.shape)
+                print(X.shape)
                 X.index = index1
                 y.index = index1
 
