@@ -206,7 +206,7 @@ class ML:
                 index1 =X.index
 
                 y = pd.DataFrame(self.cortes(y, len(y), self.n_steps))
-                X = X.drop(X.index[X.shape[0] - self.n_steps+1], axis=0)
+                X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
                 index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
 
                 X = X.reset_index(drop=True)
