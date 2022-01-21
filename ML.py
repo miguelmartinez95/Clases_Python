@@ -226,7 +226,8 @@ class ML:
             for t in range(self.horizont):
                 y =y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
-                X.index = y.index
+
+            X.index = y.index
 
             if self.pos_y == 0:
                 self.data = pd.concat([y, X.set_index(y.index)], axis=1)
