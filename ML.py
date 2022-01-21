@@ -26,7 +26,7 @@ class ML:
                'Limit is the radiation limit and schedule is the working hours'
                'IMPORTANT: the variables that can be lagged to the end of data frame'
               ))
-    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit ):
+    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit ):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -36,6 +36,7 @@ class ML:
         self.limits = limits
         self.pos_y = pos_y
         self.n_lags = n_lags
+        self.n_steps = n_steps
         self.mask = mask
         self.mask_value = mask_value
         self.sup_limit = sup_limit
@@ -196,22 +197,41 @@ class ML:
         if self.horizont==0:
             self.data = self.data
         else:
-            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-            y = self.data.iloc[:,self.pos_y]
-            for t in range(self.horizont):
-                y =y.drop(y.index[0], axis=0)
+            if self.type=='series':
+                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+                y = self.data.iloc[:,self.pos_y]
+                y = y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
 
+                index1 =X.index
 
-            print(y.index)
-            print(X.index)
-            X=X.reset_index(drop=True)
-            X.index = y.index
+                y = pd.DataFrame(self.cortes(y, len(y), self.n_steps))
+                X = X.drop(X.index[X.shape[0] - self.n_steps+1], axis=0)
+                index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
 
-            if self.pos_y == 0:
-                self.data = pd.concat([y, X.set_index(y.index)], axis=1)
+                X = X.reset_index(drop=True)
+                X.index = index1
+                y.index = index1
+
+                if self.pos_y == 0:
+                    self.data = pd.concat([y, X], axis=1)
+                else:
+                    self.data = pd.concat([X, y], axis=1)
+
             else:
-                self.data = pd.concat([X.set_index(y.index),y], axis=1)
+                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+                y = self.data.iloc[:,self.pos_y]
+                for t in range(self.horizont):
+                    y =y.drop(y.index[0], axis=0)
+                    X = X.drop(X.index[X.shape[0] - 1], axis=0)
+
+                X=X.reset_index(drop=True)
+                X.index = y.index
+
+                if self.pos_y == 0:
+                    self.data = pd.concat([y, X.set_index(y.index)], axis=1)
+                else:
+                    self.data = pd.concat([X.set_index(y.index),y], axis=1)
         print('Horizont adjusted!')
     def scalating(self, scalar_limits,groups,x,y):
         '''
@@ -310,20 +330,7 @@ class ML:
         start = np.where(hour == 0)[0][0]
         print(long)
         print(len(self.data.index))
-#        if np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] > np.where(hour == 23)[0][
-#            len(np.where(hour == 23)[0]) - 1]:
-#            end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
-#        elif np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] < np.where(hour == 23)[0][
-#            len(np.where(hour == 23)[0]) - 1]:
-#            if np.sum(hour[np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1]:np.where(hour == 23)[0][
-#                len(np.where(hour == 23)[0]) - 1]] == 23) == step:
-#                end = len(y)
-#            else:
-#                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
-#        else:
-#            end = []
-#            raise NameError('Problem with the limit of sample creating the functional sample')
-#
+
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
@@ -348,21 +355,7 @@ class ML:
         grid = []
         for t in range(int(24 * step)):
             grid.append(t)
-        #fd_y2 = fd_y.copy()
-        #missing = []
-        #for t in range(fd_y.shape[0]):
-        #    if np.sum(np.isnan(fd_y[t, :])) > 0:
-        #        missing.append(t)
-        #if len(missing) > 0:
-        #    fd_y3 = pd.DataFrame(fd_y2.copy())
-        #    fd_y2 = np.delete(fd_y2, missing, 0)
-        #    fd_y3 = fd_y3.drop(missing, 0)#
-        #    index2 = fd_y3.index
-        #    print(missing)
-        #    print(index2)
-        #else:
-        #    fd_y3 = pd.DataFrame(fd_y2.copy())
-        #    index2 = fd_y3.index
+
         fd_y2 = fd_y.copy()
         missing = []
         missing_p = []
@@ -413,8 +406,8 @@ class MLP(ML):
     def info(self):
         print(('Class to built MLP models. \n'
               'All the parameters comes from the ML class except the activation functions'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit, type):
-        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit, type):
+        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit)
         self.type = type
     @staticmethod
     def mlp_classification(layers, neurons, inputs, outputs, mask, mask__value):
@@ -467,7 +460,7 @@ class MLP(ML):
             raise NameError('Problems building the MLP')
 
     @staticmethod
-    def mlp_seires(layers, neurons,  inputs,mask, mask_value):
+    def mlp_series(layers, neurons,  inputs,mask, mask_value,n_steps):
         '''
         :param inputs:amount of inputs
         :param mask:True or false
@@ -485,7 +478,7 @@ class MLP(ML):
             for i in range(layers):
                 ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
             # The Output Layer :
-            ANN_model.add(Dense(1, kernel_initializer='normal', activation='linear'))
+            ANN_model.add(Dense(n_steps, kernel_initializer='normal', activation='linear'))
             # Compile the network :
             ANN_model.compile(loss='mse', optimizer='adam', metrics=['mean_squared_error'])
             # ANN_model.summary()
@@ -509,9 +502,13 @@ class MLP(ML):
               '################################')
         layers = len(neurons)
         x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
-        y =pd.DataFrame(self.data.iloc[:,self.pos_y])
+        if self.type=='series':
+            y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
+        else:
+            y =pd.DataFrame(self.data.iloc[:,self.pos_y])
         x=x.reset_index(drop=True)
         y=y.reset_index(drop=True)
+
         res = super().cv_division(x, y, fold)
         x_test =res['x_test']
         x_train=res['x_train']
@@ -524,11 +521,27 @@ class MLP(ML):
         tt = self.times
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
-        if self.type=='regression':
-            model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value)
-            # Checkpoitn callback
-            es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-            mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+
+        if self.type=='clasification':
+            data2 = self.data
+            yy = data2.iloc[:,self.pos_y]
+            yy = pd.Series(yy, dtype='category')
+            n_classes = len(yy.cat.categories.to_list())
+            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes,self.mask, self.mask_value)
+            ####################################################################
+            #EN PROCESOO ALGÚN DíA !!!!!!!
+            ##########################################################################
+        else:
+            if self.type=='regression':
+                model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value)
+                # Checkpoitn callback
+                es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+                mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            else:
+                model= self.__class__.mlp_series(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, self.n_steps)
+                # Checkpoitn callback
+                es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+                mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             # Train the model
             times=[0 for x in range(fold)]
             cv=[0 for x in range(fold)]
@@ -550,6 +563,9 @@ class MLP(ML):
                 y_pred = model.predict(val_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
+                if self.type=='series':
+                    y_pred = np.concatenate(y_pred)
+                    y_real = np.concatenate(y_real)
                 y_real2 = np.array(val_y.copy())
                 y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                 y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
@@ -662,15 +678,7 @@ class MLP(ML):
                 q.put(np.array([np.mean(cv), np.std(cv)]))
             else:
                 return (res)
-        else:
-            data2 = self.data
-            yy = data2.iloc[:,self.pos_y]
-            yy = pd.Series(yy, dtype='category')
-            n_classes = len(yy.cat.categories.to_list())
-            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes,self.mask, self.mask_value)
-            ####################################################################
-            #EN PROCESOO ALGÚN DíA !!!!!!!
-            ##########################################################################
+
     def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel, top):
         '''
         :param fold: division in cv analyses
