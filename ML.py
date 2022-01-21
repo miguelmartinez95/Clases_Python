@@ -339,6 +339,10 @@ class ML:
         long=len(y)
         start = np.where(hour == 0)[0][0]
 
+
+        print(long)
+        print(len(self.data.index))
+
 #        if np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] > np.where(hour == 23)[0][
 #            len(np.where(hour == 23)[0]) - 1]:
 #            end = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - step]
@@ -371,6 +375,8 @@ class ML:
         y2 = y.iloc[range(end-1, len(y))]
 
         y_short = y.iloc[range(start+1,end-1)]
+
+
         if len(y_short) % (step*24)!=0:
             print(len(y_short))
             print(len(y_short)/(step*24))
@@ -450,6 +456,9 @@ class ML:
             print(len(Y))
             print(long)
             raise NameError('Sample size error in the second joint')
+
+
+        print(len(self.data.index))
 
         Y.index = self.data.index
         self.data.iloc[:, self.pos_y] = Y
