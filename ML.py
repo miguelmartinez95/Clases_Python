@@ -1,7 +1,7 @@
 from sklearn.preprocessing import MinMaxScaler
 import sys
 
-sys.path.insert(1,'E:\Documents\Doctorado\Clases_python')
+#sys.path.insert(1,'E:\Documents\Doctorado\Clases_python\Clases_python_git')
 
 from errors import Eval_metrics as evals
 import pandas as pd
