@@ -141,20 +141,22 @@ class ML:
         :param lim: dimension of the curves
         :return: data divided in curves of specific length
         '''
-        Y = np.zeros((lim, D-(lim+1)))
+        Y = np.zeros((lim, D-(lim-1)))
         i = 0
         s = 0
         while i <= D:
-            if D - i < lim:
+            if D - i <= lim:
                 Y = np.delete(Y, s - 1, 1)
+                gap=D-i
                 break
             else:
                 Y[:, s] = x[i:(i + lim)]
                 i += 1
                 s += 1
                 if i == D:
+                    gap=[]
                     break
-        return (Y)
+        return (Y,gap)
 
     @staticmethod
     def ts(new_data, look_back, pred_col, names, lag):
@@ -230,7 +232,11 @@ class ML:
 
                 index1 =X.index
 
-                y = pd.DataFrame(self.cortes_onebyone(y, len(y), self.n_steps).transpose())
+                y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
+                y=pd.DataFrame(y.transpose())
+                if len(gap)>0:
+                    X=X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
+
                 X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
                 index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
 
