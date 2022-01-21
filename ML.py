@@ -26,6 +26,7 @@ class ML:
                'Zero problem is related with the night-day issue \n'
                'Horizont is focused on the future \n'
                'Limit is the radiation limit and schedule is the working hours'
+               'IMPORTANT: the variables that can be lagged to the end of data frame'
               ))
 
     def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit ):
