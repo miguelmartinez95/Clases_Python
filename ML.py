@@ -147,7 +147,7 @@ class ML:
         while i <= D:
             if D - i <= lim:
                 Y = np.delete(Y, s - 1, 1)
-                gap=D-i
+                gap=np.array([D-i])
                 break
             else:
                 Y[:, s] = x[i:(i + lim)]
