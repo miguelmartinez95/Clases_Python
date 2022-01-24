@@ -802,7 +802,7 @@ class LSTM_model(DL):
                     #y_pred = np.array(self.scalar_y.inverse_transform(y_pred))
 
                     y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                    y_real2 = y_real.copy()
+                    #y_real2 = y_real.copy()
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
                     #y_pred=y_pred.reshape(int(y_pred.shape[0]/self.horizont), self.horizont)
@@ -874,27 +874,28 @@ class LSTM_model(DL):
                         #y_real2 = y_real.copy()
 
 
-                        place = np.where(names == 'radiation')[0]
-                        scalar_rad = self.scalar_x['radiation']
-
-                        res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:,self.n_lags-1,place]),
-                                                      self.zero_problem, self.limits)
-
-                        index_rad = res['indexes_out']
+                       # place = np.where(names == 'radiation')[0]
+                       # scalar_rad = self.scalar_x['radiation']
+#
+                       # res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z][:,self.n_lags-1,place]),
+                       #                               self.zero_problem, self.limits)
+#
+                       # index_rad = res['indexes_out']
+                        index_rad = np.sum(y_real==0*1, axis=1)
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
                         if len(index_rad) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
                             y_real1 = np.delete(y_real, index_rad, 0)
-                            y_real2 = np.delete(y_real2, index_rad, 0)
+                            #y_real2 = np.delete(y_real2, index_rad, 0)
                         elif len(index_rad) > 0 and self.horizont > 0:
                             #y_pred1 = np.delete(y_pred, index_rad-self.horizont, 0)
                             #y_real1 = np.delete(y_real, index_rad-self.horizont, 0)
                             #y_real2 = np.delete(y_real2, index_rad-self.horizont, 0)
                             y_pred1 = np.delete(y_pred, index_rad - 1, 0)
                             y_real1 = np.delete(y_real, index_rad - 1, 0)
-                            y_real2 = np.delete(y_real2, index_rad - 1, 0)
+                            #y_real2 = np.delete(y_real2, index_rad - 1, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
@@ -902,11 +903,10 @@ class LSTM_model(DL):
                         #y_pred1 = np.array(self.scalar_y.inverse_transform(y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)))
                         #y_real1 = np.array(self.scalar_y.inverse_transform(y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)))
                         #y_real2 = np.array(self.scalar_y.inverse_transform(y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)))
+
                         if plot == True:
                             s = np.max(y_real1[:, y_real1.shape[1] - 1]).astype(int) + 15
                             i = np.min(y_real1[:, y_real1.shape[1] - 1]).astype(int) - 15
-
-
                             plt.figure()
                             plt.ylim(i, s)
                             plt.plot(y_real1[:, y_real1.shape[1] - 1], color='black', label='Real')
@@ -915,18 +915,16 @@ class LSTM_model(DL):
                             plt.title("Subsample {} ".format(z))
                             a = 'Subsample-'
                             b = str(z) + '.png'
-
                             plt.show()
-
 
                         #y_pred1[np.where(y_pred1 < self.inf_limit)[0]] = self.inf_limit
                         #y_pred1[np.where(y_pred1 > self.sup_limit)[0]] = self.sup_limit
 
                         y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
                         y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
-                        y_real2 = y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)
+                        #y_real2 = y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)
                         #Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real < self.inf_limit)[0]
 
                         if len(o)>0:
                             y_pred1 = np.delete(y_pred1,o,0)
