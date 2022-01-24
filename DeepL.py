@@ -789,12 +789,6 @@ class LSTM_model(DL):
                     print(y_pred.shape)
 
 
-
-
-
-
-
-
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
