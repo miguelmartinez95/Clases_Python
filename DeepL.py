@@ -899,8 +899,8 @@ class LSTM_model(DL):
                         #y_real2 = np.array(self.scalar_y.inverse_transform(y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)))
 
                         if plot == True:
-                            s = np.max(y_real1[:, y_real1.shape[1] - 1]).astype(int) + 15
-                            i = np.min(y_real1[:, y_real1.shape[1] - 1]).astype(int) - 15
+                            s = np.max(y_real1[:, 0]).astype(int) + 15
+                            i = np.min(y_real1[:, 0]).astype(int) - 15
                             plt.figure()
                             plt.ylim(i, s)
                             plt.plot(y_real1[:, y_real1.shape[1] - 1], color='black', label='Real')
@@ -918,7 +918,7 @@ class LSTM_model(DL):
                         y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
                         #y_real2 = y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)
                         #Outliers and missing values
-                        o = np.where(y_real < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
 
                         if len(o)>0:
                             y_pred1 = np.delete(y_pred1,o,0)
