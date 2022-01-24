@@ -705,7 +705,7 @@ class MLP(ML):
                     rmse[z] = evals(y_pred2, y_real2).rmse()
                     nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
 
-                if plot==True:
+                if plot==True and len(y_realF.shape)>1:
                     s = np.max(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) + 15
                     i = np.min(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) - 15
                     a =np.round(cv[z],2)
@@ -722,6 +722,24 @@ class MLP(ML):
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
+                elif plot==True and len(y_realF.shape)<2:
+                    s = np.max(y_realF).astype(int) + 15
+                    i = np.min(y_realF).astype(int) - 15
+                    a =np.round(cv[z],2)
+
+                    plt.figure()
+                    plt.ylim(i, s)
+                    plt.plot(y_realF, color='black', label='Real')
+                    plt.plot(y_predF, color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                    a = 'Subsample-'
+                    b = str(z) + '.png'
+
+                    plot_name = a + b
+                    plt.show()
+                    plt.savefig(plot_name)
+
 
             res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv, 'std_cv':np.std(cv),
                  'nmbe':nmbe, 'rmse':rmse,
