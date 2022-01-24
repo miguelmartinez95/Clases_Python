@@ -708,8 +708,8 @@ class MLP(ML):
 
                     plt.figure()
                     plt.ylim(i, s)
-                    plt.plot(y_predF, color='black', label='Prediction')
-                    plt.plot(y_realF, color='blue', label='Real')
+                    plt.plot(y_realF.iloc[:, y_predF.shape[1]-1], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:, y_predF.shape[1]-1], color='blue', label='Prediction')
                     plt.legend()
                     plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                     a = 'Subsample-'
