@@ -669,8 +669,6 @@ class LSTM_model(DL):
             input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
-            print(yhat)
-            print(yhat[0])
             yhat = yhat[0]
             predictions.append(yhat)
             #history.append(tt[i,:])
@@ -799,11 +797,11 @@ class LSTM_model(DL):
                     y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
-                    y_pred=y_pred.reshape(y_pred.shape[0]/self.horizont, self.horizont)
-                    y_real=y_real.reshape(y_real.shape[0]/self.horizont, self.horizont)
-
-                    #y_real = y_val[z]
-                    y_real2 = y_real.copy()
+                   # y_pred=y_pred.reshape(int(y_pred.shape[0]/self.horizont), self.horizont)
+                   # y_real=y_real.reshape(int(y_real.shape[0]/self.horizont), self.horizont)
+#
+                   # #y_real = y_val[z]
+                   # y_real2 = y_real.copy()
 
 
 
@@ -860,6 +858,13 @@ class LSTM_model(DL):
                             nmbe[zz] = 9999
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
+                        y_pred = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
+                        y_real = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
+
+                        # y_real = y_val[z]
+                        y_real2 = y_real.copy()
+
+
                         place = np.where(names == 'radiation')[0]
                         scalar_rad = self.scalar_x['radiation']
 
@@ -912,6 +917,7 @@ class LSTM_model(DL):
                             rmse[zz] = 9999
                             nmbe[zz] = 9999
                     else:
+                        y_real2 = y_real.copy()
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
