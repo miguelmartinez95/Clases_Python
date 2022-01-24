@@ -788,6 +788,61 @@ class LSTM_model(DL):
 
                     print(y_pred.shape)
 
+                    a = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    #if plot == True and len(y_realF.shape) > 1:
+                    #    s = np.max(y_realF.iloc[:, y_realF.shape[1] - 1]).astype(int) + 15
+                    #    i = np.min(y_realF.iloc[:, y_realF.shape[1] - 1]).astype(int) - 15
+                    #    a = np.round(cv[z], 2)
+#
+                    #    plt.figure()
+                    #    plt.ylim(i, s)
+                    #    plt.plot(y_realF.iloc[:, y_realF.shape[1] - 1], color='black', label='Real')
+                    #    plt.plot(y_predF.iloc[:, y_realF.shape[1] - 1], color='blue', label='Prediction')
+                    #    plt.legend()
+                    #    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                    #    a = 'Subsample-'
+                    #    b = str(z) + '.png'
+#
+                    #    plot_name = a + b
+                    #    plt.show()
+                    #    plt.savefig(plot_name)
+                    #elif plot == True and len(y_realF.shape) < 2:
+                    #    s = np.max(y_realF).astype(int) + 15
+                    #    i = np.min(y_realF).astype(int) - 15
+                    #    a = np.round(cv[z], 2)
+#
+                    #    plt.figure()
+                    #    plt.ylim(i, s)
+                    #    plt.plot(y_realF, color='black', label='Real')
+                    #    plt.plot(y_predF, color='blue', label='Prediction')
+                    #    plt.legend()
+                    #    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                    #    a = 'Subsample-'
+                    #    b = str(z) + '.png'
+#
+                    #    plot_name = a + b
+                    #    plt.show()
+                    #    plt.savefig(plot_name)
+
+
+                    s = np.max(a).astype(int) + 15
+                    i = np.min(a).astype(int) - 15
+                    m = np.round(cv[z], 2)
+
+                    plt.figure()
+                    plt.ylim(i, s)
+                    plt.plot(a, color='black', label='Real')
+                    plt.plot(y_pred, color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(m)))
+                    a = 'Subsample-'
+                    b = str(z) + '.png'
+
+                    plot_name = a + b
+                    plt.show()
+                    plt.savefig(plot_name)
+
+
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
@@ -942,40 +997,6 @@ class LSTM_model(DL):
                             rmse[zz] = 9999
                             nmbe[zz] = 9999
 
-                    if plot == True and len(y_realF.shape) > 1:
-                        s = np.max(y_realF.iloc[:, y_realF.shape[1] - 1]).astype(int) + 15
-                        i = np.min(y_realF.iloc[:, y_realF.shape[1] - 1]).astype(int) - 15
-                        a = np.round(cv[z], 2)
-
-                        plt.figure()
-                        plt.ylim(i, s)
-                        plt.plot(y_realF.iloc[:, y_realF.shape[1] - 1], color='black', label='Real')
-                        plt.plot(y_predF.iloc[:, y_realF.shape[1] - 1], color='blue', label='Prediction')
-                        plt.legend()
-                        plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
-                        a = 'Subsample-'
-                        b = str(z) + '.png'
-
-                        plot_name = a + b
-                        plt.show()
-                        plt.savefig(plot_name)
-                    elif plot == True and len(y_realF.shape) < 2:
-                        s = np.max(y_realF).astype(int) + 15
-                        i = np.min(y_realF).astype(int) - 15
-                        a = np.round(cv[z], 2)
-
-                        plt.figure()
-                        plt.ylim(i, s)
-                        plt.plot(y_realF, color='black', label='Real')
-                        plt.plot(y_predF, color='blue', label='Prediction')
-                        plt.legend()
-                        plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
-                        a = 'Subsample-'
-                        b = str(z) + '.png'
-
-                        plot_name = a + b
-                        plt.show()
-                        plt.savefig(plot_name)
 
 
                     zz +=1
