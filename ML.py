@@ -705,6 +705,7 @@ class MLP(ML):
                     s = np.max(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) + 15
                     i = np.min(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) - 15
                     a =np.round(cv[z],2)
+
                     plt.figure()
                     plt.ylim(i, s)
                     plt.plot(y_predF, color='black', label='Prediction')
@@ -716,14 +717,17 @@ class MLP(ML):
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
+
             res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv, 'std_cv':np.std(cv),
                  'nmbe':nmbe, 'rmse':rmse,
                  'times_comp':times}
+
             print(("The model with", layers," layers", neurons, "neurons and a pacience of",pacience,"has: \n"
             "The average CV(RMSE) is", np.mean(cv), " \n"
             "The average NMBE is", np.mean(nmbe), "\n"
             "The average RMSE is", np.mean(rmse), "\n"
             "The average time to train is", np.mean(times)))
+
             z = Queue()
             if type(q)==type(z):
                 q.put(np.array([np.mean(cv), np.std(cv)]))
