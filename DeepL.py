@@ -903,14 +903,14 @@ class LSTM_model(DL):
                         #y_real1 = np.array(self.scalar_y.inverse_transform(y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)))
                         #y_real2 = np.array(self.scalar_y.inverse_transform(y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)))
                         if plot == True:
-                            s = np.max(y_real1.iloc[:, y_real1.shape[1] - 1]).astype(int) + 15
-                            i = np.min(y_real1.iloc[:, y_real1.shape[1] - 1]).astype(int) - 15
+                            s = np.max(y_real1[:, y_real1.shape[1] - 1]).astype(int) + 15
+                            i = np.min(y_real1[:, y_real1.shape[1] - 1]).astype(int) - 15
 
 
                             plt.figure()
                             plt.ylim(i, s)
-                            plt.plot(y_real1.iloc[:, y_real1.shape[1] - 1], color='black', label='Real')
-                            plt.plot(y_pred1.iloc[:, y_real1.shape[1] - 1], color='blue', label='Prediction')
+                            plt.plot(y_real1[:, y_real1.shape[1] - 1], color='black', label='Real')
+                            plt.plot(y_pred1[:, y_real1.shape[1] - 1], color='blue', label='Prediction')
                             plt.legend()
                             plt.title("Subsample {} ".format(z))
                             a = 'Subsample-'
