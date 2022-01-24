@@ -660,9 +660,12 @@ class MLP(ML):
                         y_real1 = np.delete(y_real, index_rad, 0)
                         y_real2 = np.delete(y_real2, index_rad, 0)
                     elif len(index_rad) > 0 and self.horizont > 0:
-                        y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
-                        y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
-                        y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
+                        #y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
+                        #y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
+                        #y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
+                        y_pred1 = np.delete(y_pred, index_rad - 1, 0)
+                        y_real1 = np.delete(y_real, index_rad - 1, 0)
+                        y_real2 = np.delete(y_real2, index_rad - 1, 0)#
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
@@ -701,6 +704,7 @@ class MLP(ML):
                     cv[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                     rmse[z] = evals(y_pred2, y_real2).rmse()
                     nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
+
                 if plot==True:
                     s = np.max(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) + 15
                     i = np.min(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) - 15
@@ -708,12 +712,13 @@ class MLP(ML):
 
                     plt.figure()
                     plt.ylim(i, s)
-                    plt.plot(y_realF.iloc[:, y_predF.shape[1]-1], color='black', label='Real')
-                    plt.plot(y_predF.iloc[:, y_predF.shape[1]-1], color='blue', label='Prediction')
+                    plt.plot(y_realF.iloc[:,y_realF.shape[1]-1], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:,y_realF.shape[1]-1], color='blue', label='Prediction')
                     plt.legend()
                     plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                     a = 'Subsample-'
                     b = str(z) + '.png'
+
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
