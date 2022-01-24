@@ -881,7 +881,7 @@ class LSTM_model(DL):
                        #                               self.zero_problem, self.limits)
 #
                        # index_rad = res['indexes_out']
-                        index_rad = np.sum(y_real==0*1, axis=1)
+                        index_rad = np.where(np.sum(y_real==0*1, axis=1)>0)[0]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
