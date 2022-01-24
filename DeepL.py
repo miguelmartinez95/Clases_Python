@@ -512,8 +512,8 @@ class LSTM_model(DL):
                     y.append(yy[in_end:out_end])
                 #se selecciona uno
             # move along one time step
-            #in_start += 1
-            in_start += horizont
+            in_start += 1
+            #in_start += horizont
 
         return(np.array(X), np.array(y))
 
