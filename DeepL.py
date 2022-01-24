@@ -785,6 +785,7 @@ class LSTM_model(DL):
                     print(y_val[z].shape)
                     res = self.__class__.predict_model(model, self.n_lags, x_val[z], batch)
                     y_pred = res['y_pred']
+
                     print(y_pred.shape)
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
@@ -863,9 +864,12 @@ class LSTM_model(DL):
                             y_real1 = np.delete(y_real, index_rad, 0)
                             y_real2 = np.delete(y_real2, index_rad, 0)
                         elif len(index_rad) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_rad-self.horizont, 0)
-                            y_real1 = np.delete(y_real, index_rad-self.horizont, 0)
-                            y_real2 = np.delete(y_real2, index_rad-self.horizont, 0)
+                            #y_pred1 = np.delete(y_pred, index_rad-self.horizont, 0)
+                            #y_real1 = np.delete(y_real, index_rad-self.horizont, 0)
+                            #y_real2 = np.delete(y_real2, index_rad-self.horizont, 0)
+                            y_pred1 = np.delete(y_pred, index_rad - 1, 0)
+                            y_real1 = np.delete(y_real, index_rad - 1, 0)
+                            y_real2 = np.delete(y_real2, index_rad - 1, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
