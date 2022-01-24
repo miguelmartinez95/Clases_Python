@@ -788,16 +788,17 @@ class LSTM_model(DL):
 
                     print(y_pred.shape)
 
-                    y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+                    #y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                     #y_pred = np.array(self.scalar_y.inverse_transform(y_pred))
 
                     #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
                     y_real = y_val[z]
                     y_real2 = y_real.copy()
-                    y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                    #y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
-                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                    #y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    #y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
 
                     y_predF = y_pred.copy()
                     y_predF = pd.DataFrame(y_predF)
@@ -876,9 +877,16 @@ class LSTM_model(DL):
                             y_pred1 = y_pred
                             y_real1 = y_real
 
-                        y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
-                        y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
-                        y_real2 = y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)
+                        y_pred1 = np.array(self.scalar_y.inverse_transform(y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)))
+                        y_real1 = np.array(self.scalar_y.inverse_transform(y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)))
+                        y_real2 = np.array(self.scalar_y.inverse_transform(y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)))
+
+                        y_pred1[np.where(y_pred1 < self.inf_limit)[0]] = self.inf_limit
+                        y_pred1[np.where(y_pred1 > self.sup_limit)[0]] = self.sup_limit
+
+                        #y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
+                        #y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
+                        #y_real2 = y_real2.reshape(y_real2.shape[0] * y_real2.shape[1], 1)
                         #Outliers and missing values
                         o = np.where(y_real2 < self.inf_limit)[0]
 
