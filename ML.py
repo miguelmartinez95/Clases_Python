@@ -650,11 +650,12 @@ class MLP(ML):
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
-                    place = np.where(names == 'radiation')[0]
-                    scalar_rad = self.scalar_x['radiation']
-                    res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
-                                               self.zero_problem, self.limits)
-                    index_rad = res['indexes_out']
+                    #place = np.where(names == 'radiation')[0]
+                    #scalar_rad = self.scalar_x['radiation']
+                    #res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
+                    #                           self.zero_problem, self.limits)
+                    #index_rad = res['indexes_out']
+                    index_rad = np.where(np.sum(y_real == 0 * 1, axis=1) > 0)[0]
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
