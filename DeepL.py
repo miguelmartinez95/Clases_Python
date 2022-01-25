@@ -722,7 +722,6 @@ class LSTM_model(DL):
                 index_val = np.delete(index_val, range(n_lags), axis=0)
                 index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
-
                 diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
                 if diff > 0:
                     index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)), axis=0)
@@ -770,8 +769,8 @@ class LSTM_model(DL):
 #
         times_val = res['time_val']
 
-        print(times_val[1].shape)
-        print(y_val[1].shape)
+        print(times_val[0].shape)
+        print(y_val[0].shape)
 
 
         if self.type=='regression':
