@@ -768,8 +768,8 @@ class LSTM_model(DL):
 #
         times_val = res['time_val']
 
-        print(times_val.shape)
-        print(y_val.shape)
+        print(times_val[0].shape)
+        print(y_val[0].shape)
 
 
         if self.type=='regression':
