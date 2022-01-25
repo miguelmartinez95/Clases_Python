@@ -85,36 +85,36 @@ class DL:
         res = {'x_test': X_test, 'x_train':X_train,'X_val':X_val, 'y_test':Y_test, 'y_train':Y_train, 'y_val':Y_val,'indexes':indexes}
         return res
 
-    @staticmethod
-    def fix_values_0(restriction, zero_problem, limit):
-        '''
-        :param restriction: schedule hours or irradiance variable depending on the zero_problem
-        :param zero_problem: schedule or radiation
-        :param limit: limit hours or radiation limit
-        :return: the indexes where the data are not in the correct time schedule or is below the radiation limit
-        '''
-        if zero_problem == 'schedule':
-            try:
-                limit1 = limit[0]
-                limit2 = limit[1]
-                hours = restriction.hour
-                ii = np.where(hours < limit1 | hours > limit2)[0]
-                ii = ii[ii >= 0]
-            except:
-                raise NameError('Zero_problem and restriction incompatibles')
-        elif zero_problem == 'radiation':
-            try:
-                rad = restriction
-                ii = np.where(rad <= limit)[0]
-                ii = ii[ii >= 0]
-            except:
-                raise NameError('Zero_problem and restriction incompatibles')
-        else:
-            ii=[]
-            'Unknown situation with nights'
-
-        res = {'indexes_out': ii}
-        return res
+#    @staticmethod
+#    def fix_values_0(restriction, zero_problem, limit):
+#        '''
+#        :param restriction: schedule hours or irradiance variable depending on the zero_problem
+#        :param zero_problem: schedule or radiation
+#        :param limit: limit hours or radiation limit
+#        :return: the indexes where the data are not in the correct time schedule or is below the radiation limit
+#        '''
+#        if zero_problem == 'schedule':
+#            try:
+#                limit1 = limit[0]
+#                limit2 = limit[1]
+#                hours = restriction.hour
+#                ii = np.where(hours < limit1 | hours > limit2)[0]
+#                ii = ii[ii >= 0]
+#            except:
+#                raise NameError('Zero_problem and restriction incompatibles')
+#        elif zero_problem == 'radiation':
+#            try:
+#                rad = restriction
+#                ii = np.where(rad <= limit)[0]
+#                ii = ii[ii >= 0]
+#            except:
+#                raise NameError('Zero_problem and restriction incompatibles')
+#        else:
+#            ii=[]
+#            'Unknown situation with nights'
+#
+#        res = {'indexes_out': ii}
+#        return res
 
 
     @staticmethod
@@ -708,25 +708,16 @@ class LSTM_model(DL):
            for i in range(2):
                 train, test, index_test = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                print(train.shape)
-                print(test.shape)
 
-
-                index_val = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test)),:]
+                #index_val = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test)),:]
+                index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,:]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
                 x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont)
 
-
-                print(x_train.shape)
-                print(y_train.shape)
-
-
                 x_test, y_test = LSTM_model.to_supervised(test, pos_y, n_lags,horizont)
                 x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont)
-
-                print(x_test.shape)
-                print(y_test.shape)
+                #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
                 index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
                 index_val = np.delete(index_val, range(n_lags), axis=0)
@@ -778,6 +769,9 @@ class LSTM_model(DL):
 #
         times_val = res['time_val']
 
+        print(times_val.shape)
+        print(y_test.shape)
+
 
         if self.type=='regression':
             model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
@@ -796,12 +790,9 @@ class LSTM_model(DL):
                     model = self.__class__.train_model(model,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
-                    print(x_val[z].shape)
-                    print(y_val[z].shape)
                     res = self.__class__.predict_model(model, self.n_lags, x_val[z], batch)
                     y_pred = res['y_pred']
 
-                    print(y_pred.shape)
 
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
@@ -1303,8 +1294,6 @@ class LSTM_model(DL):
         from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
         from pymoo.optimize import minimize
         from pymoo.core.problem import starmap_parallelized_eval
-
-        print('DATA is', type(self.data))
 
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
