@@ -659,7 +659,7 @@ class MLP(ML):
                     #res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                     #                           self.zero_problem, self.limits)
                     #index_rad = res['indexes_out']
-                    index_rad = np.where(np.sum(y_real == 0 * 1, axis=1) > 0)[0]
+                    index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
@@ -680,15 +680,15 @@ class MLP(ML):
                         y_real1 = np.concatenate(y_real1)
                         y_real2 = np.concatenate(y_real2)
 
-                    if self.mask == True:
-                        # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
+                    #if self.mask == True:
+                    #    # Outliers and missing values
+                    #    o = np.where(y_real2 < self.inf_limit)[0]
+                    #    if len(o) > 0:
+                    #        y_pred1 = np.delete(y_pred1, o, 0)
+                    #        y_real1 = np.delete(y_real1, o, 0)
+                    #    else:
+                    #        y_pred1 = y_pred
+                    #        y_real1 = y_real
                     cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     rmse[z] = evals(y_pred1, y_real1).rmse()
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)

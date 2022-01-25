@@ -884,7 +884,7 @@ class LSTM_model(DL):
                         y_pred = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
                         y_real = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
 
-                        index_rad = np.where(np.sum(y_real==0*1, axis=1)>0)[0]
+                        index_rad = np.where(np.sum(y_real<=self.inf_limit*1, axis=1)>0)[0]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -903,11 +903,11 @@ class LSTM_model(DL):
                         y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
 
                         #Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
-
-                        if len(o)>0:
-                            y_pred1 = np.delete(y_pred1,o,0)
-                            y_real1 = np.delete(y_real1,o, 0)
+                        #o = np.where(y_real1 < self.inf_limit)[0]
+#
+                        #if len(o)>0:
+                        #    y_pred1 = np.delete(y_pred1,o,0)
+                        #    y_real1 = np.delete(y_real1,o, 0)
 
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
