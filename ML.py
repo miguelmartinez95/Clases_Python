@@ -597,6 +597,10 @@ class MLP(ML):
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],batch_size=batch )
                 times[z] = round(time() - time_start, 3)
                 y_pred = model.predict(val_x)
+
+                print(val_x.shape)
+                print(y_pred.shape)
+
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
 
