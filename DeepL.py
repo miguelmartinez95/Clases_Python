@@ -472,9 +472,11 @@ class LSTM_model(DL):
             index_test=np.delete(index_test, range(ind_out), axis=0)
 
        # restructure into windows of  data
-       train1 = np.array(np.split(train, len(train) / n_inputs))
-       test1 = np.array(np.split(test, len(test) / n_inputs))
-       index_test = np.array(np.split(index_test, len(index_test) / n_inputs))
+       #train1 = np.array(np.split(train, len(train) / n_inputs))
+       #test1 = np.array(np.split(test, len(test) / n_inputs))
+       #index_test = np.array(np.split(index_test, len(index_test) / n_inputs))
+       train1 = train
+       test1=test
        return train1, test1, index_test
 
 
@@ -484,7 +486,7 @@ class LSTM_model(DL):
         :param horizont: horizont to the future selected
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
-        data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
+        ##data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
         X, y = list(), list()
 
         in_start = 0
