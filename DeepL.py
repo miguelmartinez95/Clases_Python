@@ -475,6 +475,7 @@ class LSTM_model(DL):
        train1 = np.array(np.split(train, len(train) / n_inputs))
        test1 = np.array(np.split(test, len(test) / n_inputs))
        index_test = np.array(np.split(index_test, len(index_test) / n_inputs))
+
        return train1, test1, index_test
 
 
