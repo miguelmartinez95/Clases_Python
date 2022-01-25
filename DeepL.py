@@ -677,7 +677,7 @@ class LSTM_model(DL):
 
 
         predictions  =np.array(predictions)
-        print(predictions.shape)
+        print(len(predictions))
         y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
         res = {'y_pred': y_pred}
         return res
