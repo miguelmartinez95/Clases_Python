@@ -918,8 +918,8 @@ class LSTM_model(DL):
                             i = np.min(y_real1[:, 0]).astype(int) - 15
                             plt.figure()
                             plt.ylim(i, s)
-                            plt.plot(y_real1[:, y_real1.shape[1] - 1], color='black', label='Real')
-                            plt.plot(y_pred1[:, y_real1.shape[1] - 1], color='blue', label='Prediction')
+                            plt.plot(y_real1[:, 0], color='black', label='Real')
+                            plt.plot(y_pred1[:, 0], color='blue', label='Prediction')
                             plt.legend()
                             plt.title("Subsample {} ".format(z))
                             a = 'Subsample-'
