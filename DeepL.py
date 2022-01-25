@@ -826,10 +826,10 @@ class LSTM_model(DL):
 
                     y_predF = y_pred.copy()
                     y_predF = pd.DataFrame(y_predF)
-                    y_predF.index = times_val[z]
+                    #y_predF.index = times_val[z]
                     y_realF = y_real.copy()
                     y_realF = pd.DataFrame(y_realF)
-                    y_realF.index = times_val[z]
+                    #y_realF.index = times_val[z]
 
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
