@@ -508,7 +508,7 @@ class LSTM_model(DL):
         # step over the entire history one time step at a time
         if onebyone==True:
 
-            for _ in range(len(data)-(n_lags + horizont-1)):
+            for _ in range(len(data)-(n_lags + horizont)):
             #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
@@ -534,7 +534,7 @@ class LSTM_model(DL):
                 in_start += 1
                 #in_start += horizont
         else:
-            for _ in range(int((len(data)-(n_lags + horizont-1))/horizont)):
+            for _ in range(int((len(data)-(n_lags + horizont))/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 if horizont ==0:
@@ -557,8 +557,9 @@ class LSTM_model(DL):
                     #se selecciona uno
                 # move along one time step
                 in_start += horizont
+        dd= len(data) - in_start
 
-        return(np.array(X), np.array(y))
+        return(np.array(X), np.array(y), dd)
 
     @staticmethod
     def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout):
@@ -753,14 +754,14 @@ class LSTM_model(DL):
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
-                x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, True)
+                x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, True)
                 index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
 
                 print(index_val.shape)
                 print(val.shape)
 
-                x_test, y_test = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,True)
-                x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont,True)
+                x_test, y_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,True)
+                x_val, y_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont,True)
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
@@ -1036,8 +1037,8 @@ class LSTM_model(DL):
         res = self.__class__.three_dimension(test, self.n_lags)
         test = res['data']
 
-        x_test, y_test =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,True)
-        x_train, y_train = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, True)
+        x_test, y_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,True)
+        x_train, y_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, True)
 
         print(x_train.shape)
         print(x_test.shape)
@@ -1073,7 +1074,9 @@ class LSTM_model(DL):
         if i_out>0:
             times=np.delete(times, range(i_out),0)
 
-        x_val, y_val = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
+        x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
+
+        print(dif)
 
         print(x_val.shape)
         print(y_val.shape)
