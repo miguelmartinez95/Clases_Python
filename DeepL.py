@@ -1048,9 +1048,15 @@ class LSTM_model(DL):
 
         x_val, y_val = LSTM_model.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
+        print(x_val.shape)
+        print(y_val.shape)
+
+
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
 
         y_pred = res['y_pred']
+
+        print(y_pred.shape)
 
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
