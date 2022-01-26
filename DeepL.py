@@ -534,7 +534,7 @@ class LSTM_model(DL):
                 in_start += 1
                 #in_start += horizont
         else:
-            for _ in range(int((len(data)-(n_lags + horizont))/horizont)):
+            for _ in range(int((len(data)-(n_lags + horizont))/horizont)+1):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 if horizont ==0:
@@ -1076,7 +1076,7 @@ class LSTM_model(DL):
 
         x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
-        print(dif)
+        print('Diferencia entre time and y:',dif)
 
         print(x_val.shape)
         print(y_val.shape)
