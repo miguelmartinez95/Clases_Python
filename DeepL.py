@@ -486,7 +486,11 @@ class LSTM_model(DL):
         :param horizont: horizont to the future selected
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
-        data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
+        if len(train.shape)>2:
+            data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
+        else:
+            data = train
+
         X, y = list(), list()
 
         in_start = 0
@@ -519,7 +523,7 @@ class LSTM_model(DL):
                 in_start += 1
                 #in_start += horizont
         else:
-            for _ in range(int((len(data)-n_lags)/horizont)):
+            for _ in range(int((len(data)-(n_lags + horizont-1))/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 if horizont ==0:
