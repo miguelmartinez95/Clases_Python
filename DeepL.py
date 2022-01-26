@@ -1157,7 +1157,7 @@ class LSTM_model(DL):
             #index_rad = res['indexes_out']
             index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
 #
-            if len(y_pred <= 1):
+            if len(y_pred) <= 1:
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
