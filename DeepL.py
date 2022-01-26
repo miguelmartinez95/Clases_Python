@@ -439,7 +439,7 @@ class LSTM_model(DL):
         rest2 = data_new.shape[0] % n_inputs
         ind_out = 0
         while rest2 != 0:
-            data_new = data_new.drop(data_new.index[0], axis=0)
+            data_new = np.delete(data_new,0, axis=0)
             rest2 = data_new.shape[0] % n_inputs
             ind_out += 1
 
