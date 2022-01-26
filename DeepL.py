@@ -486,7 +486,7 @@ class LSTM_model(DL):
         :param horizont: horizont to the future selected
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
-        if len(train.shape)>2:
+        if train.shape[2]>2:
             data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
         else:
             data = train
