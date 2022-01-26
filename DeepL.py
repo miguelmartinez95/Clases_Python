@@ -736,7 +736,7 @@ class LSTM_model(DL):
                 train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
                 print(index_val.shape)
-                print(val.shape)
+                print(test.shape)
 
                 index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2), index_val.shape[0])]
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
@@ -1157,6 +1157,7 @@ class LSTM_model(DL):
                 raise NameError('Empty prediction')
         else:
             # Outliers and missing values
+            y_real2 = y_real.copy()
             o = np.where(y_real2 < self.inf_limit)[0]
             y_pred = np.delete(y_pred, o, 0)
             y_real = np.delete(y_real, o, 0)
