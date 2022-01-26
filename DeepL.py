@@ -474,7 +474,7 @@ class LSTM_model(DL):
        # restructure into windows of  data
        train1 = np.array(np.split(train, len(train) / n_inputs))
        test1 = np.array(np.split(test, len(test) / n_inputs))
-       index_test = np.array(np.split(index_test, len(index_test) / n_inputs))
+       #index_test = np.array(np.split(index_test, len(index_test) / n_inputs))
 
        return train1, test1, index_test
 
@@ -492,7 +492,7 @@ class LSTM_model(DL):
         # step over the entire history one time step at a time
         if onebyone==True:
 
-            for _ in range(len(data)-horizont):
+            for _ in range(len(data)-(n_lags + horizont-1)):
             #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
@@ -734,7 +734,7 @@ class LSTM_model(DL):
            for i in range(2):
                 train, test, index_test = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                index_val = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test)),:]
+                index_val = index_test[range(len(index_test)-math.ceil(len(index_test)/2), len(index_test))]
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
@@ -746,7 +746,7 @@ class LSTM_model(DL):
 
                 index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
                 index_val = np.delete(index_val, range(n_lags), axis=0)
-                index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
+                #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
                 diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
                 if diff > 0:
@@ -883,8 +883,8 @@ class LSTM_model(DL):
                             y_pred1 = np.delete(y_pred, index_hour, 0)
                             y_real1 = np.delete(y_real, index_hour, 0)
                         elif len(index_hour) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
-                            y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                            y_pred1 = np.delete(y_pred, index_hour - 1, 0)
+                            y_real1 = np.delete(y_real, index_hour - 1, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
@@ -907,26 +907,29 @@ class LSTM_model(DL):
                             nmbe[zz] = 9999
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
-                        y_pred = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
-                        y_real = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
+                        #y_pred = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
+                        #y_real = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
 
                         index_rad = np.where(np.sum(y_real<=self.inf_limit*1, axis=1)>0)[0]
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
-                        if len(index_rad) > 0 and self.horizont == 0:
+                        #if len(index_rad) > 0 and self.horizont == 0:
+                        #    y_pred1 = np.delete(y_pred, index_rad, 0)
+                        #    y_real1 = np.delete(y_real, index_rad, 0)
+                        #elif len(index_rad) > 0 and self.horizont > 0:
+                        #    y_pred1 = np.delete(y_pred, index_rad - 1, 0)
+                        #    y_real1 = np.delete(y_real, index_rad - 1, 0)
+                        if len(index_rad) > 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
                             y_real1 = np.delete(y_real, index_rad, 0)
-                        elif len(index_rad) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_rad - 1, 0)
-                            y_real1 = np.delete(y_real, index_rad - 1, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
 
 
-                        y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
-                        y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
+                        #y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
+                        #y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
 
                         #Outliers and missing values
                         #o = np.where(y_real1 < self.inf_limit)[0]
@@ -1024,12 +1027,16 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val, y_val,mean_y,batch):
+    def predict(self, model, val,mean_y,batch,times):
         '''
         :param model: trained model
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
+
+        times = np.delete(times, range(self.n_lags), 0)
+
+
         x_val, y_val = LSTM_model.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
@@ -1042,17 +1049,10 @@ class LSTM_model(DL):
 
         y_real = y_val.reshape((y_val.shape[0] * y_val.shape[1], 1))
         y_real = np.array(self.scalar_y.inverse_transform(y_real))
-        y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
 
-        y_real = y_val
-        y_real2 = y_val.copy()
-        y_real = np.array(self.scalar_y.inverse_transform(y_real))
-
-        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
         y_predF = y_pred.copy()
         y_predF = pd.DataFrame(y_predF)
-        y_predF.index = self.times
+        y_predF.index = times
         y_realF = pd.DataFrame(y_real.copy())
         y_realF.index = y_predF.index
 
@@ -1073,18 +1073,16 @@ class LSTM_model(DL):
                 if len(index_hour) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_hour, 0)
                     y_real1 = np.delete(y_real, index_hour, 0)
-                    y_real2 = np.delete(y_real2, index_hour, 0)
                 elif len(index_hour) > 0 and self.horizont > 0:
-                    y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
-                    y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
-                    y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
+                    y_pred1 = np.delete(y_pred, index_hour - 1, 0)
+                    y_real1 = np.delete(y_real, index_hour - 1, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
 
             # Outliers and missing values
             if len(y_pred1)>0:
-                o = np.where(y_real2 < self.inf_limit)[0]
+                o = np.where(y_real1 < self.inf_limit)[0]
                 y_pred1 = np.delete(y_pred1, o, 0)
                 y_real1 = np.delete(y_real1, o, 0)
 
