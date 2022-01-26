@@ -450,7 +450,7 @@ class LSTM_model(DL):
 
        data_new = data_new1.copy()
        train, test = data_new.drop(range(cut1, cut2)), data_new.iloc[range(cut1, cut2)]
-       index_test = index[cut1:cut2]
+       index_test = index[range(cut1, cut2)]
 
        ###################################################################################
        rest1 = train.shape[0] % n_inputs
@@ -733,6 +733,9 @@ class LSTM_model(DL):
         try:
            for i in range(2):
                 train, test, index_test = LSTM_model.split_dataset(data, n_lags,w, w2)
+
+                print(index_val.shape)
+                print(val.shape)
 
                 index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2), index_test.shape[0])]
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
