@@ -744,13 +744,13 @@ class LSTM_model(DL):
                 x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont)
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
-                index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
+                #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
                 index_val = np.delete(index_val, range(n_lags), axis=0)
                 #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
-                diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
-                if diff > 0:
-                    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)), axis=0)
+                #diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
+                #if diff > 0:
+                #    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)), axis=0)
 
                 times_val.append(index_val[:,0])
 
