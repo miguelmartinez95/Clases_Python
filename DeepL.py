@@ -735,14 +735,12 @@ class LSTM_model(DL):
            for i in range(2):
                 train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                print(index_val.shape)
-                print(test.shape)
 
-                index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2), index_val.shape[0])]
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
                 x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont)
+                index_val = index_val[range(index_val.shape[0]-val.shape[0]*val.shape[1], index_val.shape[0])]
 
                 print(index_val.shape)
                 print(val.shape)
