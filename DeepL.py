@@ -480,7 +480,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def to_supervised(train,pos_y, n_lags, horizont):
+    def to_supervised(train,pos_y, n_lags, horizont, onebyone=True):
         '''
         :param horizont: horizont to the future selected
         :return: x (past) and y (future horizont) considering the past-future relations selected
@@ -490,31 +490,57 @@ class LSTM_model(DL):
 
         in_start = 0
         # step over the entire history one time step at a time
-        for _ in range(len(data)-horizont):
-        #for _ in range(int((len(data)-n_lags)/horizont)):
-            # define the end of the input sequence
-            in_end = in_start + n_lags
-            if horizont ==0:
-                out_end = in_end
-            else:
-                out_end = in_end+horizont
+        if onebyone==True:
 
-            # ensure we have enough data for this instance
-            if out_end < len(data):
-                xx = np.delete(data,pos_y,1)
-                x_input = xx[in_start:in_end,:]
-                # x_input = x_input.reshape((len(x_input), 1))
-                X.append(x_input)
-                yy = data[:,pos_y].reshape(-1,1)
-                #y.append(yy.iloc[in_end:out_end])
-                if horizont==0:
-                    y.append(yy[out_end])
+            for _ in range(len(data)-horizont):
+            #for _ in range(int((len(data)-n_lags)/horizont)):
+                # define the end of the input sequence
+                in_end = in_start + n_lags
+                if horizont ==0:
+                    out_end = in_end
                 else:
-                    y.append(yy[in_end:out_end])
-                #se selecciona uno
-            # move along one time step
-            in_start += 1
-            #in_start += horizont
+                    out_end = in_end+horizont
+
+                # ensure we have enough data for this instance
+                if out_end < len(data):
+                    xx = np.delete(data,pos_y,1)
+                    x_input = xx[in_start:in_end,:]
+                    # x_input = x_input.reshape((len(x_input), 1))
+                    X.append(x_input)
+                    yy = data[:,pos_y].reshape(-1,1)
+                    #y.append(yy.iloc[in_end:out_end])
+                    if horizont==0:
+                        y.append(yy[out_end])
+                    else:
+                        y.append(yy[in_end:out_end])
+                    #se selecciona uno
+                # move along one time step
+                in_start += 1
+                #in_start += horizont
+        else:
+            for _ in range(int((len(data)-n_lags)/horizont)):
+                # define the end of the input sequence
+                in_end = in_start + n_lags
+                if horizont ==0:
+                    out_end = in_end
+                else:
+                    out_end = in_end+horizont
+
+                # ensure we have enough data for this instance
+                if out_end < len(data):
+                    xx = np.delete(data,pos_y,1)
+                    x_input = xx[in_start:in_end,:]
+                    # x_input = x_input.reshape((len(x_input), 1))
+                    X.append(x_input)
+                    yy = data[:,pos_y].reshape(-1,1)
+                    #y.append(yy.iloc[in_end:out_end])
+                    if horizont==0:
+                        y.append(yy[out_end])
+                    else:
+                        y.append(yy[in_end:out_end])
+                    #se selecciona uno
+                # move along one time step
+                in_start += horizont
 
         return(np.array(X), np.array(y))
 
@@ -984,7 +1010,6 @@ class LSTM_model(DL):
         print(x_test.shape)
         print(y_test.shape)
 
-
         if self.type=='regression':
             model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
             time_start = time()
@@ -999,17 +1024,24 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, x_val, y_val,mean_y,batch):
+    def predict(self, model, val, y_val,mean_y,batch):
         '''
         :param model: trained model
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
+        x_val, y_val = LSTM_model.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
 
         y_pred = res['y_pred']
 
+        y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
+        y_real = y_val.reshape((y_val.shape[0] * y_val.shape[1], 1))
+        y_real = np.array(self.scalar_y.inverse_transform(y_real))
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
 
         y_real = y_val
