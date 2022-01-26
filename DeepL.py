@@ -445,6 +445,7 @@ class LSTM_model(DL):
         :param cut2: upper limit to divided into train - test
         :return: data divided into train - test in three dimensions
        '''
+
        index=data_new1.index
        data_new1=data_new1.reset_index(drop=True)
 
@@ -732,8 +733,8 @@ class LSTM_model(DL):
 
         try:
            for i in range(2):
-
                 train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
+
                 print(index_val.shape)
                 print(val.shape)
 
