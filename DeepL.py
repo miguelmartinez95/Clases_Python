@@ -434,7 +434,19 @@ class LSTM_model(DL):
         self.dropout = dropout
         self.type = type
 
+    @staticmethod
+    def three_dimension(data_new, n_inputs):
+        rest2 = data_new.shape[0] % n_inputs
+        ind_out = 0
+        while rest2 != 0:
+            data_new = data_new.drop(data_new.index[0], axis=0)
+            rest2 = data_new.shape[0] % n_inputs
+            ind_out += 1
 
+        # restructure into windows of  data
+        data_new = np.array(np.split(data_new, len(data_new) / n_inputs))
+        res={'data':data_new, 'ind_out':ind_out}
+        return res
 
     @staticmethod
     def split_dataset(data_new1, n_inputs,cut1, cut2):
@@ -450,6 +462,7 @@ class LSTM_model(DL):
        data_new1=data_new1.reset_index(drop=True)
 
        data_new = data_new1.copy()
+
        train, test = data_new.drop(range(cut1, cut2)), data_new.iloc[range(cut1, cut2)]
        index_test = index[range(cut1, cut2)]
 
@@ -1017,6 +1030,12 @@ class LSTM_model(DL):
 
         Instance to train model outside these classes
         '''
+
+        res = self.__class__.three_dimension(train, self.n_lags)
+        train = res['data']
+        res = self.__class__.three_dimension(test, self.n_lags)
+        test = res['data']
+
         x_test, y_test =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,True)
         x_train, y_train = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, True)
 
@@ -1047,6 +1066,12 @@ class LSTM_model(DL):
 
         times = np.delete(times, range(self.n_lags), 0)
 
+        res = self.__class__.three_dimension(val, self.n_lags)
+
+        val = res['data']
+        i_out = res['ind_out']
+        if i_out>0:
+            times=np.delete(times, i_out)
 
         x_val, y_val = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
