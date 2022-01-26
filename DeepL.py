@@ -481,7 +481,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def to_supervised(train,pos_y, n_lags, horizont, onebyone=True):
+    def to_supervised(train,pos_y, n_lags, horizont, onebyone):
         '''
         :param horizont: horizont to the future selected
         :return: x (past) and y (future horizont) considering the past-future relations selected
@@ -738,14 +738,14 @@ class LSTM_model(DL):
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
-                x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont)
+                x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, True)
                 index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
 
                 print(index_val.shape)
                 print(val.shape)
 
-                x_test, y_test = LSTM_model.to_supervised(test, pos_y, n_lags,horizont)
-                x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont)
+                x_test, y_test = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,True)
+                x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont,True)
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
@@ -1015,8 +1015,8 @@ class LSTM_model(DL):
 
         Instance to train model outside these classes
         '''
-        x_test, y_test =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont)
-        x_train, y_train = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont)
+        x_test, y_test =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,True)
+        x_train, y_train = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, True)
 
         print(x_train.shape)
         print(x_test.shape)
