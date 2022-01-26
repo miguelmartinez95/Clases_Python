@@ -752,7 +752,7 @@ class LSTM_model(DL):
                 #if diff > 0:
                 #    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)), axis=0)
 
-                times_val.append(index_val[:,0])
+                times_val.append(index_val)
 
                 X_test.append(x_test)
                 X_train.append(x_train)
