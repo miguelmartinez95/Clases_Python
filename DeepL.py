@@ -1071,7 +1071,7 @@ class LSTM_model(DL):
         val = res['data']
         i_out = res['ind_out']
         if i_out>0:
-            times=np.delete(times, i_out)
+            times=np.delete(times, range(i_out),0)
 
         x_val, y_val = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
