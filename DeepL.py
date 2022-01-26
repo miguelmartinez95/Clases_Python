@@ -971,12 +971,20 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, x_train, y_train, x_test, y_test, neurons_lstm, neurons_dense, pacience, batch):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch):
         '''
         :return: the trained model and the time required to be trained
 
         Instance to train model outside these classes
         '''
+        x_test, y_test = LSTM_model.to_supervised(test, self.pos_y, self.n_lags, self.horizont)
+        x_train, y_train = LSTM_model.to_supervised(train, self.pos_y, self.n_lags, self.horizont)
+
+        print(x_train.shape)
+        print(x_test.shape)
+        print(y_test.shape)
+
+
         if self.type=='regression':
             model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
             time_start = time()
