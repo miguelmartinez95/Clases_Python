@@ -732,8 +732,8 @@ class LSTM_model(DL):
 
         try:
            for i in range(2):
-                train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
+                train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
                 print(index_val.shape)
                 print(val.shape)
 
