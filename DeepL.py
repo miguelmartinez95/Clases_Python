@@ -735,16 +735,14 @@ class LSTM_model(DL):
            for i in range(2):
                 train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-
                 #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
                 x_train, y_train = LSTM_model.to_supervised(train, pos_y, n_lags,horizont)
-                index_val = index_val[range(index_val.shape[0]-val.shape[0]*val.shape[1], index_val.shape[0])]
+                index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
 
                 print(index_val.shape)
                 print(val.shape)
-
 
                 x_test, y_test = LSTM_model.to_supervised(test, pos_y, n_lags,horizont)
                 x_val, y_val = LSTM_model.to_supervised(val, pos_y, n_lags,horizont)
@@ -772,8 +770,6 @@ class LSTM_model(DL):
             raise NameError('Problems with the sample division in the cv classic')
         res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_val':times_val}
         return res
-
-
 
     def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y,plot, q=[]):
         '''
