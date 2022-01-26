@@ -1015,8 +1015,8 @@ class LSTM_model(DL):
 
         Instance to train model outside these classes
         '''
-        x_test, y_test = LSTM_model.to_supervised(test, self.pos_y, self.n_lags, self.horizont)
-        x_train, y_train = LSTM_model.to_supervised(train, self.pos_y, self.n_lags, self.horizont)
+        x_test, y_test =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont)
+        x_train, y_train = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont)
 
         print(x_train.shape)
         print(x_test.shape)
@@ -1046,7 +1046,7 @@ class LSTM_model(DL):
         times = np.delete(times, range(self.n_lags), 0)
 
 
-        x_val, y_val = LSTM_model.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
+        x_val, y_val = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
 
         print(x_val.shape)
         print(y_val.shape)
