@@ -121,8 +121,8 @@ class ML:
         i = 0
         s = 0
         while i <= D:
-            if D - i <= lim:
-                Y = np.delete(Y, s - 1, 1)
+            if D - i < lim:
+                Y = np.delete(Y, s, 1)
                 gap = D - i - 1
                 break
             else:
@@ -148,8 +148,8 @@ class ML:
         s = 0
         while i <= D:
             print(i)
-            if D - i <= lim:
-                Y = np.delete(Y, s - 1, 1)
+            if D - i < lim:
+                Y = np.delete(Y, s, 1)
                 gap=D-i-1
 
                 break
@@ -248,13 +248,15 @@ class ML:
                     y,gap = self.cortes(y, len(y), self.n_steps)
                     y=pd.DataFrame(y.transpose())
 
+                    seq = np.arange(0, X.shape[0] - self.n_steps+1, self.n_steps)
+                    X = X.iloc[seq]
+                    index1 =index1[seq]
+
                     if gap > 0:
                         X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
                         index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
 
-                    seq = np.arange(0, X.shape[0] - self.n_steps+1, self.n_steps)
-                    X = X.iloc[seq]
-                    index1 =index1[seq]
+
 
 
                 #X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
