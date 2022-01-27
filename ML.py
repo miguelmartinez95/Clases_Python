@@ -924,7 +924,7 @@ class MLP(ML):
         y_predF = pd.DataFrame(y_predF)
         print(y_predF.shape)
         y_predF.index = times
-        y_realF = pd.DataFrame(np.concatenate(y_real).copy())
+        y_realF = pd.DataFrame(np.concateante(y_real).copy())
         y_realF.index = y_predF.index
 
         if self.zero_problem == 'schedule':
@@ -932,7 +932,7 @@ class MLP(ML):
             res = super().fix_values_0( self.times,  self.zero_problem, self.limits)
             index_hour = res['indexes_out']
 
-            if len(y_pred<=1):
+            if len(y_pred)<=1:
                 y_pred1= np.nan
                 y_real1=y_real
             else:
@@ -989,7 +989,7 @@ class MLP(ML):
             #        if len(o)>0:
             #            y_pred1 = np.delete(y_pred1, o, 0)
             #            y_real1 = np.delete(y_real1, o, 0)
-            if len(y_pred <= 1):
+            if len(y_pred)<=1:
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
