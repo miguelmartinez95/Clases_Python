@@ -121,7 +121,7 @@ class ML:
         i = 0
         s = 0
         while i <= D:
-            if D - i < lim:
+            if D - i <= lim:
                 Y = np.delete(Y, s - 1, 1)
                 gap = D - i - 1
                 break
