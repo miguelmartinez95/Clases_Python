@@ -916,8 +916,10 @@ class MLP(ML):
             y_pred[np.where(y_pred > self.sup_limit)[0], t] = self.sup_limit
 
 
-        y_predF = np.concatenate(y_pred).copy()
+        print(y_pred.shape)
+        y_predF = np.concatenate(y_pred.copy())
         y_predF = pd.DataFrame(y_predF)
+        print(y_predF.shape)
         y_predF.index = times
         y_realF = pd.DataFrame(np.concateante(y_real).copy())
         y_realF.index = y_predF.index
