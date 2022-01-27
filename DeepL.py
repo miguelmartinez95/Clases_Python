@@ -85,36 +85,36 @@ class DL:
         res = {'x_test': X_test, 'x_train':X_train,'X_val':X_val, 'y_test':Y_test, 'y_train':Y_train, 'y_val':Y_val,'indexes':indexes}
         return res
 
-#    @staticmethod
-#    def fix_values_0(restriction, zero_problem, limit):
-#        '''
-#        :param restriction: schedule hours or irradiance variable depending on the zero_problem
-#        :param zero_problem: schedule or radiation
-#        :param limit: limit hours or radiation limit
-#        :return: the indexes where the data are not in the correct time schedule or is below the radiation limit
-#        '''
-#        if zero_problem == 'schedule':
-#            try:
-#                limit1 = limit[0]
-#                limit2 = limit[1]
-#                hours = restriction.hour
-#                ii = np.where(hours < limit1 | hours > limit2)[0]
-#                ii = ii[ii >= 0]
-#            except:
-#                raise NameError('Zero_problem and restriction incompatibles')
-#        elif zero_problem == 'radiation':
-#            try:
-#                rad = restriction
-#                ii = np.where(rad <= limit)[0]
-#                ii = ii[ii >= 0]
-#            except:
-#                raise NameError('Zero_problem and restriction incompatibles')
-#        else:
-#            ii=[]
-#            'Unknown situation with nights'
-#
-#        res = {'indexes_out': ii}
-#        return res
+    @staticmethod
+    def fix_values_0(restriction, zero_problem, limit):
+        '''
+        :param restriction: schedule hours or irradiance variable depending on the zero_problem
+        :param zero_problem: schedule or radiation
+        :param limit: limit hours or radiation limit
+        :return: the indexes where the data are not in the correct time schedule or is below the radiation limit
+        '''
+        if zero_problem == 'schedule':
+            try:
+                limit1 = limit[0]
+                limit2 = limit[1]
+                hours = restriction.hour
+                ii = np.where(hours < limit1 | hours > limit2)[0]
+                ii = ii[ii >= 0]
+            except:
+                raise NameError('Zero_problem and restriction incompatibles')
+        elif zero_problem == 'radiation':
+            try:
+                rad = restriction
+                ii = np.where(rad <= limit)[0]
+                ii = ii[ii >= 0]
+            except:
+                raise NameError('Zero_problem and restriction incompatibles')
+        else:
+            ii=[]
+            'Unknown situation with nights'
+
+        res = {'indexes_out': ii}
+        return res
 
 
     @staticmethod
@@ -1058,7 +1058,7 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val,mean_y,batch,times):
+    def predict(self, model, val,names,mean_y,batch,times):
         '''
         :param model: trained model
         :return: prediction with the built metrics
@@ -1148,10 +1148,10 @@ class LSTM_model(DL):
 
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
-            place = np.where(x_val.columns == 'radiation')[0]
+            place = np.where(names == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
-            res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
+            res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
             index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
