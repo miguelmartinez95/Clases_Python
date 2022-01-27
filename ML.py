@@ -989,7 +989,8 @@ class MLP(ML):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
                                           self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            print(index_rad)
+            print(len(index_rad))
+            print(self.n_steps)
             #if len(y_pred<=1) and len(index_rad)>0:
             #    y_pred1= np.nan
             #    y_real1=y_real
@@ -1005,12 +1006,12 @@ class MLP(ML):
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
-                if len(index_rad) > 0 and self.steps == 0:
+                if len(index_rad) > 0 and self.n_steps == 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
-                elif len(index_rad) > 0 and self.steps > 0:
-                    y_pred1 = np.delete(y_pred, index_rad - self.n_steps, 0)
-                    y_real1 = np.delete(y_real, index_rad - self.n_steps, 0)
+                elif len(index_rad) > 0 and self.n_steps > 0:
+                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.n_steps, 0)
+                    y_real1 = np.delete(y_real, np.array(index_rad) - self.n_steps, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
