@@ -1087,7 +1087,7 @@ class MLP(ML):
 
         a = np.round(cv, 2)
         up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
-        low = int(np.min(y_realF)) + int(np.min(y_realF) / 4)
+        low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
         plt.figure()
         plt.ylim(low, up)
         plt.plot(y_realF, color='black', label='Real')
