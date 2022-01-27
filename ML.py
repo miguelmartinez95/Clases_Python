@@ -117,6 +117,7 @@ class ML:
         :param lim: dimension of the curves
         :return: data divided in curves of specific length
         '''
+
         Y = np.zeros((lim, int(D / lim)))
         i = 0
         s = 0
@@ -143,6 +144,7 @@ class ML:
         :param lim: dimension of the curves
         :return: data divided in curves of specific length
         '''
+
         Y = np.zeros((lim, D-(lim-1)))
         i = 0
         s = 0
