@@ -1151,7 +1151,7 @@ class LSTM_model(DL):
             place = np.where(names == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
-            res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1], place]),
+            res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1]-1, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
             index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
@@ -1187,6 +1187,18 @@ class LSTM_model(DL):
                     nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
                     rmse = evals(y_pred1, y_real1).rmse()
                     r2 = evals(y_pred1, y_real1).r2()
+
+                    a = np.round(cv, 2)
+                    up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
+                    plt.figure()
+                    plt.ylim(low, up)
+                    plt.plot(y_real1, color='black', label='Real')
+                    plt.plot(y_pred1, color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("No rad - CV(RMSE)={}".format(str(a)))
+                    plt.show()
+                    plt.savefig('plot1.png')
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1232,6 +1244,7 @@ class LSTM_model(DL):
         plt.title("CV(RMSE)={}".format(str(a)))
         plt.show()
         plt.savefig('plot1.png')
+
 
         return res
 
