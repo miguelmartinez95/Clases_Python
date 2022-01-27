@@ -1037,8 +1037,8 @@ class MLP(ML):
                     low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
                     plt.figure()
                     plt.ylim(low, up)
-                    plt.plot(y_realF, color='black', label='Real')
-                    plt.plot(y_predF, color='blue', label='Prediction')
+                    plt.plot(y_real1, color='black', label='Real')
+                    plt.plot(y_pred1, color='blue', label='Prediction')
                     plt.legend()
                     plt.title("No rad - CV(RMSE)={}".format(str(a)))
 
