@@ -123,14 +123,16 @@ class ML:
         while i <= D:
             if D - i < lim:
                 Y = np.delete(Y, s - 1, 1)
+                gap = D - i - 1
                 break
             else:
                 Y[:, s] = x[i:(i + lim)]
                 i += lim
                 s += 1
                 if i == D:
+                    gap = 0
                     break
-        return (Y)
+        return (Y,gap)
 
 
     @staticmethod
@@ -219,7 +221,7 @@ class ML:
             self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit, len(inf))
         if len(sup)>0:
             self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
-    def adapt_horizont(self):
+    def adapt_horizont(self, onebyone):
         '''
         Move the data sample to connected the y with the x based on the future selected
         '''
@@ -231,10 +233,14 @@ class ML:
                 y = self.data.iloc[:,self.pos_y]
                 y = y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
+                index1 = X.index
 
-                index1 =X.index
-                y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
-                y=pd.DataFrame(y.transpose())
+                if onebyone==True:
+                    y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
+                    y=pd.DataFrame(y.transpose())
+                else:
+                    y,gap = self.cortes(y, len(y), self.n_steps)
+                    y=pd.DataFrame(y.transpose())
 
                 if gap>0:
                     X=X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
@@ -242,10 +248,8 @@ class ML:
 
                 X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
                 index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
-
                 X = X.reset_index(drop=True)
-                print(y.shape)
-                print(X.shape)
+
                 X.index = index1
                 y.index = index1
 
