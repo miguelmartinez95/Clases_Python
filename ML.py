@@ -1030,6 +1030,16 @@ class MLP(ML):
                     nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
                     rmse = evals(y_pred1, y_real1).rmse()
                     r2 = evals(y_pred1, y_real1).r2()
+                    a = np.round(cv, 2)
+                    up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
+                    plt.figure()
+                    plt.ylim(low, up)
+                    plt.plot(y_realF, color='black', label='Real')
+                    plt.plot(y_predF, color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("No rad - CV(RMSE)={}".format(str(a)))
+
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
