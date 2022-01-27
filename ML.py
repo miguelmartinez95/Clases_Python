@@ -918,6 +918,10 @@ class MLP(ML):
         :param y_val: y to predict
         :return: predictions with the errors depending of zero_problem
         '''
+
+        times = np.delete(times, range(self.n_lags + self.horizont), axis=0)
+
+
         x_val=x_val.reset_index(drop=True)
         y_val=y_val.reset_index(drop=True)
         scalar_y = self.scalar_y
@@ -1040,7 +1044,7 @@ class MLP(ML):
                     plt.plot(y_real1, color='black', label='Real')
                     plt.plot(y_pred1, color='blue', label='Prediction')
                     plt.legend()
-                    plt.title("No rad - CV(RMSE)={}".format(str(a)))
+                    plt.title("No radiation - CV(RMSE)={}".format(str(a)))
 
                 else:
                     print('Missing values are detected when we are evaluating the predictions')

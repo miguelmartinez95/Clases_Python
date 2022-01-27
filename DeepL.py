@@ -1148,33 +1148,36 @@ class LSTM_model(DL):
 
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
-            #place = np.where(x_val.columns == 'radiation')[0]
-            #scalar_x = self.scalar_x
-            #scalar_rad = scalar_x['radiation']
-
-            #res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
-            #                           self.zero_problem, self.limits)
-            #index_rad = res['indexes_out']
-            index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
+            place = np.where(x_val.columns == 'radiation')[0]
+            scalar_x = self.scalar_x
+            scalar_rad = scalar_x['radiation']
+            res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
+                                       self.zero_problem, self.limits)
+            index_rad = res['indexes_out']
+            #index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
 #
             if len(y_pred) <= 1:
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
-                if len(index_rad) > 0:
+                if len(index_rad) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
+                elif len(index_rad) > 0 and self.horizont > 0:
+                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                    y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
 
-
-
+                print(y_pred1[0:100])
+                print(y_real1[0:100])
                 # Outliers and missing values
-            #o = np.where(y_real < self.inf_limit)[0]
-            #if len(o) > 0:
-            #    y_pred1 = np.delete(y_pred1, o, 0)
-            #    y_real1 = np.delete(y_real1, o, 0)
+                if self.mask == True and len(y_pred1) > 0:
+                    o = np.where(y_real1 < self.inf_limit)[0]
+                    if len(o) > 0:
+                        y_pred1 = np.delete(y_pred1, o, 0)
+                        y_real1 = np.delete(y_real1, o, 0)
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
