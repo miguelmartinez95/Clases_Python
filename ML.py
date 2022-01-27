@@ -924,7 +924,7 @@ class MLP(ML):
         y_predF = pd.DataFrame(y_predF)
         print(y_predF.shape)
         y_predF.index = times
-        y_realF = pd.DataFrame(np.concateante(y_real).copy())
+        y_realF = pd.DataFrame(np.concatenate(y_real).copy())
         y_realF.index = y_predF.index
 
         if self.zero_problem == 'schedule':
