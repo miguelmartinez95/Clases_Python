@@ -860,6 +860,7 @@ class MLP(ML):
         print('Process finished!!!')
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
+
     def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test):
         '''
         :param x_train: x to train
@@ -869,7 +870,7 @@ class MLP(ML):
         :return: trained model and the time needed to train
         '''
         layers = len(neurons)
-        model = self.__class__.mlp_regression(layers, neurons,self.data.shape[1]-1, self.mask, self.mask_value)
+        model = self.__class__.mlp_regression(layers, neurons,x_train.shape[1]-1, self.mask, self.mask_value)
         # Checkpoint callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
         mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
