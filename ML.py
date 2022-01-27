@@ -124,7 +124,7 @@ class ML:
         while i <= D:
             if D - i < lim:
                 Y = np.delete(Y, s-1, 1)
-                gap = D - i - 1
+                gap = D - i
                 break
             else:
                 Y[:, s] = x[i:(i + lim)]
@@ -152,7 +152,7 @@ class ML:
             print(i)
             if D - i < lim:
                 Y = np.delete(Y, s-1, 1)
-                gap=D-i-1
+                gap=D-i
 
                 break
             else:
@@ -255,7 +255,8 @@ class ML:
                     index1 =index1[seq]
 
                     if gap > 0:
-                        print(gap)
+                        print('El total a quitar de time_val es:',gap+self.n_steps+self.n_lags)
+
                         X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
                         index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
 
