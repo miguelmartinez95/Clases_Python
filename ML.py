@@ -624,10 +624,10 @@ class MLP(ML):
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
 
-                y_real2 = np.array(val_y.copy())
                 for t in range(y_pred.shape[1]):
                     y_pred[np.where(y_pred < self.inf_limit)[0],t] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0],t] = self.sup_limit
+
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -646,11 +646,9 @@ class MLP(ML):
                     if len(index_hour) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_hour, 0)
                         y_real1 = np.delete(y_real, index_hour, 0)
-                        y_real2 = np.delete(y_real2, index_hour, 0)
                     elif len(index_hour) > 0 and self.horizont > 0:
                         y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
                         y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
-                        y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
@@ -658,11 +656,10 @@ class MLP(ML):
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
-                        y_real2 = np.concatenate(y_real2)
 
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
@@ -680,17 +677,18 @@ class MLP(ML):
                     #                           self.zero_problem, self.limits)
                     #index_rad = res['indexes_out']
                     index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
-                    if len(index_rad) > 0 and self.horizont == 0:
+                    #if len(index_rad) > 0 and self.horizont == 0:
+                    #    y_pred1 = np.delete(y_pred, index_rad, 0)
+                    #    y_real1 = np.delete(y_real, index_rad, 0)
+                    #elif len(index_rad) > 0 and self.horizont > 0:
+                    #    y_pred1 = np.delete(y_pred, index_rad - 1, 0)
+                    #    y_real1 = np.delete(y_real, index_rad - 1, 0)
+                    #else:
+                    #    y_pred1 = y_pred
+                    #    y_real1 = y_real
+                    if len(index_rad) > 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
-                        y_real2 = np.delete(y_real2, index_rad, 0)
-                    elif len(index_rad) > 0 and self.horizont > 0:
-                        #y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
-                        #y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
-                        #y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
-                        y_pred1 = np.delete(y_pred, index_rad - 1, 0)
-                        y_real1 = np.delete(y_real, index_rad - 1, 0)
-                        y_real2 = np.delete(y_real2, index_rad - 1, 0)#
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
@@ -698,7 +696,6 @@ class MLP(ML):
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
-                        y_real2 = np.concatenate(y_real2)
 
                     #if self.mask == True:
                     #    # Outliers and missing values
@@ -714,21 +711,19 @@ class MLP(ML):
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
                 else:
                     if self.type == 'series':
-                        y_pred2 = np.concatenate(y_pred)
-                        y_real2 = np.concatenate(y_real)
+                        y_pred = np.concatenate(y_pred)
+                        y_real = np.concatenate(y_real)
 
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real < self.inf_limit)[0]
                         if len(o) > 0:
-                            y_pred2 = np.delete(y_pred, o, 0)
-                            y_real2 = np.delete(y_real, o, 0)
-                        else:
-                            y_pred2 = y_pred
-                            y_real2 = y_real
-                    cv[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred2, y_real2).rmse()
-                    nmbe[z] = evals(y_pred2, y_real2).nmbe(mean_y)
+                            y_pred = np.delete(y_pred, o, 0)
+                            y_real = np.delete(y_real, o, 0)
+
+                    cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred, y_real).rmse()
+                    nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
                 if plot==True and len(y_realF.shape)>1:
                     s = np.max(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) + 15
@@ -902,7 +897,7 @@ class MLP(ML):
         res = {'model':model, 'times':times}
         return(res)
 
-    def predict(self, model,x_val, y_val,mean_y):
+    def predict(self, model,x_val, y_val,mean_y, times):
         '''
         :param model: trained model
         :param x_val: x to predict
@@ -914,31 +909,24 @@ class MLP(ML):
         scalar_y = self.scalar_y
         y_pred = model.predict(pd.DataFrame(x_val))
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-        y_real = y_val
-        y_real2 = np.array(y_val.copy())
-        y_real = np.array(self.scalar_y.inverse_transform(y_real))
-        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-        y_predF = y_pred.copy()
+        y_real = np.array(self.scalar_y.inverse_transform(y_val))
+
+        for t in range(y_pred.shape[1]):
+            y_pred[np.where(y_pred < self.inf_limit)[0], t] = self.inf_limit
+            y_pred[np.where(y_pred > self.sup_limit)[0], t] = self.sup_limit
+
+
+        y_predF = np.concatenate(y_pred).copy()
         y_predF = pd.DataFrame(y_predF)
-        y_predF.index = self.times
-        y_realF = pd.DataFrame(y_real.copy())
+        y_predF.index = times
+        y_realF = pd.DataFrame(np.concateante(y_real).copy())
         y_realF.index = y_predF.index
+
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
             res = super().fix_values_0( self.times,  self.zero_problem, self.limits)
             index_hour = res['indexes_out']
-           # if len(y_pred<=1) and len(index_hour)>0:
-           #     y_pred1= np.nan
-           #     y_real1=y_real
-           # elif len(y_pred>1) and len(index_hour)==0:
-           #     y_pred1= y_real
-           #     y_real1=y_real
-           #     if self.mask == True:
-           #         o = np.where(y_real2 < self.inf_limit)[0]
-           #         if len(o)>0:
-           #             y_pred1 = np.delete(y_pred1, o, 0)
-           #             y_real1 = np.delete(y_real1, o, 0)
+
             if len(y_pred<=1):
                 y_pred1= np.nan
                 y_real1=y_real
@@ -946,20 +934,24 @@ class MLP(ML):
                 if len(index_hour) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_hour, 0)
                     y_real1 = np.delete(y_real, index_hour, 0)
-                    y_real2 = np.delete(y_real2, index_hour, 0)
                 elif len(index_hour) > 0 and self.horizont > 0:
                     y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
                     y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
-                    y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
+
+                if self.type == 'series':
+                    y_pred1 = np.concatenate(y_pred1)
+                    y_real1 = np.concatenate(y_real1)
+
                 if self.mask == True and len(y_pred1)>0:
-                    o = np.where(y_real2 < self.inf_limit)[0]
+                    o = np.where(y_real1 < self.inf_limit)[0]
                     if len(o)>0:
                         y_pred1 = np.delete(y_pred1, o, 0)
                         y_real1 = np.delete(y_real1, o, 0)
-            if len(y_pred1)>0:
+
+            if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
@@ -975,13 +967,12 @@ class MLP(ML):
                 raise NameError('Empty prediction')
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
-            place = np.where(x_val.columns == 'radiation')[0]
-            scalar_x = self.scalar_x
-            scalar_rad = scalar_x['radiation']
-            res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
-                                          self.zero_problem, self.limits)
-            index_rad=res['indexes_out']
-            index_rad = res['indexes_out']
+            #place = np.where(x_val.columns == 'radiation')[0]
+            #scalar_x = self.scalar_x
+            #scalar_rad = scalar_x['radiation']
+            #res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
+            #                              self.zero_problem, self.limits)
+            index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
             #if len(y_pred<=1) and len(index_rad)>0:
             #    y_pred1= np.nan
             #    y_real1=y_real
@@ -997,19 +988,24 @@ class MLP(ML):
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
-                if len(index_rad) > 0 and self.horizont == 0:
+                if len(index_rad) > 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
-                    y_real2 = np.delete(y_real2, index_rad, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
-                if self.mask == True and len(y_pred1)>0:
-                    o = np.where(y_real2 < self.inf_limit)[0]
-                    if len(o)>0:
-                        y_pred1 = np.delete(y_pred1, o, 0)
-                        y_real1 = np.delete(y_real1, o, 0)
-            if len(y_pred1)>0:
+
+                if self.type == 'series':
+                    y_pred1 = np.concatenate(y_pred1)
+                    y_real1 = np.concatenate(y_real1)
+
+                #if self.mask == True and len(y_pred1)>0:
+                #    o = np.where(y_real1 < self.inf_limit)[0]
+                #    if len(o)>0:
+                #        y_pred1 = np.delete(y_pred1, o, 0)
+                #        y_real1 = np.delete(y_real1, o, 0)
+
+            if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
@@ -1024,12 +1020,17 @@ class MLP(ML):
             else:
                 raise NameError('Empty prediction')
         else:
+            if self.type == 'series':
+                y_pred = np.concatenate(y_pred)
+                y_real = np.concatenate(y_real)
+
             if self.mask == True:
-                o = np.where(y_real2 < self.inf_limit)[0]
+                o = np.where(y_real < self.inf_limit)[0]
                 if len(o)>0:
                     y_pred = np.delete(y_pred, o, 0)
                     y_real = np.delete(y_real, o, 0)
-            if len(y_pred)>0:
+
+            if len(y_pred)>1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     cv = evals(y_pred, y_real).cv_rmse(mean_y)
                     rmse = evals(y_pred, y_real).rmse()
@@ -1043,9 +1044,13 @@ class MLP(ML):
                     r2 = -9999
             else:
                 raise NameError('Empty prediction')
+
         res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
-        y_realF = pd.DataFrame(y_realF)
-        y_realF.index = y_predF.index
+
+        #y_realF = pd.DataFrame(y_realF)
+        #y_realF.index = y_predF.index
+
+        a = np.round(cv, 2)
         up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
         low = int(np.min(y_realF)) + int(np.min(y_realF) / 4)
         plt.figure()
@@ -1053,8 +1058,10 @@ class MLP(ML):
         plt.plot(y_predF, color='black', label='Prediction')
         plt.plot(y_realF, color='blue', label='Real')
         plt.legend()
+        plt.title("CV(RMSE)={}".format(str(a)))
         plt.savefig('plot1.png')
         return res
+
     def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
                          xlimit_sup, dictionary):
         '''
