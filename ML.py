@@ -255,6 +255,7 @@ class ML:
                     index1 =index1[seq]
 
                     if gap > 0:
+                        print(gap)
                         X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
                         index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
 
