@@ -238,17 +238,29 @@ class ML:
                 if onebyone==True:
                     y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
                     y=pd.DataFrame(y.transpose())
+                    if gap > 0:
+                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
+                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
                 else:
                     y,gap = self.cortes(y, len(y), self.n_steps)
                     y=pd.DataFrame(y.transpose())
 
-                if gap>0:
-                    X=X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
-                    index1 = np.delete(index1, range(X.shape[0] -1, X.shape[0]))
+                    if gap > 0:
+                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
+                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
 
-                X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
-                index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
+                    seq = np.arange(0, X.shape[0] - self.n_steps+1, self.n_steps)
+                    X = X.iloc[seq]
+                    index1 =index1[seq]
+
+
+                #X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
+                #index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
                 X = X.reset_index(drop=True)
+
+                print(X.shape)
+                print(y.shape)
+
 
                 X.index = index1
                 y.index = index1
@@ -273,6 +285,7 @@ class ML:
                 else:
                     self.data = pd.concat([X.set_index(y.index),y], axis=1)
         print('Horizont adjusted!')
+
     def scalating(self, scalar_limits,groups,x,y):
         '''
         :param scalar_limits: limit of the scalar data
