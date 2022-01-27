@@ -1151,7 +1151,7 @@ class LSTM_model(DL):
             place = np.where(names == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
-            res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:, place]),
+            res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1], place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
             index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
