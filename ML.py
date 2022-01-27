@@ -687,7 +687,9 @@ class MLP(ML):
                     res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
-                    #index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
+                    index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+
+                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)

@@ -1154,7 +1154,9 @@ class LSTM_model(DL):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            #index_rad = np.where(np.sum(y_real <= self.inf_limit * 1, axis=1) > 0)[0]
+            index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+
+            index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 #
             if len(y_pred) <= 1:
                 y_pred1 = np.nan
