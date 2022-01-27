@@ -886,7 +886,10 @@ class MLP(ML):
         '''
 
         layers = len(neurons)
-        model = self.__class__.mlp_regression(layers, neurons,x_train.shape[1], self.mask, self.mask_value)
+        if self.type=='series':
+            model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value, self.n_steps)
+        else:
+            model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value)
         # Checkpoint callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
         mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
