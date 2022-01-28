@@ -526,7 +526,7 @@ class LSTM_model(DL):
                     yy = data[:,pos_y].reshape(-1,1)
                     #y.append(yy.iloc[in_end:out_end])
                     if horizont==0:
-                        y.append(yy[out_end])
+                        y.append(yy[out_end-1])
                     else:
                         y.append(yy[in_end:out_end])
                     #se selecciona uno
@@ -1072,8 +1072,10 @@ class LSTM_model(DL):
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
-
-        times = np.delete(times, range(self.n_lags), 0)
+        if self.horizont==0:
+            times = np.delete(times, range(self.n_lags-1), 0)
+        else:
+            times = np.delete(times, range(self.n_lags), 0)
 
         res = self.__class__.three_dimension(val, self.n_lags)
 
