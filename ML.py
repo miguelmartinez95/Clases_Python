@@ -227,7 +227,7 @@ class ML:
         '''
         Move the data sample to connected the y with the x based on the future selected
         '''
-        if self.horizont==0:
+        if self.steps==0:
             self.data = self.data
         else:
             if self.type=='series':
