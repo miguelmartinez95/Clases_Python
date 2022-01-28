@@ -556,7 +556,7 @@ class LSTM_model(DL):
                     yy = data[:,pos_y].reshape(-1,1)
                     #y.append(yy.iloc[in_end:out_end])
                     if horizont==0:
-                        y.append(yy[out_end])
+                        y.append(yy[out_end-1])
                     else:
                         y.append(yy[in_end:out_end])
                     #se selecciona uno
