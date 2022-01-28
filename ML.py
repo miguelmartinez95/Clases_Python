@@ -921,7 +921,7 @@ class MLP(ML):
         :return: predictions with the errors depending of zero_problem
         '''
 
-        times = np.delete(times, range(self.n_lags + self.horizont), axis=0)
+        times = np.delete(times, range(self.n_lags + self.n_steps), axis=0)
 
 
         x_val=x_val.reset_index(drop=True)
