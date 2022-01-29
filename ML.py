@@ -690,12 +690,12 @@ class MLP(ML):
                     index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
 
                     index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
-                    if len(index_rad) > 0 and self.horizont == 0:
+                    if len(index_rad) > 0 and self.n_steps == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
                     elif len(index_rad) > 0 and self.horizont > 0:
-                        y_pred1 = np.delete(y_pred, index_rad - 1, 0)
-                        y_real1 = np.delete(y_real, index_rad - 1, 0)
+                        y_pred1 = np.delete(y_pred, np.array(index_rad) - self.n_steps, 0)
+                        y_real1 = np.delete(y_real, np.array(index_rad) - self.n_steps, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
@@ -706,9 +706,9 @@ class MLP(ML):
                     #    y_pred1 = y_pred
                     #    y_real1 = y_real
 #
-                    #if self.type == 'series':
-                    #    y_pred1 = np.concatenate(y_pred1)
-                    #    y_real1 = np.concatenate(y_real1)
+                    if self.type == 'series':
+                        y_pred1 = np.concatenate(y_pred1)
+                        y_real1 = np.concatenate(y_real1)
 #
                     if self.mask == True:
                         # Outliers and missing values
@@ -722,6 +722,17 @@ class MLP(ML):
                     cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     rmse[z] = evals(y_pred1, y_real1).rmse()
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+
+                    a = np.round(cv[z], 2)
+                    up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
+                    plt.figure()
+                    plt.ylim(low, up)
+                    plt.plot(y_real1, color='black', label='Real')
+                    plt.plot(y_pred1, color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("No radiation - CV(RMSE)={}".format(str(a)))
+
                 else:
                     if self.type == 'series':
                         y_pred = np.concatenate(y_pred)
@@ -739,14 +750,14 @@ class MLP(ML):
                     nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
                 if plot==True and len(y_realF.shape)>1:
-                    s = np.max(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) + 15
-                    i = np.min(y_realF.iloc[:,y_realF.shape[1]-1]).astype(int) - 15
+                    s = np.max(y_realF.iloc[:,0]).astype(int) + 15
+                    i = np.min(y_realF.iloc[:,0]).astype(int) - 15
                     a =np.round(cv[z],2)
 
                     plt.figure()
                     plt.ylim(i, s)
-                    plt.plot(y_realF.iloc[:,y_realF.shape[1]-1], color='black', label='Real')
-                    plt.plot(y_predF.iloc[:,y_realF.shape[1]-1], color='blue', label='Prediction')
+                    plt.plot(y_realF.iloc[:,0], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:,0], color='blue', label='Prediction')
                     plt.legend()
                     plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                     a = 'Subsample-'
