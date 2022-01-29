@@ -759,7 +759,7 @@ class LSTM_model(DL):
            for i in range(2):
                 train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2)),1]
+                index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2))]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
                 x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, True)
