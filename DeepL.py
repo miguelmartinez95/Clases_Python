@@ -987,6 +987,19 @@ class LSTM_model(DL):
                             cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             rmse[zz] = evals(y_pred1, y_real1).rmse()
                             nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+
+                            a = np.round(cv[zz], 2)
+                            up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                            low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
+                            plt.figure()
+                            plt.ylim(low, up)
+                            plt.plot(y_real1, color='black', label='Real')
+                            plt.plot(y_pred1, color='blue', label='Prediction')
+                            plt.legend()
+                            plt.title("No rad - CV(RMSE)={}".format(str(a)))
+                            plt.show()
+
+
                         else:
                             print('Missing values are detected when we are evaluating the predictions')
                             cv[zz] = 9999
