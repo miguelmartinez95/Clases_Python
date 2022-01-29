@@ -201,27 +201,76 @@ class DL:
         if len(sup)>0:
             self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
 
-    def adapt_horizont(self):
+    def adapt_horizont(self, onebyone):
         '''
         Move the data sample to connected the y with the x based on the future selected
         '''
-        if self.horizont==0:
+        if self.n_steps == 0:
             self.data = self.data
         else:
-            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-            y = self.data.iloc[:,self.pos_y]
-            for t in range(self.horizont):
-                y =y.drop(y.index[0], axis=0)
+            if self.type == 'series':
+                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+                y = self.data.iloc[:, self.pos_y]
+                y = y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
+                index1 = X.index
 
-            if self.pos_y == 0:
-                self.data = pd.concat([y, X], axis=1)
+                if onebyone == True:
+                    y, gap = self.cortes_onebyone(y, len(y), self.n_steps)
+                    y = pd.DataFrame(y.transpose())
+                    if gap > 0:
+                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
+                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
+                    X = X.drop(X.index[range(X.shape[0] - self.n_steps + 1, X.shape[0])], axis=0)
+                    index1 = np.delete(index1, range(len(index1) - self.n_steps + 1, len(index1)))
+
+                else:
+                    y, gap = self.cortes(y, len(y), self.n_steps)
+                    y = pd.DataFrame(y.transpose())
+
+                    seq = np.arange(0, X.shape[0] - self.n_steps + 1, self.n_steps)
+                    X = X.iloc[seq]
+                    index1 = index1[seq]
+
+                    if gap > 0:
+                        fuera = 1 + gap + self.n_steps + self.n_lags
+                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
+                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
+
+                    else:
+                        fuera = 1 + self.n_lags
+                    print('El total a quitar de time_val es:', fuera)
+
+                # X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
+                # index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
+                X = X.reset_index(drop=True)
+
+                print(X.shape)
+                print(y.shape)
+
+                X.index = index1
+                y.index = index1
+
+                if self.pos_y == 0:
+                    self.data = pd.concat([y, X], axis=1)
+                else:
+                    self.data = pd.concat([X, y], axis=1)
+
             else:
-                self.data = pd.concat([X,y], axis=1)
+                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+                y = self.data.iloc[:, self.pos_y]
+                for t in range(self.horizont):
+                    y = y.drop(y.index[0], axis=0)
+                    X = X.drop(X.index[X.shape[0] - 1], axis=0)
 
+                X = X.reset_index(drop=True)
+                X.index = y.index
+
+                if self.pos_y == 0:
+                    self.data = pd.concat([y, X.set_index(y.index)], axis=1)
+                else:
+                    self.data = pd.concat([X.set_index(y.index), y], axis=1)
         print('Horizont adjusted!')
-
-
 
     def scalating(self, scalar_limits, groups, x, y):
         '''
@@ -333,8 +382,6 @@ class DL:
         hour=self.times.hour
         start = np.where(hour==0)[0][0]
 
-
-
         if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
             d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
             end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
@@ -436,6 +483,12 @@ class LSTM_model(DL):
 
     @staticmethod
     def three_dimension(data_new, n_inputs):
+        '''
+
+        :param data_new: data
+        :param n_inputs: the lags considered (n_lags)
+        :return: data converted in three dimension based on the lags and the variables
+        '''
         rest2 = data_new.shape[0] % n_inputs
         ind_out = 0
         while rest2 != 0:
@@ -524,7 +577,7 @@ class LSTM_model(DL):
                     # x_input = x_input.reshape((len(x_input), 1))
                     X.append(x_input)
                     yy = data[:,pos_y].reshape(-1,1)
-                    #y.append(yy.iloc[in_end:out_end])
+
                     if horizont==0:
                         y.append(yy[out_end-1])
                     else:
@@ -532,7 +585,7 @@ class LSTM_model(DL):
                     #se selecciona uno
                 # move along one time step
                 in_start += 1
-                #in_start += horizont
+
         else:
             if horizont==0:
                 limit=int((len(data)-(n_lags + horizont))/1)+1
@@ -554,7 +607,7 @@ class LSTM_model(DL):
                     # x_input = x_input.reshape((len(x_input), 1))
                     X.append(x_input)
                     yy = data[:,pos_y].reshape(-1,1)
-                    #y.append(yy.iloc[in_end:out_end])
+
                     if horizont==0:
                         y.append(yy[out_end-1])
                     else:
@@ -684,10 +737,10 @@ class LSTM_model(DL):
         :param model: model architecture built
         :return: model trained
         '''
-        print(train_x1.shape)
-        print(train_y1.shape)
-        print(test_x1.shape)
-        print(test_y1.shape)
+        print('TRAIN:', train_x1.shape)
+        print('TRAIN_Y:',train_y1.shape)
+        print('TEST:', test_x1.shape)
+        print('TEST_Y:', test_y1.shape)
 
         h_path = Path('./best_models')
         h_path.mkdir(exist_ok=True)
@@ -710,6 +763,7 @@ class LSTM_model(DL):
         :param n_lags: lags to built lstm blocks
         :return: predictions in the validation sample, considering the selected moving window
         '''
+
         data = np.array(x_val)
         data = data.reshape((data.shape[0] * data.shape[1], data.shape[2]))
         predictions = list()
@@ -726,7 +780,6 @@ class LSTM_model(DL):
             #history.append(tt[i,:])
             l1 =l2
             l2 += n_lags
-
 
         predictions  =np.array(predictions)
         print(len(predictions))
