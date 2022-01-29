@@ -759,11 +759,11 @@ class LSTM_model(DL):
            for i in range(2):
                 train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                #index_val = index_test[range(index_test.shape[0]-math.ceil(index_test.shape[0]/2)),: ,1]
+                index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2)),1]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
                 x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, True)
-                index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
+                #index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
 
                 print(index_val.shape)
                 print(val.shape)
@@ -773,7 +773,10 @@ class LSTM_model(DL):
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
-                index_val = np.delete(index_val, range(n_lags), axis=0)
+                if horizont==0:
+                    index_val = np.delete(index_val, range(n_lags-1), axis=0)
+                else:
+                    index_val = np.delete(index_val, range(n_lags), axis=0)
                 #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
                 #diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
@@ -859,10 +862,10 @@ class LSTM_model(DL):
                             y_predP = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
                             y_realP = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
 
-                            y_predP = y_predP[:,0]
-                            y_predP = y_predP.index = times_val[z]
-                            y_realP = y_realP[:,0]
-                            y_realP = y_realP.index = times_val[z]
+                            y_predP = pd.DataFrame(y_predP[:,0])
+                            y_predP.index = times_val[z]
+                            y_realP = pd.DataFrame(y_realP[:,0])
+                            y_realP.index = times_val[z]
 
                             s = np.max(y_realP).astype(int) + 12
                             i = np.min(y_realP).astype(int) - 12
@@ -940,10 +943,15 @@ class LSTM_model(DL):
                             nmbe[zz] = 9999
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
-                        #y_pred = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
-                        #y_real = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
-
-                        index_rad = np.where(np.sum(y_real<=self.inf_limit*1, axis=1)>0)[0]
+                        print('*****Night-radiation fixed******')
+                        place = np.where(names == 'radiation')[0]
+                        scalar_x = self.scalar_x
+                        scalar_rad = scalar_x['radiation']
+                        res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:, x_val.shape[1] - 1, place]),
+                                                   self.zero_problem, self.limits)
+                        index_rad = res['indexes_out']
+                        index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+                        index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -953,13 +961,15 @@ class LSTM_model(DL):
                         #elif len(index_rad) > 0 and self.horizont > 0:
                         #    y_pred1 = np.delete(y_pred, index_rad - 1, 0)
                         #    y_real1 = np.delete(y_real, index_rad - 1, 0)
-                        if len(index_rad) > 0:
+                        if len(index_rad) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
                             y_real1 = np.delete(y_real, index_rad, 0)
+                        elif len(index_rad) > 0 and self.horizont > 0:
+                            y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                            y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-
 
                         #y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
                         #y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
