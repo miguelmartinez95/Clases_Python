@@ -508,7 +508,7 @@ class LSTM_model(DL):
         # step over the entire history one time step at a time
         if onebyone==True:
 
-            for _ in range(len(data)-(n_lags + horizont)):
+            for _ in range(len(data)-(n_lags + horizont)+1):
             #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
