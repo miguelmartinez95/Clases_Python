@@ -879,15 +879,17 @@ class LSTM_model(DL):
                             b = str(z) + '.png'
                             plt.show()
                         else:
-                            y_real.index=times_val[z]
-                            y_pred.index=times_val[z]
+                            y_realP = pd.DataFrame(y_real)
+                            y_predP = pd.DataFrame(y_pred)
+                            y_realP.index=times_val[z]
+                            y_predP.index=times_val[z]
 
                             s = np.max(y_real).astype(int) + 12
                             i = np.min(y_real).astype(int) - 12
                             plt.figure()
                             plt.ylim(i, s)
-                            plt.plot(y_real, color='black', label='Real')
-                            plt.plot(y_pred, color='blue', label='Prediction')
+                            plt.plot(y_realP, color='black', label='Real')
+                            plt.plot(y_predP, color='blue', label='Prediction')
                             plt.legend()
                             plt.title("Subsample {} ".format(z))
                             a = 'Subsample-'
