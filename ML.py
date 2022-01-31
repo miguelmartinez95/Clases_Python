@@ -263,8 +263,6 @@ class ML:
                         fuera= 1+self.n_lags
                     print('El total a quitar de time_val es:', fuera)
 
-                #X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
-                #index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
                 X = X.reset_index(drop=True)
 
                 print(X.shape)
@@ -532,7 +530,6 @@ class MLP(ML):
                 else:
                     ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
 
-
             # The Output Layer :
             ANN_model.add(Dense(1, kernel_initializer='normal', activation='linear'))
             # Compile the network :
@@ -591,7 +588,7 @@ class MLP(ML):
         :param plot: True plots
         :return: predictions, real values, errors and the times needed to train
         '''
-        scalar_y =self.scalar_y
+
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
         print('##########################'
               '################################'
@@ -620,7 +617,7 @@ class MLP(ML):
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
 
-        if self.type=='clasification':
+        if self.type=='classification':
             data2 = self.data
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
@@ -631,7 +628,7 @@ class MLP(ML):
             ##########################################################################
         else:
             if self.type=='regression':
-                model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, dropout,)
+                model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, dropout)
                 # Checkpoitn callback
                 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
@@ -730,12 +727,6 @@ class MLP(ML):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-                    #if len(index_rad) > 0:
-                    #    y_pred1 = np.delete(y_pred, index_rad, 0)
-                    #    y_real1 = np.delete(y_real, index_rad, 0)
-                    #else:
-                    #    y_pred1 = y_pred
-                    #    y_real1 = y_real
 #
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
@@ -754,15 +745,15 @@ class MLP(ML):
                     rmse[z] = evals(y_pred1, y_real1).rmse()
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
 
-                    a = np.round(cv[z], 2)
-                    up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
-                    plt.figure()
-                    plt.ylim(low, up)
-                    plt.plot(y_real1, color='black', label='Real')
-                    plt.plot(y_pred1, color='blue', label='Prediction')
-                    plt.legend()
-                    plt.title("No radiation - CV(RMSE)={}".format(str(a)))
+                    #a = np.round(cv[z], 2)
+                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    #low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
+                    #plt.figure()
+                    #plt.ylim(low, up)
+                    #plt.plot(y_real1, color='black', label='Real')
+                    #plt.plot(y_pred1, color='blue', label='Prediction')
+                    #plt.legend()
+                    #plt.title("No radiation - CV(RMSE)={}".format(str(a)))
 
                 else:
                     if self.type == 'series':
@@ -968,7 +959,6 @@ class MLP(ML):
 
         x_val=x_val.reset_index(drop=True)
         y_val=y_val.reset_index(drop=True)
-        scalar_y = self.scalar_y
         y_pred = model.predict(pd.DataFrame(x_val))
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
@@ -1040,17 +1030,7 @@ class MLP(ML):
             index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
 
             index_rad= np.union1d(np.array(index_rad), np.array(index_rad2))
-            #if len(y_pred<=1) and len(index_rad)>0:
-            #    y_pred1= np.nan
-            #    y_real1=y_real
-            #elif len(y_pred<=1) and len(index_rad)==0:
-            #    y_pred1= y_real
-            #    y_real1=y_real
-            #    if self.mask == True:
-            #        o = np.where(y_real2 < self.inf_limit)[0]
-            #        if len(o)>0:
-            #            y_pred1 = np.delete(y_pred1, o, 0)
-            #            y_real1 = np.delete(y_real1, o, 0)
+
             if len(y_pred)<=1:
                 y_pred1 = np.nan
                 y_real1 = y_real
@@ -1081,15 +1061,15 @@ class MLP(ML):
                     nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
                     rmse = evals(y_pred1, y_real1).rmse()
                     r2 = evals(y_pred1, y_real1).r2()
-                    a = np.round(cv, 2)
-                    up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
-                    plt.figure()
-                    plt.ylim(low, up)
-                    plt.plot(y_real1, color='black', label='Real')
-                    plt.plot(y_pred1, color='blue', label='Prediction')
-                    plt.legend()
-                    plt.title("No radiation - CV(RMSE)={}".format(str(a)))
+                    #a = np.round(cv, 2)
+                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    #low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
+                    #plt.figure()
+                    #plt.ylim(low, up)
+                    #plt.plot(y_real1, color='black', label='Real')
+                    #plt.plot(y_pred1, color='blue', label='Prediction')
+                    #plt.legend()
+                    #plt.title("No radiation - CV(RMSE)={}".format(str(a)))
 
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1126,9 +1106,6 @@ class MLP(ML):
                 raise NameError('Empty prediction')
 
         res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
-
-        #y_realF = pd.DataFrame(y_realF)
-        #y_realF.index = y_predF.index
 
         a = np.round(cv, 2)
         up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
@@ -1169,13 +1146,13 @@ class MLP(ML):
             problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-                                self.type, self.data,
+                                self.type, self.data,self.scalar_x,
                                 med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-                                self.type, self.data,
+                                self.type, self.data,self.scalar_x,
                                 med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary)
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
