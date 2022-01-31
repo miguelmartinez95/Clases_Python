@@ -1110,12 +1110,15 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,model=[]):
         '''
         :return: the trained model and the time required to be trained
 
         Instance to train model outside these classes
         '''
+        from datetime import datetime
+
+        now = str(datetime.now().microsecond)
 
         res = self.__class__.three_dimension(train, self.n_lags)
         train = res['data']
@@ -1128,19 +1131,22 @@ class LSTM_model(DL):
         print(x_train.shape)
         print(x_test.shape)
         print(y_test.shape)
-
-        if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
-            time_start = time()
-            model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
-            times = round(time() - time_start, 3)
+        if isinstance(model, list):
+            if self.type=='regression':
+                model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
+                time_start = time()
+                model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
+                times = round(time() - time_start, 3)
+            else:
+                model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout)
+                time_start = time()
+                model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
+                times = round(time() - time_start, 3)
         else:
-            model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout)
-            time_start = time()
-            model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
-            times = round(time() - time_start, 3)
+            model_trained=model
         if save_model==True:
-            model.save('mlp.h5', save_format='h5')
+            name='mlp'+now+'.h5'
+            model_trained.save(name, save_format='h5')
         res = {'model': model_trained, 'times': times}
         return res
 

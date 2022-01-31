@@ -933,7 +933,7 @@ class MLP(ML):
         '''
         from datetime import datetime
 
-        now = str(datetime.now())
+        now = str(datetime.now().microsecond)
 
         if type=='regression':
             if isinstance(model, list):
