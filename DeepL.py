@@ -865,7 +865,7 @@ class LSTM_model(DL):
         res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_val':times_val}
         return res
 
-    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y,plot, q=[]):
+    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y,plot, q=[], model=[]):
         '''
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
@@ -895,7 +895,11 @@ class LSTM_model(DL):
 
 
         if self.type=='regression':
-            model = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+            if isinstance(model, list):
+                model1 = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+
+            else:
+                model1=model
             # Train the model
             times = [0 for x in range(rep*2)]
             cv = [0 for x in range(rep*2)]
@@ -907,11 +911,12 @@ class LSTM_model(DL):
             for z in range(2):
                 print('Fold number', z)
                 for zz2 in range(rep):
+                    modelF = model1
                     time_start = time()
-                    model = self.__class__.train_model(model,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
+                    model = self.__class__.train_model(modelF,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
-                    res = self.__class__.predict_model(model, self.n_lags, x_val[z], batch)
+                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch)
                     y_pred = res['y_pred']
 
 

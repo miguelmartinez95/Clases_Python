@@ -581,7 +581,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[]):
+    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -627,16 +627,22 @@ class MLP(ML):
             #EN PROCESOO ALGÚN DíA !!!!!!!
             ##########################################################################
         else:
-            if self.type=='regression':
-                model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, dropout)
-                # Checkpoitn callback
-                es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-                mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            if isinstance(model, list):
+                if self.type=='regression':
+                    model1= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, dropout)
+                    # Checkpoitn callback
+                    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+                    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+                else:
+                    model1= self.__class__.mlp_series(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value,dropout, self.n_steps)
+                    # Checkpoitn callback
+                    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+                    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             else:
-                model= self.__class__.mlp_series(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value,dropout, self.n_steps)
-                # Checkpoitn callback
+                model1=model
                 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+
             # Train the model
             times=[0 for x in range(fold)]
             cv=[0 for x in range(fold)]
@@ -645,6 +651,7 @@ class MLP(ML):
             predictions=[]
             reales = []
             for z in range(fold):
+                modelF=model1
                 print('Fold number', z)
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
@@ -653,9 +660,9 @@ class MLP(ML):
                 val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
                 time_start = time()
-                model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],batch_size=batch )
+                modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],batch_size=batch )
                 times[z] = round(time() - time_start, 3)
-                y_pred = model.predict(val_x)
+                y_pred = modelF.predict(val_x)
 
                 print(val_x.shape)
                 print(y_pred.shape)
