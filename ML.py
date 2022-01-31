@@ -512,23 +512,23 @@ class MLP(ML):
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
                 ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
-                ANN_model.add(Dropout(drop_value))
+                ANN_model.add(Dropout(dropout))
             elif mask==True and dropout==0:
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
                 ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
-                ANN_model.add(Dropout(drop_value))
+                ANN_model.add(Dropout(dropout))
             elif mask==False and dropout>0:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
-                ANN_model.add(Dropout(drop_value))
+                ANN_model.add(Dropout(dropout))
             else:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
             for i in range(layers):
                 if dropout>0:
                     ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
-                    ANN_model.add(Dropout(drop_value))
+                    ANN_model.add(Dropout(dropout))
                 else:
                     ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
 
@@ -543,7 +543,7 @@ class MLP(ML):
             raise NameError('Problems building the MLP')
 
     @staticmethod
-    def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout, drop_value,n_steps):
+    def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout,n_steps):
         '''
         :param inputs:amount of inputs
         :param mask:True or false
@@ -555,23 +555,23 @@ class MLP(ML):
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                     activation='relu'))
-                ANN_model.add(Dropout(drop_value))
+                ANN_model.add(Dropout(dropout))
             elif mask == True and dropout ==0:
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                     activation='relu'))
-                ANN_model.add(Dropout(drop_value))
+                ANN_model.add(Dropout(dropout))
             elif mask == False and dropout >0:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                     activation='relu'))
-                ANN_model.add(Dropout(drop_value))
+                ANN_model.add(Dropout(dropout))
             else:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                     activation='relu'))
             for i in range(layers):
                 if dropout >0:
                     ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
-                    ANN_model.add(Dropout(drop_value))
+                    ANN_model.add(Dropout(dropout))
                 else:
                     ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
 
@@ -832,7 +832,7 @@ class MLP(ML):
             else:
                 return (res)
 
-    def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel, top):
+    def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel,dropout, top):
         '''
         :param fold: division in cv analyses
         :param parallel: True or false (True to linux)
@@ -851,7 +851,7 @@ class MLP(ML):
                 for i in range(len(paciences)):
                     options['neurons'].append(neuron)
                     options['pacience'].append(paciences[i])
-                    res = self.cv_analysis(fold, neuron , paciences[i],batch,mean_y,False)
+                    res = self.cv_analysis(fold, neuron , paciences[i],batch,mean_y,dropout,False)
                     results[w]=np.mean(res['cv_rmse'])
                     deviations[w]=np.std(res['cv_rmse'])
                     w +=1
@@ -870,7 +870,7 @@ class MLP(ML):
                     if z < parallel and w < contador:
                         multiprocessing.set_start_method('fork')
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y,False, q))
+                                    args=(fold, neuron, paciences[i], batch, mean_y,dropout,False, q))
                         p.start()
                         processes.append(p)
                         z1 =z+ 1
@@ -886,13 +886,13 @@ class MLP(ML):
                         # multiprocessing.set_start_method('spawn')
                         q = Queue()
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y,False, q))
+                                    args=(fold, neuron, paciences[i], batch, mean_y,dropout,False, q))
                         p.start()
                         processes.append(p)
                         z1 = 1
                     elif w == contador:
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y,False, q))
+                                    args=(fold, neuron, paciences[i], batch, mean_y,dropout,False, q))
                         p.start()
                         processes.append(p)
                         p.close()
@@ -1143,7 +1143,7 @@ class MLP(ML):
         return res
 
     def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
-                         xlimit_sup, dictionary):
+                         xlimit_sup,dropout, dictionary):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -1170,13 +1170,13 @@ class MLP(ML):
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,
-                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,
-                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup, dictionary)
+                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary)
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           # sampling =g,
@@ -1213,7 +1213,7 @@ class MLP(ML):
         else:
             pass
         return (obj, struct, obj_T, struct_T, res)
-    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
+    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
         '''
         :param l_dense: maximun layers dense
         :param batch: batch size
@@ -1230,7 +1230,7 @@ class MLP(ML):
         contador.append(0)
         obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dictionary)
+                                                                            xlimit_sup, dropout,dictionary)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
@@ -1266,7 +1266,7 @@ class MyProblem_mlp(MLP, Problem):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
     def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
                  sup_limit, type, data,scalar_x, med, contador,
-                 n_var,l_dense, batch, xlimit_inf, xlimit_sup, dictionary, **kwargs):
+                 n_var,l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1295,6 +1295,7 @@ class MyProblem_mlp(MLP, Problem):
         self.batch = batch
         self.xlimit_inf = xlimit_inf
         self.xlimit_sup = xlimit_sup
+        self.dropout = dropout
         self.n_var = n_var
         self.dictionary = dictionary
     @staticmethod
@@ -1310,7 +1311,7 @@ class MyProblem_mlp(MLP, Problem):
         F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
         return F
 
-    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y,dropout, dictionary):
+    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param dictionary: dictionary to fill with the options tested
@@ -1342,8 +1343,21 @@ class MyProblem_mlp(MLP, Problem):
         tt = self.times
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
-        if self.type == 'regression':
-            model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, dropout)
+        if self.type=='classification':
+            data2 = self.data
+            yy = data2.iloc[:, self.pos_y]
+            yy = pd.Series(yy, dtype='category')
+            n_classes = len(yy.cat.categories.to_list())
+            model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask, self.mask_value)
+            ####################################################################
+            # EN PROCESOO ALGÚN DíA !!!!!!!
+            ##########################################################################
+        else:
+            if self.type=='regression':
+                model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, self.dropout)
+            elif self.type=='series':
+                model = self.__class__.mlp_series(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value,
+                                                      self.dropout, self.n_steps)
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
