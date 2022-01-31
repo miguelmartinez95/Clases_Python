@@ -631,12 +631,12 @@ class MLP(ML):
             ##########################################################################
         else:
             if self.type=='regression':
-                model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value)
+                model= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, dropout,)
                 # Checkpoitn callback
                 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             else:
-                model= self.__class__.mlp_series(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, self.n_steps)
+                model= self.__class__.mlp_series(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value,dropout, self.n_steps)
                 # Checkpoitn callback
                 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
@@ -1459,15 +1459,7 @@ class MyProblem_mlp(MLP, Problem):
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             return res_final['cvs'], res_final['complexity']
-        else:
-            data2 = self.data
-            yy = data2.iloc[:, self.pos_y]
-            yy = pd.Series(yy, dtype='category')
-            n_classes = len(yy.cat.categories.to_list())
-            model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask, self.mask_value)
-            ####################################################################
-            # EN PROCESOO ALGÚN DíA !!!!!!!
-            ##########################################################################
+
     @staticmethod
     def bool4(x,l_dense):
         '''
