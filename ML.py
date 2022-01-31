@@ -922,29 +922,42 @@ class MLP(ML):
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
 
-    def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test, dropout, save_model):
+    def train(self, type,neurons, pacience, batch,x_train, x_test, y_train, y_test, dropout, save_model, model=[]):
         '''
         :param x_train: x to train
         :param x_test: x to early stopping
         :param y_train: y to train
         :param y_test: y to early stopping
+        :param model: loaded model
         :return: trained model and the time needed to train
         '''
+        from datetime import datetime
 
-        layers = len(neurons)
-        if self.type=='series':
-            model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value,dropout, self.n_steps)
+        now = str(datetime.now())
+
+        if type=='regression':
+            if isinstance(model, list):
+                layers = len(neurons)
+                if self.type=='series':
+                    model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value,dropout, self.n_steps)
+                else:
+                    model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout)
+            else:
+                model=model
+            # Checkpoint callback
+            es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+            mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            time_start = time()
+            model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
+                      callbacks=[es, mc],batch_size=batch)
+            times = round(time() - time_start, 3)
         else:
-            model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout)
-        # Checkpoint callback
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-        mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
-        time_start = time()
-        model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
-                  callbacks=[es, mc],batch_size=batch)
-        times = round(time() - time_start, 3)
+
+            'clasification'
+
         if save_model==True:
-            model.save('mlp.h5', save_format='h5')
+            name='mlp'+now+'.h5'
+            model.save(name, save_format='h5')
         res = {'model':model, 'times':times}
         return(res)
 
