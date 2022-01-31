@@ -9,7 +9,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Masking
+from keras.layers import Masking, Dropout
 from datetime import datetime
 from time import time
 import skfda
@@ -500,7 +500,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
     @staticmethod
-    def mlp_regression(layers, neurons,  inputs,mask, mask_value):
+    def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout):
         '''
         :param inputs:amount of inputs
         :param mask:True or false
@@ -508,15 +508,31 @@ class MLP(ML):
         '''
         try:
             ANN_model = Sequential()
-            if mask==True:
+            if mask==True and dropout>0:
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
                 ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
+                ANN_model.add(Dropout(drop_value))
+            elif mask==True and dropout==0:
+                ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
+                ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
+                                activation='relu'))
+                ANN_model.add(Dropout(drop_value))
+            elif mask==False and dropout>0:
+                ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
+                                activation='relu'))
+                ANN_model.add(Dropout(drop_value))
             else:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
             for i in range(layers):
-                ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
+                if dropout>0:
+                    ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
+                    ANN_model.add(Dropout(drop_value))
+                else:
+                    ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
+
+
             # The Output Layer :
             ANN_model.add(Dense(1, kernel_initializer='normal', activation='linear'))
             # Compile the network :
@@ -527,7 +543,7 @@ class MLP(ML):
             raise NameError('Problems building the MLP')
 
     @staticmethod
-    def mlp_series(layers, neurons,  inputs,mask, mask_value,n_steps):
+    def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout, drop_value,n_steps):
         '''
         :param inputs:amount of inputs
         :param mask:True or false
@@ -535,15 +551,30 @@ class MLP(ML):
         '''
         try:
             ANN_model = Sequential()
-            if mask==True:
+            if mask == True and dropout >0:
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
-                ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
-                                activation='relu'))
+                ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
+                                    activation='relu'))
+                ANN_model.add(Dropout(drop_value))
+            elif mask == True and dropout ==0:
+                ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
+                ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
+                                    activation='relu'))
+                ANN_model.add(Dropout(drop_value))
+            elif mask == False and dropout >0:
+                ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
+                                    activation='relu'))
+                ANN_model.add(Dropout(drop_value))
             else:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
-                                activation='relu'))
+                                    activation='relu'))
             for i in range(layers):
-                ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
+                if dropout >0:
+                    ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
+                    ANN_model.add(Dropout(drop_value))
+                else:
+                    ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
+
             # The Output Layer :
             ANN_model.add(Dense(n_steps, kernel_initializer='normal', activation='linear'))
             # Compile the network :
@@ -553,7 +584,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self,fold, neurons, pacience, batch, mean_y, plot,q=[]):
+    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -900,7 +931,7 @@ class MLP(ML):
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
 
-    def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test):
+    def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test, dropout):
         '''
         :param x_train: x to train
         :param x_test: x to early stopping
@@ -911,9 +942,9 @@ class MLP(ML):
 
         layers = len(neurons)
         if self.type=='series':
-            model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value, self.n_steps)
+            model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value,dropout, self.n_steps)
         else:
-            model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value)
+            model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout)
         # Checkpoint callback
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
         mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
@@ -1278,7 +1309,8 @@ class MyProblem_mlp(MLP, Problem):
         u = len(neurons)
         F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
         return F
-    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y, dictionary):
+
+    def cv_nsga(self,data, fold, neurons, pacience, batch, mean_y,dropout, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param dictionary: dictionary to fill with the options tested
@@ -1311,7 +1343,7 @@ class MyProblem_mlp(MLP, Problem):
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
         if self.type == 'regression':
-            model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value)
+            model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, dropout)
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
