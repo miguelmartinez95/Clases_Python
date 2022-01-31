@@ -1110,7 +1110,7 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model):
         '''
         :return: the trained model and the time required to be trained
 
@@ -1139,6 +1139,8 @@ class LSTM_model(DL):
             time_start = time()
             model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
             times = round(time() - time_start, 3)
+        if save_model==True:
+            model.save('mlp.h5', save_format='h5')
         res = {'model': model_trained, 'times': times}
         return res
 

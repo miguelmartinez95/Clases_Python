@@ -922,7 +922,7 @@ class MLP(ML):
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
 
-    def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test, dropout):
+    def train(self, neurons, pacience, batch,x_train, x_test, y_train, y_test, dropout, save_model):
         '''
         :param x_train: x to train
         :param x_test: x to early stopping
@@ -943,6 +943,8 @@ class MLP(ML):
         model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
                   callbacks=[es, mc],batch_size=batch)
         times = round(time() - time_start, 3)
+        if save_model==True:
+            model.save('mlp.h5', save_format='h5')
         res = {'model':model, 'times':times}
         return(res)
 
