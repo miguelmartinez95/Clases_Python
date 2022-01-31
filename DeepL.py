@@ -241,8 +241,6 @@ class DL:
                         fuera = 1 + self.n_lags
                     print('El total a quitar de time_val es:', fuera)
 
-                # X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
-                # index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
                 X = X.reset_index(drop=True)
 
                 print(X.shape)
@@ -639,23 +637,42 @@ class LSTM_model(DL):
         n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]  # define model
 
         model = Sequential()
-        if mask == True:
-            model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-            model.add(LSTM(n_features, activation='relu', return_sequences=True))
-        else:
-            model.add(LSTM(n_features, activation='relu', return_sequences=True, input_shape=(n_timesteps, n_features)))
         for k in range(layers_lstm):
-            if (repeat_vector == True and k == 0):
-                model.add(LSTM(neurons_lstm[k], activation='relu'))
-                model.add(RepeatVector(n_outputs))
-            else:
-                model.add(LSTM(neurons_lstm[k], activation='relu'))
+            if k == 0 and repeat_vector == True:
+                if mask == True:
+                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                    model.add(LSTM(neurons_lstm[k], activation='relu'))
+                    model.add(RepeatVector(n_timesteps))
+                else:
+                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation='relu'))
+                    model.add(RepeatVector(n_timesteps))
 
-        for z in range(layers_neurons):
-            if neurons_dense[z] == 0:
-                pass
+            elif k == 0 and repeat_vector == False:
+                if mask == True:
+                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                    model.add(LSTM(neurons_lstm[k], return_sequences=True, activation='relu'))
+                else:
+                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), return_sequences=True,
+                                   activation='relu'))
+            elif k == layers_lstm - 1:
+                model.add(LSTM(neurons_lstm[k], activation='relu'))
             else:
-                model.add(Dense(neurons_dense[z], activation='relu'))
+                model.add(LSTM(neurons_lstm[k], return_sequences=True, activation='relu'))
+
+        if layers_neurons > 0:
+            if dropout > 0:
+                for z in range(layers_neurons):
+                    if neurons_dense[z] == 0:
+                        pass
+                    else:
+                        model.add(Dense(neurons_dense[z], activation='relu', kernel_constraint=maxnorm(3)))
+                        model.add(Dropout(dropout))
+            else:
+                for z in range(layers_neurons):
+                    if neurons_dense[z] == 0:
+                        pass
+                    else:
+                        model.add(Dense(neurons_dense[z], activation='relu'))
 
         model.add(Dense(n_outputs), kernel_initializer='normal', activation='softmax')
         model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy'])
@@ -832,9 +849,6 @@ class LSTM_model(DL):
                     index_val = np.delete(index_val, range(n_lags), axis=0)
                 #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
-                #diff = len(index_val) - (y_val.shape[0] * y_val.shape[1])
-                #if diff > 0:
-                #    index_val = np.delete(index_val, range(len(index_val) - diff, len(index_val)), axis=0)
                 times_val.append(index_val)
 
                 X_test.append(x_test)
@@ -1010,12 +1024,7 @@ class LSTM_model(DL):
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
-                        #if len(index_rad) > 0 and self.horizont == 0:
-                        #    y_pred1 = np.delete(y_pred, index_rad, 0)
-                        #    y_real1 = np.delete(y_real, index_rad, 0)
-                        #elif len(index_rad) > 0 and self.horizont > 0:
-                        #    y_pred1 = np.delete(y_pred, index_rad - 1, 0)
-                        #    y_real1 = np.delete(y_real, index_rad - 1, 0)
+
                         if len(index_rad) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
                             y_real1 = np.delete(y_real, index_rad, 0)
@@ -1026,31 +1035,21 @@ class LSTM_model(DL):
                             y_pred1 = y_pred
                             y_real1 = y_real
 
-                        #y_pred1 = y_pred1.reshape(y_pred1.shape[0] * y_pred1.shape[1], 1)
-                        #y_real1 = y_real1.reshape(y_real1.shape[0] * y_real1.shape[1], 1)
-
-                        #Outliers and missing values
-                        #o = np.where(y_real1 < self.inf_limit)[0]
-#
-                        #if len(o)>0:
-                        #    y_pred1 = np.delete(y_pred1,o,0)
-                        #    y_real1 = np.delete(y_real1,o, 0)
-
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             rmse[zz] = evals(y_pred1, y_real1).rmse()
                             nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
 
-                            a = np.round(cv[zz], 2)
-                            up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                            low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
-                            plt.figure()
-                            plt.ylim(low, up)
-                            plt.plot(y_real1, color='black', label='Real')
-                            plt.plot(y_pred1, color='blue', label='Prediction')
-                            plt.legend()
-                            plt.title("No rad - CV(RMSE)={}".format(str(a)))
-                            plt.show()
+                            #a = np.round(cv[zz], 2)
+                            #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                            #low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
+                            #plt.figure()
+                            #plt.ylim(low, up)
+                            #plt.plot(y_real1, color='black', label='Real')
+                            #plt.plot(y_pred1, color='blue', label='Prediction')
+                            #plt.legend()
+                            #plt.title("No rad - CV(RMSE)={}".format(str(a)))
+                            #plt.show()
 
 
                         else:
@@ -1260,8 +1259,6 @@ class LSTM_model(DL):
                     y_pred1 = y_pred
                     y_real1 = y_real
 
-                print(y_pred1[0:100])
-                print(y_real1[0:100])
                 # Outliers and missing values
                 if self.mask == True and len(y_pred1) > 0:
                     o = np.where(y_real1 < self.inf_limit)[0]
@@ -1276,16 +1273,16 @@ class LSTM_model(DL):
                     rmse = evals(y_pred1, y_real1).rmse()
                     r2 = evals(y_pred1, y_real1).r2()
 
-                    a = np.round(cv, 2)
-                    up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
-                    plt.figure()
-                    plt.ylim(low, up)
-                    plt.plot(y_real1, color='black', label='Real')
-                    plt.plot(y_pred1, color='blue', label='Prediction')
-                    plt.legend()
-                    plt.title("No rad - CV(RMSE)={}".format(str(a)))
-                    plt.show()
+                    #a = np.round(cv, 2)
+                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    #low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
+                    #plt.figure()
+                    #plt.ylim(low, up)
+                    #plt.plot(y_real1, color='black', label='Real')
+                    #plt.plot(y_pred1, color='blue', label='Prediction')
+                    #plt.legend()
+                    #plt.title("No rad - CV(RMSE)={}".format(str(a)))
+                    #plt.show()
                     plt.savefig('plot1.png')
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1719,13 +1716,12 @@ class MyProblem(ElementwiseProblem):
                     y_pred = res['y_pred']
 #
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-#
-                    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                    y_real2 = y_real.copy()
-                    y_real = np.array(self.scalar_y.inverse_transform(y_real))
-#
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
+                    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    y_real = np.array(self.scalar_y.inverse_transform(y_real))
+
 
                     y_predF = y_pred.copy()
                     y_predF = pd.DataFrame(y_predF)
@@ -1742,21 +1738,18 @@ class MyProblem(ElementwiseProblem):
 
                         index_hour = res['indexes_out']
 
-
                         if len(index_hour) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_hour, 0)
                             y_real1 = np.delete(y_real, index_hour, 0)
-                            y_real2 = np.delete(y_real2, index_hour, 0)
                         elif len(index_hour) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
-                            y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
-                            y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
+                            y_pred1 = np.delete(y_pred, index_hour - 1, 0)
+                            y_real1 = np.delete(y_real, index_hour - 1, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
 
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
 
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
@@ -1779,21 +1772,18 @@ class MyProblem(ElementwiseProblem):
 
                         index_rad = res['indexes_out']
 
-
                         if len(index_rad) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
                             y_real1 = np.delete(y_real, index_rad, 0)
-                            y_real2 = np.delete(y_real2, index_rad, 0)
                         elif len(index_rad) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
-                            y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
-                            y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
+                            y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                            y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
 
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
 
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
@@ -1908,8 +1898,6 @@ class MyProblem(ElementwiseProblem):
         n_lstm = x[range(self.l_lstm)]*10
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*10
         n_pacience = x[len(x)-1]*10
-
-
 
         f1, f2 = self.cv_nsga(self.data,10,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
