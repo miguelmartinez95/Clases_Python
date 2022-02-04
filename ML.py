@@ -588,7 +588,8 @@ class MLP(ML):
         :param plot: True plots
         :return: predictions, real values, errors and the times needed to train
         '''
-
+        from pathlib import Path
+        import random
 
 
 
@@ -639,8 +640,7 @@ class MLP(ML):
             predictions=[]
             reales = []
             for z in range(fold):
-                from pathlib import Path
-                import random
+
                 h_path = Path('./best_models')
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
@@ -672,7 +672,7 @@ class MLP(ML):
                 val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
                 time_start = time()
-                modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],batch_size=batch )
+                modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],batch_size=batch)
                 times[z] = round(time() - time_start, 3)
                 y_pred = modelF.predict(val_x)
 
@@ -1329,6 +1329,14 @@ class MyProblem_mlp(ElementwiseProblem):
         :param q:operator to differentiate when there is parallelisation and the results must be a queue
         :return: cv(rmse) and complexity of the model tested
         '''
+
+        from pathlib import Path
+        import random
+
+        h_path = Path('./best_models')
+        h_path.mkdir(exist_ok=True)
+        h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
+
         name1 = tuple(np.concatenate((neurons, np.array([pacience]))))
         try:
             a0, a1 = dictionary[name1]
@@ -1371,7 +1379,7 @@ class MyProblem_mlp(ElementwiseProblem):
                                                       self.dropout, self.n_steps)
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-            mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             # Train the model
             for z in range(fold):
                 print('Fold number', z)
