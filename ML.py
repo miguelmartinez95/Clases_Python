@@ -1513,7 +1513,7 @@ class MyProblem_mlp(ElementwiseProblem):
         print(x)
         n_dense = x[range(self.l_dense)]
         n_pacience = x[len(x) - 1]
-        f1, f2 = MyProblem_mlp.cv_nsga(self.data, 10, n_dense, n_pacience, self.batch, self.med, self.dictionary)
+        f1, f2 = self.cv_nsga(self.data, 10, n_dense, n_pacience, self.batch, self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
             self.contador, '\n #########################')
