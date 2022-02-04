@@ -1330,7 +1330,7 @@ class MyProblem_mlp(ElementwiseProblem):
         layers = len(neurons)
         y = self.data.iloc[:,self.pos_y]
         x =self.data.drop(self.data.columns[self.pos_y],axis=1)
-        res = super().cv_division(x, y, fold)
+        res = MLP.cv_division(x, y, fold)
         x_test = res['x_test']
         x_train = res['x_train']
         x_val = res['x_val']
