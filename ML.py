@@ -1347,15 +1347,15 @@ class MyProblem_mlp(ElementwiseProblem):
             yy = data2.iloc[:, self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
-            model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask, self.mask_value)
+            model = MLP.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask, self.mask_value)
             ####################################################################
             # EN PROCESOO ALGÚN DíA !!!!!!!
             ##########################################################################
         else:
             if self.type=='regression':
-                model = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, self.dropout)
+                model = MLP.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, self.dropout)
             elif self.type=='series':
-                model = self.__class__.mlp_series(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value,
+                model = MLP.mlp_series(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value,
                                                       self.dropout, self.n_steps)
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
