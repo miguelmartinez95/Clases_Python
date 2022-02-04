@@ -1169,13 +1169,13 @@ class MLP(ML):
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador, self.data.shape[1], l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary)
+                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary)
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           # sampling =g,
@@ -1259,8 +1259,8 @@ class MyRepair(Repair):
             x = np.concatenate((x2, np.array([x[len(x) - 1]])))
             pop[k].X = x
         return pop
-from pymoo.core.problem import Problem
-class MyProblem_mlp(MLP, Problem):
+from pymoo.core.problem import ElementwiseProblem
+class MyProblem_mlp(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
     def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
