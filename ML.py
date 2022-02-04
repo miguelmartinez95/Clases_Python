@@ -1405,7 +1405,7 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_realF.index = times_test[z]
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = super().fix_values_0(times_test[z],
+                    res = ML.fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
@@ -1431,7 +1431,7 @@ class MyProblem_mlp(ElementwiseProblem):
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
-                    res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
+                    res = ML.fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
                     if len(index_rad) > 0 and self.horizont == 0:
