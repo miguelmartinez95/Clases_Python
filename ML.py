@@ -588,6 +588,13 @@ class MLP(ML):
         :param plot: True plots
         :return: predictions, real values, errors and the times needed to train
         '''
+        from pathlib import Path
+        import random
+        h_path = Path('./best_models')
+        h_path.mkdir(exist_ok=True)
+        h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
+
+
 
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
         print('##########################'
@@ -632,16 +639,16 @@ class MLP(ML):
                     model1= self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value, dropout)
                     # Checkpoitn callback
                     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-                    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+                    mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
                 else:
                     model1= self.__class__.mlp_series(layers, neurons, x_train[0].shape[1],self.mask, self.mask_value,dropout, self.n_steps)
                     # Checkpoitn callback
                     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-                    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+                    mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             else:
                 model1=model
                 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-                mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+                mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
             # Train the model
             times=[0 for x in range(fold)]
