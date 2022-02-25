@@ -15,6 +15,9 @@ class Reading_files:
     def __init__(self, destination):
         self.destination = destination
 
+    def read_names(self, directory):
+        folders = os.listdir(directory)
+        return folders
 
     def reading(self, directory, n_folders, separator, decimal, col_index, type, export):
         '''
