@@ -487,6 +487,7 @@ class LSTM_model(DL):
         :param n_inputs: the lags considered (n_lags)
         :return: data converted in three dimension based on the lags and the variables
         '''
+        data_new =np.array(data_new)
         rest2 = data_new.shape[0] % n_inputs
         ind_out = 0
         while rest2 != 0:
