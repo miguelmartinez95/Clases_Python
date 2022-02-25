@@ -482,7 +482,6 @@ class LSTM_model(DL):
     @staticmethod
     def three_dimension(data_new, n_inputs):
         '''
-
         :param data_new: data
         :param n_inputs: the lags considered (n_lags)
         :return: data converted in three dimension based on the lags and the variables
