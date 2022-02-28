@@ -767,10 +767,10 @@ class LSTM_model(DL):
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
         mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
         # Train the model
-        model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
+        history = model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
                            callbacks=[es, mc])
 
-        return model
+        return model, history
 
 
     @staticmethod
@@ -913,7 +913,7 @@ class LSTM_model(DL):
                 for zz2 in range(rep):
                     modelF = model1
                     time_start = time()
-                    model = self.__class__.train_model(modelF,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
+                    modelF, history = self.__class__.train_model(modelF,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
                     res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch)
@@ -1140,19 +1140,19 @@ class LSTM_model(DL):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
                 time_start = time()
-                model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
+                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
             else:
                 model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout)
                 time_start = time()
-                model_trained = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
+                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
         else:
             model_trained=model
         if save_model==True:
             name='mlp'+now+'.h5'
             model_trained.save(name, save_format='h5')
-        res = {'model': model_trained, 'times': times}
+        res = {'model': model_trained, 'times': times, 'history':history}
         return res
 
 
@@ -1722,7 +1722,7 @@ class MyProblem(ElementwiseProblem):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
-                    model = LSTM_model.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
+                    model, history = LSTM_model.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
                                                        batch)
 #
                     res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
