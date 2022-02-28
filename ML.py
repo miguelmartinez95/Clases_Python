@@ -967,7 +967,7 @@ class MLP(ML):
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             time_start = time()
-            model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
+            history = model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
                       callbacks=[es, mc],batch_size=batch)
             times = round(time() - time_start, 3)
         else:
@@ -977,7 +977,7 @@ class MLP(ML):
         if save_model==True:
             name='mlp'+now+'.h5'
             model.save(name, save_format='h5')
-        res = {'model':model, 'times':times}
+        res = {'model':model, 'times':times, 'history':history}
         return(res)
 
     def predict(self, model,x_val, y_val,mean_y, times):
