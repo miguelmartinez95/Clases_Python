@@ -1148,7 +1148,11 @@ class LSTM_model(DL):
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
         else:
-            model_trained=model
+            time_start = time()
+            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,
+                                                                batch)
+            times = round(time() - time_start, 3)
+
         if save_model==True:
             name='mlp'+now+'.h5'
             model_trained.save(name, save_format='h5')
