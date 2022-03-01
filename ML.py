@@ -941,7 +941,7 @@ class MLP(ML):
         res = {'errors': results,'options':options, 'best': top_results}
         return(res)
 
-    def train(self, type,neurons, pacience, batch,x_train, x_test, y_train, y_test, dropout, save_model, model=[]):
+    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[]):
         '''
         :param x_train: x to train
         :param x_test: x to early stopping
@@ -950,6 +950,14 @@ class MLP(ML):
         :param model: loaded model
         :return: trained model and the time needed to train
         '''
+        data_train = pd.DataFrame(data_train)
+        data_test = pd.DataFrame(data_test)
+
+        x_train = data_train.drop(data_train.columns[self.pos_y], axis=1)
+        x_test = data_test.drop(data_test.columns[self.pos_y], axis=1)
+        y_train = data_train.iloc[:,self.pos_y]
+        y_test = data_test.iloc[:,self.pos_y]
+
         from datetime import datetime
 
         now = str(datetime.now().microsecond)
