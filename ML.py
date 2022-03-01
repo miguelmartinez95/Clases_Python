@@ -507,12 +507,12 @@ class MLP(ML):
         try:
             ANN_model = Sequential()
             if mask==True and dropout>0:
-                ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
+                ANN_model.add(Masking(mask_value=mask_value, input_shape=np.array(inputs)))
                 ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
                 ANN_model.add(Dropout(dropout))
             elif mask==True and dropout==0:
-                ANN_model.add(Masking(mask_value=mask_value, input_shape=(inputs)))
+                ANN_model.add(Masking(mask_value=mask_value, input_shape=np.array(inputs)))
                 ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
                                 activation='relu'))
                 ANN_model.add(Dropout(dropout))
