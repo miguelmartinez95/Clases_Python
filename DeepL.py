@@ -1115,7 +1115,7 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,model=[]):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[]):
         '''
         :return: the trained model and the time required to be trained
 
@@ -1130,8 +1130,8 @@ class LSTM_model(DL):
         res = self.__class__.three_dimension(test, self.n_lags)
         test = res['data']
 
-        x_test, y_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,True)
-        x_train, y_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, True)
+        x_test, y_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
+        x_train, y_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
 
         print(x_train.shape)
         print(x_test.shape)
