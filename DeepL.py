@@ -588,7 +588,7 @@ class LSTM_model(DL):
             if horizont==0:
                 limit=int((len(data)-(n_lags + horizont))/1)+1
             else:
-                limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
+                limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
 
             for _ in range(limit):
                 # define the end of the input sequence
