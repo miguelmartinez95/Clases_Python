@@ -1130,6 +1130,8 @@ class LSTM_model(DL):
         res = self.__class__.three_dimension(test, self.n_lags)
         test = res['data']
 
+        print('Data in three dimensions')
+
         x_test, y_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
         x_train, y_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
 
