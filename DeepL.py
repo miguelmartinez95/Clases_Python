@@ -1235,8 +1235,9 @@ class LSTM_model(DL):
             # Outliers and missing values
             if len(y_pred1)>0:
                 o = np.where(y_real1 < self.inf_limit)[0]
-                y_pred1 = np.delete(y_pred1, o, 0)
-                y_real1 = np.delete(y_real1, o, 0)
+                if len(0) > 0:
+                    y_pred1 = np.delete(y_pred1, o, 0)
+                    y_real1 = np.delete(y_real1, o, 0)
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -1316,8 +1317,9 @@ class LSTM_model(DL):
             # Outliers and missing values
             y_real2 = y_real.copy()
             o = np.where(y_real2 < self.inf_limit)[0]
-            y_pred = np.delete(y_pred, o, 0)
-            y_real = np.delete(y_real, o, 0)
+            if len(0)>0:
+                y_pred = np.delete(y_pred, o, 0)
+                y_real = np.delete(y_real, o, 0)
             if len(y_pred)>0:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     cv = evals(y_pred, y_real).cv_rmse(mean_y)
