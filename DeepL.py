@@ -612,11 +612,11 @@ class LSTM_model(DL):
                         y.append(yy[in_end:out_end])
                     #se selecciona uno
                 # move along one time step
-                #if horizont==0:
-                #    in_start += 1
-                #else:
-                #    in_start += horizont
-                in_start += onebyone
+                if horizont==0:
+                    in_start += 1
+                else:
+                    in_start += horizont
+                #in_start += onebyone
         dd= len(data) - in_start
 
         return(np.array(X), np.array(y), dd)
