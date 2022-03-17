@@ -988,13 +988,16 @@ class MLP(ML):
         res = {'model':model, 'times':times, 'history':history}
         return(res)
 
-    def predict(self, model,x_val, y_val,mean_y, times):
+    def predict(self, model,val,mean_y, times):
         '''
         :param model: trained model
         :param x_val: x to predict
         :param y_val: y to predict
         :return: predictions with the errors depending of zero_problem
         '''
+
+        y_val = val.iloc[:,self.pos_y]
+        x_val = val.drop(val.columns[self.pos_y], axis=1)
 
         times = np.delete(times, range(self.n_lags + self.n_steps), axis=0)
 
