@@ -215,7 +215,7 @@ class DL:
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
                 index1 = X.index
 
-                if onebyone == True:
+                if onebyone[0] == True:
                     y, gap = self.cortes_onebyone(y, len(y), self.n_steps)
                     y = pd.DataFrame(y.transpose())
                     if gap > 0:
@@ -548,16 +548,17 @@ class LSTM_model(DL):
     def to_supervised(train,pos_y, n_lags, horizont, onebyone):
         '''
         :param horizont: horizont to the future selected
+        onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
 
         data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
-
+        data=pd.DataFrame(data)
         X, y = list(), list()
 
         in_start = 0
         # step over the entire history one time step at a time
-        if onebyone==True:
+        if onebyone[0]==True:
 
             for _ in range(len(data)-(n_lags + horizont)+1):
             #for _ in range(int((len(data)-n_lags)/horizont)):
@@ -570,25 +571,30 @@ class LSTM_model(DL):
 
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
-                    xx = np.delete(data,pos_y,1)
-                    x_input = xx[in_start:in_end,:]
+                    #xx = np.delete(data,pos_y,1)
+                    xx = data.drop(data.columns[pos_y],axis=1)
+                    x_input = xx.iloc[in_start:in_end,:]
                     # x_input = x_input.reshape((len(x_input), 1))
                     X.append(x_input)
-                    yy = data[:,pos_y].reshape(-1,1)
+                    #yy = data[:,pos_y].reshape(-1,len(pos_y))
+                    yy = data.iloc[:,pos_y]
 
                     if horizont==0:
-                        y.append(yy[out_end-1])
+                        y.append(yy.iloc[out_end-1])
                     else:
-                        y.append(yy[in_end:out_end])
+                        y.append(yy.iloc[in_end:out_end])
                     #se selecciona uno
                 # move along one time step
                 in_start += 1
 
         else:
-            if horizont==0:
+            if horizont==0 and onebyone[1]==True:
+                limit = int((len(data) - (n_lags + horizont)) / n_lags) + 1
+            elif horizont==0 and onebyone[1]==False:
                 limit=int((len(data)-(n_lags + horizont))/1)+1
             else:
-                limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
+                #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
+                limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
 
             for _ in range(limit):
                 # define the end of the input sequence
@@ -600,19 +606,23 @@ class LSTM_model(DL):
 
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
-                    xx = np.delete(data,pos_y,1)
-                    x_input = xx[in_start:in_end,:]
+                    xx = data.drop(data.columns[pos_y], axis=1)
+                    #xx = np.delete(data,pos_y,1)
+                    x_input = xx.iloc[in_start:in_end,:]
                     # x_input = x_input.reshape((len(x_input), 1))
                     X.append(x_input)
-                    yy = data[:,pos_y].reshape(-1,1)
+                    # yy = data[:,pos_y].reshape(-1,len(pos_y))
+                    yy = data.iloc[:,pos_y]
 
                     if horizont==0:
-                        y.append(yy[out_end-1])
+                        y.append(yy.iloc[out_end-1])
                     else:
-                        y.append(yy[in_end:out_end])
+                        y.append(yy.iloc[in_end:out_end])
                     #se selecciona uno
                 # move along one time step
-                if horizont==0:
+                if horizont==0 and onebyone[1]==True:
+                    in_start+=n_lags
+                elif horizont==0 and onebyone[1]==False:
                     in_start += 1
                 else:
                     in_start += horizont
