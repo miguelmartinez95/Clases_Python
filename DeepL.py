@@ -194,12 +194,23 @@ class DL:
         '''
         Adjust the data or the variable to certain upper or lower limits
         '''
-        inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit)[0]
-        sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit)[0]
-        if len(inf)>0:
-            self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit, len(inf))
-        if len(sup)>0:
-            self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
+        if len(self.pos_y)>1:
+            for t in range(len(self.pos_y)):
+                inf = np.where(self.data.iloc[:, self.pos_y[t]] < self.inf_limit[t])[0]
+                sup = np.where(self.data.iloc[:, self.pos_y[t]] > self.sup_limit[t])[0]
+                if len(inf) > 0:
+                    self.data.iloc[inf, self.pos_y[t]] = np.repeat(self.inf_limit[t], len(inf))
+                if len(sup) > 0:
+                    self.data.iloc[sup, self.pos_y[t]] = np.repeat(self.sup_limit[t], len(sup))
+
+
+        else:
+            inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit)[0]
+            sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit)[0]
+            if len(inf)>0:
+                self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit, len(inf))
+            if len(sup)>0:
+                self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
 
     def adapt_horizont(self, onebyone):
         '''
