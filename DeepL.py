@@ -1191,7 +1191,7 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val,names,mean_y,batch,times, onebyone):
+    def predict(self, model, val,names,mean_y,batch,times, onebyone, plotting):
         '''
         :param model: trained model
         :return: prediction with the built metrics
@@ -1381,17 +1381,18 @@ class LSTM_model(DL):
         y_realF = pd.DataFrame(y_realF)
         y_realF.index = y_predF.index
 
-        a = np.round(cv, 2)
-        up =int(np.max(y_realF)) + int(np.max(y_realF)/4)
-        low = int(np.min(y_realF)) - int(np.min(y_realF)/4)
-        plt.figure()
-        plt.ylim(low, up)
-        plt.plot(y_realF, color='black', label='Real')
-        plt.plot(y_predF, color='blue', label='Prediction')
-        plt.legend()
-        plt.title("CV(RMSE)={}".format(str(a)))
-        plt.show()
-        plt.savefig('plot1.png')
+        if plotting==True:
+            a = np.round(cv, 2)
+            up =int(np.max(y_realF)) + int(np.max(y_realF)/4)
+            low = int(np.min(y_realF)) - int(np.min(y_realF)/4)
+            plt.figure()
+            plt.ylim(low, up)
+            plt.plot(y_realF, color='black', label='Real')
+            plt.plot(y_predF, color='blue', label='Prediction')
+            plt.legend()
+            plt.title("CV(RMSE)={}".format(str(a)))
+            plt.show()
+            plt.savefig('plot1.png')
 
 
         return res
