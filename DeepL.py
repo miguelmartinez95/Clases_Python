@@ -1197,7 +1197,10 @@ class LSTM_model(DL):
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
-        if self.horizont==0:
+
+        if self.horizont == 0 and onebyone[1] == True:
+            times = range(int(val.shape[0]/self.n_lags))
+        elif self.horizont == 0 and onebyone[1] == False:
             times = np.delete(times, range(self.n_lags-1), 0)
         else:
             times = np.delete(times, range(self.n_lags), 0)
