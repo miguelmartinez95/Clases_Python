@@ -1220,15 +1220,25 @@ class LSTM_model(DL):
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
 
         y_pred = res['y_pred']
+        if len(self.pos_y) > 1:
+            y_pred = y_pred.reshape(-1, y_val.shape[1])
 
         print(y_pred.shape)
 
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+        if len(self.pos_y)>1:
+            for t in range(y_val.shape[1]):
+                y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
+                y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+            y_real = y_val
+        else:
+            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+            y_real = y_val.reshape((y_val.shape[0] * y_val.shape[1], 1))
 
-        y_real = y_val.reshape((y_val.shape[0] * y_val.shape[1], 1))
+
         y_real = np.array(self.scalar_y.inverse_transform(y_real))
+        print(y_pred)
 
         y_predF = y_pred.copy()
         y_predF = pd.DataFrame(y_predF)
