@@ -1191,7 +1191,7 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val,names,mean_y,batch,times):
+    def predict(self, model, val,names,mean_y,batch,times, onebyone):
         '''
         :param model: trained model
         :return: prediction with the built metrics
@@ -1209,7 +1209,7 @@ class LSTM_model(DL):
         if i_out>0:
             times=np.delete(times, range(i_out),0)
 
-        x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, False)
+        x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, onebyone)
 
         print('Diferencia entre time and y:',dif)
 
