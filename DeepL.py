@@ -1358,7 +1358,7 @@ class LSTM_model(DL):
             # Outliers and missing values
             y_real2 = y_real.copy()
             o = np.where(y_real2 < self.inf_limit)[0]
-            if len(0)>0:
+            if len(o)>0:
                 y_pred = np.delete(y_pred, o, 0)
                 y_real = np.delete(y_real, o, 0)
             if len(y_pred)>0:
