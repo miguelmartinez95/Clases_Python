@@ -1191,9 +1191,10 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val,names,mean_y,batch,times, onebyone, plotting):
+    def predict(self, model, val,names,mean_y,batch,times, onebyone, scalated,plotting):
         '''
         :param model: trained model
+        :param scalated: 0 predict 1 real
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
@@ -1227,8 +1228,11 @@ class LSTM_model(DL):
             y_pred = y_pred.reshape(-1, y_val.shape[1])
 
         print(y_pred.shape)
+        if scalated[0]==True:
+            y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+        if scalated[1]==True:
+            y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
-        y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if len(self.pos_y)>1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
@@ -1240,7 +1244,7 @@ class LSTM_model(DL):
             y_real = y_val.reshape((y_val.shape[0] * y_val.shape[1], 1))
 
 
-        y_real = np.array(self.scalar_y.inverse_transform(y_real))
+
         print(y_pred)
 
         y_predF = y_pred.copy()
