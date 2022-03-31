@@ -1231,19 +1231,17 @@ class LSTM_model(DL):
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if scalated[1]==True:
-            y_real = np.array(self.scalar_y.inverse_transform(y_real))
+            y_val = np.array(self.scalar_y.inverse_transform(y_val))
 
         if len(self.pos_y)>1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
                 y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
-            y_real = y_val
+            y_real=y_val
         else:
             y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
             y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
             y_real = y_val.reshape((y_val.shape[0] * y_val.shape[1], 1))
-
-
 
         print(y_pred)
 
