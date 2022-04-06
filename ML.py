@@ -272,7 +272,7 @@ class ML:
                 X.index = index1
                 y.index = index1
 
-                if self.pos_y == 0:
+                if any(self.pos_y) == 0:
                     self.data = pd.concat([y, X], axis=1)
                 else:
                     self.data = pd.concat([X, y], axis=1)
@@ -287,7 +287,7 @@ class ML:
                 X=X.reset_index(drop=True)
                 X.index = y.index
 
-                if self.pos_y == 0:
+                if any(self.pos_y) == 0:
                     self.data = pd.concat([y, X.set_index(y.index)], axis=1)
                 else:
                     self.data = pd.concat([X.set_index(y.index),y], axis=1)
