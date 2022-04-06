@@ -498,7 +498,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
     @staticmethod
-    def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout):
+    def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout, outputs):
         '''
         :param inputs:amount of inputs
         :param mask:True or false
@@ -531,7 +531,7 @@ class MLP(ML):
                     ANN_model.add(Dense(neurons[i], kernel_initializer='normal', activation='relu'))
 
             # The Output Layer :
-            ANN_model.add(Dense(1, kernel_initializer='normal', activation='linear'))
+            ANN_model.add(Dense(outputs, kernel_initializer='normal', activation='linear'))
             # Compile the network :
             ANN_model.compile(loss='mse', optimizer='adam', metrics=['mean_squared_error'])
             # ANN_model.summary()
@@ -968,7 +968,7 @@ class MLP(ML):
                 if self.type=='series':
                     model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value,dropout, self.n_steps)
                 else:
-                    model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout)
+                    model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout, len(self.pos_y))
             else:
                 model=model
             # Checkpoint callback
@@ -1013,7 +1013,7 @@ class MLP(ML):
             y_pred[np.where(y_pred > self.sup_limit)[0], t] = self.sup_limit
 
 
-        print(y_pred.shape)
+        print(y_pred)
         y_predF = np.concatenate(y_pred.copy())
         y_predF = pd.DataFrame(y_predF)
         print(y_predF.shape)
@@ -1137,10 +1137,21 @@ class MLP(ML):
 
             if len(y_pred)>1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
-                    cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                    rmse = evals(y_pred, y_real).rmse()
-                    nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                    r2 = evals(y_pred, y_real).r2()
+                    if len(self.pos_y)>1:
+                        cv=[0 for x in range(len(self.pos_y))]
+                        rmse=[0 for x in range(len(self.pos_y))]
+                        nmbe=[0 for x in range(len(self.pos_y))]
+                        r2=[0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
+                            rmse[t] = evals(y_pred[:,t], y_real[:,t]).rmse()
+                            nmbe[t] = evals(y_pred[:,t], y_real[:,t]).nmbe(mean_y[t])
+                            r2[t] = evals(y_pred[:,t], y_real[:,t]).r2()
+                    else:
+                        cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        rmse = evals(y_pred, y_real).rmse()
+                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                        r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
