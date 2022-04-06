@@ -1017,9 +1017,19 @@ class MLP(ML):
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
 
-        for t in range(y_pred.shape[1]):
-            y_pred[np.where(y_pred < self.inf_limit)[0], t] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0], t] = self.sup_limit
+        #for t in range(y_pred.shape[1]):
+        if len(self.pos_y)>1:
+            for t in range(len(self.pos_y)):
+                y_pred[np.where(y_pred[:,t] < self.inf_limit)[0],t] = self.inf_limit[t]
+                y_pred[np.where(y_pred[:,t] > self.sup_limit)[0],t] = self.sup_limit[t]
+
+        elif self.n_steps>1:
+            for t in self.n_steps:
+                y_pred[np.where(y_pred[:, t] < self.inf_limit)[0], t] = self.inf_limit
+                y_pred[np.where(y_pred[:, t] > self.sup_limit)[0], t] = self.sup_limit
+        else:
+            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
 
         print(y_pred)
