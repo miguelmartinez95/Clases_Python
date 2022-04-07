@@ -1022,22 +1022,28 @@ class MLP(ML):
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
                 y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0],t] = self.sup_limit[t]
+            y_predF = pd.DataFrame(y_pred.copy())
+            y_realF = pd.DataFrame(y_real).copy()
 
         elif self.n_steps>1:
             for t in self.n_steps:
                 y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit
                 y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit
+            y_predF = pd.DataFrame(np.concatenate(y_pred.copy()))
+            y_realF = pd.DataFrame(np.concatenate(y_real).copy())
         else:
             y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
             y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+            y_predF = pd.DataFrame(y_pred.copy())
+            y_realF = pd.DataFrame(y_real).copy()
 
 
         print(y_pred)
-        y_predF = np.concatenate(y_pred.copy())
-        y_predF = pd.DataFrame(y_predF)
+        #y_predF = np.concatenate(y_pred.copy())
+        #y_predF = pd.DataFrame(y_predF)
         print(y_predF.shape)
         y_predF.index = times
-        y_realF = pd.DataFrame(np.concatenate(y_real).copy())
+        #y_realF = pd.DataFrame(np.concatenate(y_real).copy())
         y_realF.index = y_predF.index
 
         if self.zero_problem == 'schedule':
