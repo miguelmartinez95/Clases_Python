@@ -997,7 +997,7 @@ class MLP(ML):
         res = {'model':model, 'times':times, 'history':history}
         return(res)
 
-    def predict(self, model,val,mean_y, times):
+    def predict(self, model,val,mean_y, times,plotting):
         '''
         :param model: trained model
         :param x_val: x to predict
@@ -1188,16 +1188,17 @@ class MLP(ML):
 
         res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
 
-        a = np.round(cv, 2)
-        up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
-        low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
-        plt.figure()
-        plt.ylim(low, up)
-        plt.plot(y_realF, color='black', label='Real')
-        plt.plot(y_predF, color='blue', label='Prediction')
-        plt.legend()
-        plt.title("CV(RMSE)={}".format(str(a)))
-        plt.savefig('plot1.png')
+        if plotting==True:
+            a = np.round(cv, 2)
+            up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
+            low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
+            plt.figure()
+            plt.ylim(low, up)
+            plt.plot(y_realF, color='black', label='Real')
+            plt.plot(y_predF, color='blue', label='Prediction')
+            plt.legend()
+            plt.title("CV(RMSE)={}".format(str(a)))
+            plt.savefig('plot1.png')
         return res
 
     def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
