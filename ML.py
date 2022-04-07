@@ -1008,7 +1008,7 @@ class MLP(ML):
         y_val = val.iloc[:,self.pos_y]
         x_val = val.drop(val.columns[self.pos_y], axis=1)
 
-        times = np.delete(times, range(self.n_lags + self.n_steps), axis=0)
+        #times = np.delete(times, range(self.n_lags + self.n_steps), axis=0)
 
 
         x_val=x_val.reset_index(drop=True)
