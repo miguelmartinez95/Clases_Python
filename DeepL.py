@@ -1198,7 +1198,7 @@ class LSTM_model(DL):
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
-
+        shape1 = val.shape[0]
         res = self.__class__.three_dimension(val, self.n_lags)
 
         val = res['data']
@@ -1208,13 +1208,11 @@ class LSTM_model(DL):
 
 
         if self.horizont == 0 and onebyone[1] == True:
-            times = range(int(val.shape[0]/self.n_lags))
+            times = range(int(shape1/self.n_lags))
         elif self.horizont == 0 and onebyone[1] == False:
             times = np.delete(times, range(self.n_lags-1), 0)
         else:
             times = np.delete(times, range(self.n_lags), 0)
-
-
 
         x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, onebyone)
 
