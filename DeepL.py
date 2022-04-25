@@ -1199,6 +1199,14 @@ class LSTM_model(DL):
         Instance to predict certain samples outside these classes
         '''
 
+        res = self.__class__.three_dimension(val, self.n_lags)
+
+        val = res['data']
+        i_out = res['ind_out']
+        if i_out>0:
+            times=np.delete(times, range(i_out),0)
+
+
         if self.horizont == 0 and onebyone[1] == True:
             times = range(int(val.shape[0]/self.n_lags))
         elif self.horizont == 0 and onebyone[1] == False:
@@ -1206,12 +1214,7 @@ class LSTM_model(DL):
         else:
             times = np.delete(times, range(self.n_lags), 0)
 
-        res = self.__class__.three_dimension(val, self.n_lags)
 
-        val = res['data']
-        i_out = res['ind_out']
-        if i_out>0:
-            times=np.delete(times, range(i_out),0)
 
         x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, onebyone)
 
