@@ -16,9 +16,18 @@ class Eval_metrics:
         self.predict= pd.DataFrame(predict).iloc[:,0]
         self.real = pd.DataFrame(real).iloc[:,0]
 
+    #def cv_rmse(self, mean):
+    #    cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
+    #    return(cv)
+
     def cv_rmse(self, mean):
-        cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
-        return(cv)
+        if len(self.real.shape) > 1:
+            cv = [0 for x in range(self.real.shape[1])]
+            for i in range(self.real.shape[1]):
+                cv[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])) / mean[i])
+        else:
+            cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
+        return (cv)
 
     def cv_rmse_daily(self, mean,times):
         '''
