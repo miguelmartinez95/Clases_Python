@@ -1579,7 +1579,7 @@ class MyProblem_mlp(ElementwiseProblem):
         g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1),self.l_dense)
         out["G"] = g1
         print(x)
-        n_dense = x[range(self.l_dense)]
+        n_dense = x[range(self.l_dense)]*10
         n_pacience = x[len(x) - 1]
         f1, f2 = self.cv_nsga(self.data, 10, n_dense, n_pacience, self.batch, self.med, self.dictionary)
         print(
