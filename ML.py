@@ -1441,7 +1441,7 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_pred = model.predict(val_x)
 
                 print(x_test[0])
-                print(x_train[0])
+                print(y_test[0])
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
                 y_real2 = np.array(y_real.copy())
