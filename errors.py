@@ -28,6 +28,8 @@ class Eval_metrics:
         if len(self.real.shape) > 1:
             cv = [0 for x in range(self.real.shape[1])]
             for i in range(self.real.shape[1]):
+                print(self.real.shape)
+                print(self.predict.shape)
                 cv[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])) / mean[i])
 
             cv= np.mean(cv)
