@@ -1395,6 +1395,7 @@ class MyProblem_mlp(ElementwiseProblem):
         print(type(data))
         names = self.data.columns
         names = np.delete(names, self.pos_y)
+        neurons=neurons[neurons>0]
         layers = len(neurons)
         y = self.data.iloc[:,self.pos_y]
         x =self.data.drop(self.data.columns[self.pos_y],axis=1)
