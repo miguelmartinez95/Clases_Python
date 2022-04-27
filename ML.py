@@ -1398,6 +1398,8 @@ class MyProblem_mlp(ElementwiseProblem):
         layers = len(neurons)
         y = self.data.iloc[:,self.pos_y]
         x =self.data.drop(self.data.columns[self.pos_y],axis=1)
+        print(x)
+        print(y)
         res = MLP.cv_division(x, y, fold)
         x_test = res['x_test']
         x_train = res['x_train']
@@ -1440,8 +1442,6 @@ class MyProblem_mlp(ElementwiseProblem):
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
                 y_pred = model.predict(val_x)
 
-                print(x_test[0])
-                print(y_test[0])
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
                 y_real2 = np.array(y_real.copy())
