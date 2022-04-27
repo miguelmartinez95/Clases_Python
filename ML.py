@@ -606,7 +606,7 @@ class MLP(ML):
         print('##########################'
               '################################'
               'CROSS-VALIDATION'
-              '#############################3'
+              '#################################'
               '################################')
         layers = len(neurons)
         x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
