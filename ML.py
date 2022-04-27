@@ -1439,7 +1439,6 @@ class MyProblem_mlp(ElementwiseProblem):
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
                 y_pred = model.predict(val_x)
-
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
                 y_real2 = np.array(y_real.copy())
@@ -1477,6 +1476,7 @@ class MyProblem_mlp(ElementwiseProblem):
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                 elif self.zero_problem == 'radiation':
+
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
