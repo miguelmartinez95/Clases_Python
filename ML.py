@@ -657,7 +657,7 @@ class MLP(ML):
                 if isinstance(model, list):
                     if self.type == 'regression':
                         model1 = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask,
-                                                               self.mask_value, dropout)
+                                                               self.mask_value, dropout,len(self.pos_y))
                         # Checkpoitn callback
                         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                         mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
@@ -1421,7 +1421,7 @@ class MyProblem_mlp(ElementwiseProblem):
             ##########################################################################
         else:
             if self.type=='regression':
-                model = MLP.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, self.dropout)
+                model = MLP.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value, self.dropout,len(self.pos_y))
             elif self.type=='series':
                 model = MLP.mlp_series(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value,
                                                       self.dropout, self.n_steps)
