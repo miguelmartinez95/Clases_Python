@@ -1446,10 +1446,8 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_real = val_y
                 y_real2 = np.array(y_real.copy())
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
-                #print(y_pred)
-                #print(y_real)
-                print(test_x.shape)
-                print(x_t.shape)
+                print(y_real)
+                print(y_pred)
 
                 y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                 y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
