@@ -1440,7 +1440,8 @@ class MyProblem_mlp(ElementwiseProblem):
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
                 y_pred = model.predict(val_x)
 
-                print(val_y)
+                print(val_y.iloc[100])
+                print(test_y.iloc[100])
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
                 y_real2 = np.array(y_real.copy())
