@@ -1439,10 +1439,14 @@ class MyProblem_mlp(ElementwiseProblem):
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
                 y_pred = model.predict(val_x)
+
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
                 y_real2 = np.array(y_real.copy())
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                print(y_pred)
+                print(y_real)
+
                 y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                 y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                 y_predF = y_pred.copy()
@@ -1517,6 +1521,9 @@ class MyProblem_mlp(ElementwiseProblem):
                         else:
                             y_pred2 = y_pred
                             y_real2 = y_real
+                    else:
+                        y_pred2 = y_pred
+                        y_real2 = y_real
                     if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
                         cvs[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                     else:
