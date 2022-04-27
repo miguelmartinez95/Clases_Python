@@ -12,9 +12,13 @@ class Eval_metrics:
           "- NMBE \n"
           "- R2"))
 
+    #def __init__(self, predict, real):
+    #    self.predict= pd.DataFrame(predict).iloc[:,0]
+    #    self.real = pd.DataFrame(real).iloc[:,0]
+    #
     def __init__(self, predict, real):
-        self.predict= pd.DataFrame(predict).iloc[:,0]
-        self.real = pd.DataFrame(real).iloc[:,0]
+        self.predict= predict
+        self.real = real
 
     #def cv_rmse(self, mean):
     #    cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
@@ -25,6 +29,8 @@ class Eval_metrics:
             cv = [0 for x in range(self.real.shape[1])]
             for i in range(self.real.shape[1]):
                 cv[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])) / mean[i])
+
+            cv= np.mean(cv)
         else:
             cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
         return (cv)
