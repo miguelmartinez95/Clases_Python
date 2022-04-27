@@ -1255,12 +1255,22 @@ class MLP(ML):
                        verbose=True,
                        seed=7)
         if res.F.shape[0] > 1:
+            rf=res.F
+            rx=res.F
             weights = np.array([0.75, 0.25])
-            I = get_decomposition("pbi").do(res.F, weights).argmin()
-            obj_T = res.F
-            struct_T = res.X
-            obj = res.F[I, :]
-            struct = res.X[I, :]
+
+            r_final = pd.DataFrame(rf)
+            scal = MinMaxScaler(feature_range=(0, 1))
+            rf = np.array(scal.fit_transform(r_final))
+
+
+
+
+            I = get_decomposition("pbi").do(rf, weights).argmin()
+            obj_T = rf
+            struct_T = rx
+            obj = rf[I, :]
+            struct = rx[I, :]
         else:
             obj_T = res.F
             struct_T = res.X
