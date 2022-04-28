@@ -1929,7 +1929,13 @@ class MyProblem(ElementwiseProblem):
         x1 = x[range(l_lstm)]
         x2 = x[range(l_lstm, l_lstm+l_dense)]
 #
-        if len(x2)==3:
+
+        if len(x2) == 2:
+            if x2[0] == 0 and x2[1] > 0:
+                a_dense = np.array([1])
+            else:
+                a_dense = np.array([0])
+        elif len(x2)==3:
             if x2[0] == 0 and x2[1] > 0:
                 a_dense = np.array([1])
                 if x2[2] > 0:
@@ -1960,7 +1966,12 @@ class MyProblem(ElementwiseProblem):
         else:
             raise NameError('Option not considered')
 #
-        if len(x1)==3:
+        if len(x1) == 2:
+            if x1[0] == 0 and x1[1] > 0:
+                a_dense = np.array([1])
+            else:
+                a_dense = np.array([0])
+        elif len(x1)==3:
             if x1[1] == 0 and x1[2] > 0:
                 a_lstm = np.array([2])
             else:
