@@ -940,7 +940,7 @@ class LSTM_model(DL):
 
         if self.type=='regression':
             if isinstance(model, list):
-                model1 = self.__class__.built_model_regression(x_train[0],y_train,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+                model1 = self.__class__.built_model_regression(x_train[0],y_train[0].reshape(-1,1),neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
 
             else:
                 model1=model
@@ -1796,7 +1796,7 @@ class MyProblem(ElementwiseProblem):
         #print(y_train.shape)
 #
         if self.type == 'regression':
-            model = LSTM_model.built_model_regression(x_train[0], y_train, neurons_lstm, neurons_dense,
+            model = LSTM_model.built_model_regression(x_train[0], y_train[0].reshape(-1,1), neurons_lstm, neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 #
 #
@@ -1806,7 +1806,7 @@ class MyProblem(ElementwiseProblem):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
-                    model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(y_train.shape[1],1), x_test[z], y_test[z].reshape(y_test.shape[1],1), pacience,
+                    model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
                     print(x_val[0].shape)
                     res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
@@ -1817,7 +1817,7 @@ class MyProblem(ElementwiseProblem):
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
                     #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                    y_real = y_val[z].reshape(len(y_val[z]), 1)
+                    y_real = y_val[z].reshape(-1, 1)
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
 
