@@ -830,7 +830,7 @@ class LSTM_model(DL):
         predictions = list()
         l1 = 0
         l2 = n_lags
-        for i in range(len(x_val)):
+        for i in range(x_val.shape[0]):
             # flatten data
             input_x = data[l1:l2, :]
             input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
