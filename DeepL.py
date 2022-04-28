@@ -1997,7 +1997,7 @@ class MyProblem(ElementwiseProblem):
         g1 = MyProblem.bool4(np.delete(x, len(x)-1), self.l_lstm, self.l_dense)
         out["G"] = g1
 #
-        print(x)
+        print('##########################################',x,'##########################################')
 #
         n_lstm = x[range(self.l_lstm)]*10
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*10
