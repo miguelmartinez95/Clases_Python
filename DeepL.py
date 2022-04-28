@@ -849,7 +849,7 @@ class LSTM_model(DL):
         return res
 
     @staticmethod
-    def cv_division_lstm(data, horizont, fold, pos_y,n_lags):
+    def cv_division_lstm(data, horizont, fold, pos_y,n_lags, onebyone):
         '''
         :return: Division to cv analysis considering that with lstm algorithm the data can not be divided into simple pieces.
         It can only be divided with a initial part and a final part
@@ -876,14 +876,14 @@ class LSTM_model(DL):
                 index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2))]
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
-                x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, True)
+                x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                 #index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
 
                 print(index_val.shape)
                 print(val.shape)
 
-                x_test, y_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,True)
-                x_val, y_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont,True)
+                x_test, y_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
+                x_val, y_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
@@ -1540,7 +1540,7 @@ class LSTM_model(DL):
         res = {'errors': results, 'options': options, 'best': top_results}
         return res
 
-    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary):
+    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -1567,11 +1567,11 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary)
+                                self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
@@ -1625,7 +1625,7 @@ class LSTM_model(DL):
 
         return (obj, struct,obj_T, struct_T,  res)
 
-    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel):
+    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
@@ -1643,7 +1643,7 @@ class LSTM_model(DL):
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
-        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary)
+        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -1701,7 +1701,7 @@ class MyProblem(ElementwiseProblem):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 #
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
-                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary, **kwargs):
+                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1736,6 +1736,7 @@ class MyProblem(ElementwiseProblem):
         self.xlimit_sup = xlimit_sup
         self.n_var = n_var
         self.dictionary =dictionary
+        self.onebyone =onebyone
 
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
@@ -1780,7 +1781,7 @@ class MyProblem(ElementwiseProblem):
 #
         names = data.columns
         names = np.delete(names, self.pos_y)
-        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags)
+        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.onebyone)
 #
         x_test = np.array(res['x_test'])
         x_train = np.array(res['x_train'])
