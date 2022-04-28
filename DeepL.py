@@ -1791,6 +1791,7 @@ class MyProblem(ElementwiseProblem):
         y_val = np.array(res['y_val'])
         #
         times_val = res['time_val']
+        print(x_test.shape)
         print(x_train[0].shape)
         print(y_train.shape)
 #
