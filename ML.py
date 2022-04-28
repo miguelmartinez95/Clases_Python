@@ -1282,11 +1282,11 @@ class MLP(ML):
             struct_T = rx
             obj = rf[I, :]
             struct = rx[I, :]
-            #print(rf.shape)
-            #print(rx.shape)
+            print(rf.shape)
+            print(rx.shape)
 
-            obj = rf[:,I]
-            struct = rx[:,I]
+            #obj = rf[:,I]
+            #struct = rx[:,I]
         else:
             obj_T = res.F
             struct_T = res.X
