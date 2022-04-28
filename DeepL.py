@@ -1594,12 +1594,23 @@ class LSTM_model(DL):
                        seed=7)
 
         if res.F.shape[0] > 1:
+            rf=res.F
+            rx=res.X
             weights = np.array([0.75, 0.25])
-            I = get_decomposition("pbi").do(res.F, weights).argmin()
-            obj_T = res.F
-            struct_T = res.X
-            obj = res.F[I, :]
-            struct = res.X[I, :]
+
+            r_final = pd.DataFrame(rf)
+            scal = MinMaxScaler(feature_range=(0, 1))
+            rf = scal.fit_transform(r_final)
+
+            I = get_decomposition("pbi").do(np.array(rf), weights).argmin()
+            rf = scal.inverse_transform(rf)
+            obj_T = rf
+            struct_T = rx
+            obj = rf[I, :]
+            struct = rx[I, :]
+            print(rf.shape)
+            print(rx.shape)
+
         else:
             obj_T = res.F
             struct_T = res.X
