@@ -1810,13 +1810,14 @@ class MyProblem(ElementwiseProblem):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
-                    print(y_train[z].shape)
+
                     model = LSTM_model.built_model_regression(x_train[z], y_train[z].reshape(-1, 1), neurons_lstm,
                                                               neurons_dense,
                                                               self.mask, self.mask_value, self.repeat_vector,
                                                               self.dropout)
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
+                    print(y_train[z].shape)
                     print(x_val[0].shape)
                     res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
                     y_pred = res['y_pred']
