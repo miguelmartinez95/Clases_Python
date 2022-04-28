@@ -76,7 +76,7 @@ class DL:
         w2 = step
         indexes = []
         try:
-            while w2 <= x.shape[0]:
+            while w2 < x.shape[0]:
                 a = x.iloc[range(w,w2)]
                 X_val.append(a.iloc[range(len(a)-math.floor(len(a)/2), len(a))])
                 X_test.append(a.drop(range(len(a)-math.floor(len(a)/2), len(a))))
