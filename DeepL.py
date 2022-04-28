@@ -877,10 +877,6 @@ class LSTM_model(DL):
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
-                print(train.shape)
-                print(test.shape)
-
-
                 x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                 x_test, y_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                 x_val, y_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
@@ -894,6 +890,10 @@ class LSTM_model(DL):
                 #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
                 times_val.append(index_val)
+
+                print(len(index_val))
+                print(x_val.shape)
+
 
                 X_test.append(x_test)
                 X_train.append(x_train)
