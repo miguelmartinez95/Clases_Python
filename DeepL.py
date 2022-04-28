@@ -892,7 +892,7 @@ class LSTM_model(DL):
                 times_val.append(index_val)
 
                 print(len(index_val))
-                print(x_val.shape)
+                print(y_val.shape)
 
 
                 X_test.append(x_test)
