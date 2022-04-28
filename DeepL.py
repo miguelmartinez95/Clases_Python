@@ -1791,7 +1791,7 @@ class MyProblem(ElementwiseProblem):
         y_val = np.array(res['y_val'])
         #
         times_val = res['time_val']
-        print(x_val.shape)
+
         #print(x_train[0].shape)
         #print(y_train.shape)
 #
@@ -1808,7 +1808,7 @@ class MyProblem(ElementwiseProblem):
                     time_start = time()
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z], x_test[z], y_test[z], pacience,
                                                        batch)
-#
+                    print(x_val[0].shape)
                     res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
                     y_pred = res['y_pred']
 #
@@ -1820,7 +1820,7 @@ class MyProblem(ElementwiseProblem):
                     y_real = y_val[z].reshape(len(y_val[z]), 1)
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
-
+                    print(y_pred.shape)
                     y_predF = y_pred.copy()
                     y_predF = pd.DataFrame(y_predF)
                     y_predF.index = times_val[z]
