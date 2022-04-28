@@ -1820,6 +1820,7 @@ class MyProblem(ElementwiseProblem):
                     y_real = y_val[z].reshape(len(y_val[z]), 1)
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
+
                     print(y_pred.shape)
                     y_predF = y_pred.copy()
                     y_predF = pd.DataFrame(y_predF)
