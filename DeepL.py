@@ -1801,8 +1801,7 @@ class MyProblem(ElementwiseProblem):
         #print(y_train.shape)
 #
         if self.type == 'regression':
-            model = LSTM_model.built_model_regression(x_train[0], y_train[0].reshape(-1,1), neurons_lstm, neurons_dense,
-                                                          self.mask, self.mask_value, self.repeat_vector,self.dropout)
+
 #
 #
             # Train the model
@@ -1812,6 +1811,10 @@ class MyProblem(ElementwiseProblem):
                 for zz2 in range(rep):
                     time_start = time()
                     print(y_train[z].shape)
+                    model = LSTM_model.built_model_regression(x_train[z], y_train[z].reshape(-1, 1), neurons_lstm,
+                                                              neurons_dense,
+                                                              self.mask, self.mask_value, self.repeat_vector,
+                                                              self.dropout)
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
                     print(x_val[0].shape)
