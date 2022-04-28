@@ -1901,10 +1901,10 @@ class MyProblem(ElementwiseProblem):
                             cvs[zz] = 9999
 
                     else:
-
+                        y_real2=y_real.copy()
 
                         # Outliers and missing values
-                        o = np.where(y_real < self.inf_limit)[0]
+                        o = np.where(y_real2 < self.inf_limit)[0]
 
                         if len(o) > 0:
                             y_pred2 = np.delete(y_pred, o, 0)
