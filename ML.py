@@ -1269,23 +1269,21 @@ class MLP(ML):
                        seed=7)
         if res.F.shape[0] > 1:
             rf=res.F
-            rx=res.F
+            rx=res.X
             weights = np.array([0.75, 0.25])
 
             r_final = pd.DataFrame(rf)
             scal = MinMaxScaler(feature_range=(0, 1))
-            rf = np.array(scal.fit_transform(r_final))
+            rf = scal.fit_transform(r_final)
 
-
-
-
-            I = get_decomposition("pbi").do(rf, weights).argmin()
+            I = get_decomposition("pbi").do(np.array(rf), weights).argmin()
+            rf = scal.inverse_transform(rf)
             obj_T = rf
             struct_T = rx
-            #obj = rf[I, :]
-            #struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
+            obj = rf[I, :]
+            struct = rx[I, :]
+            #print(rf.shape)
+            #print(rx.shape)
 
             obj = rf[:,I]
             struct = rx[:,I]
