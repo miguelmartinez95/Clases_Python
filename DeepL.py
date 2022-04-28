@@ -877,17 +877,11 @@ class LSTM_model(DL):
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
-                res = LSTM_model.three_dimension(train,n_lags)
-                train = res['data']
+                print(train.shape)
+                print(test.shape)
+
 
                 x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
-                #index_val = index_val[range(index_val.shape[0] - val.shape[0]*val.shape[1], index_val.shape[0])]
-
-                res = LSTM_model.three_dimension(test,n_lags)
-                test = res['data']
-                res = LSTM_model.three_dimension(val,n_lags)
-                val = res['data']
-
                 x_test, y_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                 x_val, y_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
