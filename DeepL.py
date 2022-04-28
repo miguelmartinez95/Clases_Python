@@ -940,7 +940,7 @@ class LSTM_model(DL):
 
         if self.type=='regression':
             if isinstance(model, list):
-                model1 = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+                model1 = self.__class__.built_model_regression(x_train[0],y_train,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
 
             else:
                 model1=model
