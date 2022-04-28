@@ -1968,9 +1968,9 @@ class MyProblem(ElementwiseProblem):
 #
         if len(x1) == 2:
             if x1[0] == 0 and x1[1] > 0:
-                a_dense = np.array([1])
+                a_lstm = np.array([1])
             else:
-                a_dense = np.array([0])
+                a_lstm = np.array([0])
         elif len(x1)==3:
             if x1[1] == 0 and x1[2] > 0:
                 a_lstm = np.array([2])
