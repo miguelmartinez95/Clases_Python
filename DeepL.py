@@ -938,14 +938,9 @@ class LSTM_model(DL):
         print(y_val[0].shape)
 
 
-        res = self.__class__.three_dimension(train, self.n_lags)
-        train_init = res['data']
-        res = self.__class__.three_dimension(test, self.n_lags)
-        test = res['data']
-
         if self.type=='regression':
             if isinstance(model, list):
-                model1 = self.__class__.built_model_regression(x_train[0],y_train[0],neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+                model1 = self.__class__.built_model_regression(x_train,y_train,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
 
             else:
                 model1=model
