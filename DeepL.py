@@ -213,8 +213,6 @@ class DL:
                     self.data.iloc[inf, self.pos_y[t]] = np.repeat(self.inf_limit[t], len(inf))
                 if len(sup) > 0:
                     self.data.iloc[sup, self.pos_y[t]] = np.repeat(self.sup_limit[t], len(sup))
-
-
         else:
             inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit)[0]
             sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit)[0]
