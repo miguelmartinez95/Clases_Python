@@ -1792,7 +1792,7 @@ class MyProblem(ElementwiseProblem):
         #
         times_val = res['time_val']
         print(x_train[0].shape)
-        print(y_train[0].shape)
+        print(y_train.shape)
 #
         if self.type == 'regression':
             model = LSTM_model.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,
