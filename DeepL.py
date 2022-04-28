@@ -1791,12 +1791,12 @@ class MyProblem(ElementwiseProblem):
         y_val = np.array(res['y_val'])
         #
         times_val = res['time_val']
-        print(x_test.shape)
-        print(x_train[0].shape)
-        print(y_train.shape)
+        #print(x_test.shape)
+        #print(x_train[0].shape)
+        #print(y_train.shape)
 #
         if self.type == 'regression':
-            model = LSTM_model.built_model_regression(x_train[0], y_train[0], neurons_lstm, neurons_dense,
+            model = LSTM_model.built_model_regression(x_train[0], y_train, neurons_lstm, neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,self.dropout)
 #
 #
