@@ -78,6 +78,7 @@ class ML:
                 X_val.append(a.iloc[range(len(a)-math.ceil(len(a)/2), len(a)-1)])
                 X_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
                 X_train.append(x.drop(range(w,w2)))
+
                 a = y.iloc[range(w,w2)]
                 Y_val.append(a.iloc[range(len(a)-math.ceil(len(a)/2), len(a)-1)])
                 Y_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
