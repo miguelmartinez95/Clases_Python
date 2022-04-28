@@ -1811,6 +1811,7 @@ class MyProblem(ElementwiseProblem):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
+                    print(y_train[z].shape)
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
                     print(x_val[0].shape)
