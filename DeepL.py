@@ -1816,7 +1816,8 @@ class MyProblem(ElementwiseProblem):
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
-                    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    y_real = y_val[z].reshape(len(y_val[z]), 1)
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
 
