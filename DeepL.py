@@ -843,7 +843,7 @@ class LSTM_model(DL):
             l2 += n_lags
 
         predictions  =np.array(predictions)
-        print(len(predictions))
+        print(predictions.shape)
         y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
         res = {'y_pred': y_pred}
         return res
