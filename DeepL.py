@@ -839,13 +839,14 @@ class LSTM_model(DL):
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
             yhat = yhat[0]
+            print(yhat.shape)
             predictions.append(yhat)
             #history.append(tt[i,:])
             l1 =l2
             l2 += n_lags
 
         predictions  =np.array(predictions)
-        print(predictions.shape)
+
         y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
         res = {'y_pred': y_pred}
         return res
@@ -1817,9 +1818,7 @@ class MyProblem(ElementwiseProblem):
                                                               self.dropout)
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
-                    print(y_train[z].shape)
-                    print(y_test[z].shape)
-                    print(x_val[0].shape)
+
                     res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
                     y_pred = res['y_pred']
 #
