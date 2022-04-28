@@ -1914,6 +1914,7 @@ class MyProblem(ElementwiseProblem):
                             y_real2 = y_real
 
                         if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+
                             cvs[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
 
                         else:
