@@ -587,7 +587,7 @@ class LSTM_model(DL):
 
         data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
         data=pd.DataFrame(data)
-        X, y = list(), list()
+        X, y, timesF= list(), list(),list()
 
         in_start = 0
         # step over the entire history one time step at a time
@@ -649,8 +649,10 @@ class LSTM_model(DL):
 
                     if horizont==0:
                         y.append(yy.iloc[out_end-1])
+                        timesF.append(np.array([out_end-1]))
                     else:
                         y.append(yy.iloc[in_end:out_end])
+                        timesF.append(list(range(in_end,out_end)))
                     #se selecciona uno
                 # move along one time step
                 if horizont==0 and onebyone[1]==True:
@@ -662,7 +664,7 @@ class LSTM_model(DL):
                 #in_start += onebyone
         dd= len(data) - in_start
 
-        return(np.array(X), np.array(y), dd)
+        return(np.array(X), np.array(y),timesF, dd)
 
     @staticmethod
     def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout):
@@ -877,16 +879,19 @@ class LSTM_model(DL):
                 val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                 test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
-                x_train, y_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
-                x_test, y_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
-                x_val, y_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
+                x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
+                x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
+                x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
                 #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
-                if horizont==0:
-                    index_val = np.delete(index_val, range(n_lags-1), axis=0)
+                if onebyone[0]==True:
+                    if horizont==0:
+                        index_val = np.delete(index_val, range(n_lags-1), axis=0)
+                    else:
+                        index_val = np.delete(index_val, range(n_lags), axis=0)
                 else:
-                    index_val = np.delete(index_val, range(n_lags), axis=0)
+                    index_val=index_val[np.concatenate(ind_val)]
                 #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
                 times_val.append(index_val)
