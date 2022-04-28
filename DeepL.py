@@ -24,6 +24,17 @@ import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
+import collections
+
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],[tf.config.experimental.VirtualDeviceConfiguration(memory_limit=5120)])
+  except RuntimeError as e:
+    print(e)
+
 
 class DL:
     def info(self):
@@ -305,7 +316,13 @@ class DL:
                 raise NameError('Problems with the scalar by groups of variables')
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-            if len(self.pos_y)>1:
+
+          #  if len(self.pos_y)>1:
+          #      self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+          #  else:
+          #      self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+
+            if isinstance(self.pos_y, collections.abc.Sized):
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
@@ -331,7 +348,7 @@ class DL:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-            if len(self.pos_y) > 1:
+            if isinstance(self.pos_y, collections.abc.Sized):
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
