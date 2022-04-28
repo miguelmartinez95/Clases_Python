@@ -1818,6 +1818,7 @@ class MyProblem(ElementwiseProblem):
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
                     print(y_train[z].shape)
+                    print(y_test[z].shape)
                     print(x_val[0].shape)
                     res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
                     y_pred = res['y_pred']
