@@ -17,6 +17,19 @@ import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
 import matplotlib.pyplot as plt
+
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],[tf.config.experimental.VirtualDeviceConfiguration(memory_limit=5120)])
+  except RuntimeError as e:
+    print(e)
+
+
+
+
 class ML:
     def info(self):
         print(('Super class to built different machine learning models. This class has other more specific classes associated with it  \n'
