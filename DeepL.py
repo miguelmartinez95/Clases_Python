@@ -1192,7 +1192,8 @@ class LSTM_model(DL):
 
         print(x_train.shape)
         print(x_test.shape)
-        print(y_test.shape)
+        print(y_train.shape)
+        print(y_train.reshape(-1,1).shape)
         if isinstance(model, list):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train.reshape(-1,1),neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
