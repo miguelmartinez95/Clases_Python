@@ -1182,8 +1182,8 @@ class LSTM_model(DL):
 
         print('Data in three dimensions')
 
-        x_test, y_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
-        x_train, y_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
+        x_test, y_test,ind_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
+        x_train, y_train,ind_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
 
         print(x_train.shape)
         print(x_test.shape)
@@ -1235,7 +1235,7 @@ class LSTM_model(DL):
         else:
             times = np.delete(times, range(self.n_lags), 0)
 
-        x_val, y_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, onebyone)
+        x_val, y_val,ind_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, onebyone)
 
         print('Diferencia entre time and y:',dif)
 
