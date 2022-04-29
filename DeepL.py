@@ -592,7 +592,7 @@ class LSTM_model(DL):
         in_start = 0
         # step over the entire history one time step at a time
         if onebyone[0]==True:
-            timesF.append(0)
+            timesF.append(np.array([0]))
             for _ in range(len(data)-(n_lags + horizont)+1):
             #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
