@@ -1212,7 +1212,7 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val,names,mean_y,batch,times, onebyone, scalated,plotting):
+    def predict(self, model, val,names,mean_y,batch,times, onebyone, scalated,daily,plotting):
         '''
         :param model: trained model
         :param scalated: 0 predict 1 real
@@ -1290,9 +1290,11 @@ class LSTM_model(DL):
                 if len(index_hour) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_hour, 0)
                     y_real1 = np.delete(y_real, index_hour, 0)
+                    times = np.delete(times, index_hour, 0)
                 elif len(index_hour) > 0 and self.horizont > 0:
                     y_pred1 = np.delete(y_pred, index_hour - 1, 0)
                     y_real1 = np.delete(y_real, index_hour - 1, 0)
+                    times = np.delete(times, index_hour - 1, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
@@ -1303,19 +1305,31 @@ class LSTM_model(DL):
                 if len(0) > 0:
                     y_pred1 = np.delete(y_pred1, o, 0)
                     y_real1 = np.delete(y_real1, o, 0)
+                    times = np.delete(times, o, 0)
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                    rmse = evals(y_pred1, y_real1).rmse()
-                    r2 = evals(y_pred1, y_real1).r2()
+                    if daily==True:
+                        cv, std_cv = evals(y_pred1, y_real1).cv_rmse_daily(mean_y, times)
+                        nmbe, stsd_nmbe = evals(y_pred1, y_real1).nmbe_dayli(mean_y, times)
+                        rmse, std_rmse = evals(y_pred1, y_real1).rmse_daily(times)
+                        r2 = evals(y_pred1, y_real1).r2()
+                        res = {'y_pred': y_predF, 'cv_rmse': cv,'std_cv': std_cv, 'nmbe': nmbe,'std_nmbe': std_nmbe, 'rmse': rmse,'std_rmse': std_rmse, 'r2': r2}
+                    else:
+                        cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
+                        rmse = evals(y_pred1, y_real1).rmse()
+                        r2 = evals(y_pred1, y_real1).r2()
+                        res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                               'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
                     nmbe = 9999
                     rmse = 9999
                     r2 = -9999
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
 
@@ -1338,9 +1352,11 @@ class LSTM_model(DL):
                 if len(index_rad) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
+                    times = np.delete(times, index_rad, 0)
                 elif len(index_rad) > 0 and self.horizont > 0:
                     y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
                     y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
+                    times = np.delete(times, np.array(index_rad) - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
@@ -1351,31 +1367,33 @@ class LSTM_model(DL):
                     if len(o) > 0:
                         y_pred1 = np.delete(y_pred1, o, 0)
                         y_real1 = np.delete(y_real1, o, 0)
+                        times = np.delete(times, o, 0)
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                    rmse = evals(y_pred1, y_real1).rmse()
-                    r2 = evals(y_pred1, y_real1).r2()
-
-                    #a = np.round(cv, 2)
-                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    #low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
-                    #plt.figure()
-                    #plt.ylim(low, up)
-                    #plt.plot(y_real1, color='black', label='Real')
-                    #plt.plot(y_pred1, color='blue', label='Prediction')
-                    #plt.legend()
-                    #plt.title("No rad - CV(RMSE)={}".format(str(a)))
-                    #plt.show()
-                    plt.savefig('plot1.png')
+                    if daily == True:
+                        cv, std_cv = evals(y_pred1, y_real1).cv_rmse_daily(mean_y, times)
+                        nmbe, stsd_nmbe = evals(y_pred1, y_real1).nmbe_dayli(mean_y, times)
+                        rmse, std_rmse = evals(y_pred1, y_real1).rmse_daily(times)
+                        r2 = evals(y_pred1, y_real1).r2()
+                        res = {'y_pred': y_predF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
+                               'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2}
+                    else:
+                        cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
+                        rmse = evals(y_pred1, y_real1).rmse()
+                        r2 = evals(y_pred1, y_real1).r2()
+                        res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                               'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
                     nmbe = 9999
                     rmse = 9999
                     r2 = -9999
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
+
             else:
                 raise NameError('Empty prediction')
         else:
@@ -1385,22 +1403,35 @@ class LSTM_model(DL):
             if len(o)>0:
                 y_pred = np.delete(y_pred, o, 0)
                 y_real = np.delete(y_real, o, 0)
+                times = np.delete(times, o, 0)
             if len(y_pred)>0:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
-                    cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                    rmse = evals(y_pred, y_real).rmse()
-                    nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                    r2 = evals(y_pred, y_real).r2()
+                    if daily == True:
+                        cv, std_cv = evals(y_pred, y_real).cv_rmse_daily(mean_y, times)
+                        nmbe, stsd_nmbe = evals(y_pred, y_real).nmbe_dayli(mean_y, times)
+                        rmse, std_rmse = evals(y_pred, y_real).rmse_daily(times)
+                        r2 = evals(y_pred, y_real).r2()
+                        res = {'y_pred': y_predF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
+                               'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2}
+                    else:
+                        cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                        rmse = evals(y_pred, y_real).rmse()
+                        r2 = evals(y_pred, y_real).r2()
+                        res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                               'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
                     nmbe = 9999
                     rmse = 9999
                     r2 = -9999
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
 
-        res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
+        #res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
 
         y_realF = pd.DataFrame(y_realF)
         y_realF.index = y_predF.index
