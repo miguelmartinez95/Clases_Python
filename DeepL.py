@@ -1431,6 +1431,7 @@ class LSTM_model(DL):
             else:
                 raise NameError('Empty prediction')
 
+
         #res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
 
         y_realF = pd.DataFrame(y_realF)
