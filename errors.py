@@ -49,7 +49,8 @@ class Eval_metrics:
             ii=np.where(days==i)
             cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii])) / mean)
 
-        return(cv)
+        std = np.std(cv)
+        return(cv,std)
 
     def rmse(self):
         if len(self.real.shape) > 1:
@@ -76,7 +77,8 @@ class Eval_metrics:
             ii = np.where(days == i)
             rmse[i] = np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii]))
 
-        return(rmse)
+        std = np.std(rmse)
+        return(rmse,std)
 
     def nmbe(self,mean):
         y_true = np.array(self.real)
@@ -101,8 +103,8 @@ class Eval_metrics:
             ii = np.where(days == i)
             nmbe[i] = 100*(np.mean(y_true.iloc[ii] - y_pred.iloc[ii]) / mean)
 
-
-        return (nmbe)
+        std=np.std(nmbe)
+        return (nmbe,std)
 
     def r2(self):
         r2=metrics.r2_score(self.real, self.predict)
