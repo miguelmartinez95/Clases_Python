@@ -1183,8 +1183,12 @@ class LSTM_model(DL):
 
         print('Data in three dimensions')
 
-        x_test, y_test,ind_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
-        x_train, y_train,ind_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
+        #x_test, y_test,ind_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
+        #x_train, y_train,ind_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
+        x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags, self.horizont,
+                                                                     onebyone)
+        x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags, self.horizont,
+                                                                        onebyone)
 
         print(x_train.shape)
         print(x_test.shape)
