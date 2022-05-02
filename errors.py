@@ -44,6 +44,8 @@ class Eval_metrics:
         '''
         days =times.day
         cv=[0 for x in range(len(np.unique(days)))]
+        print(self.real.shape)
+        print(self.predict.shape)
         for i in np.unique(days):
             ii=np.where(days==i)[0]
             #cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii])) / mean)
