@@ -205,7 +205,8 @@ class DL:
         '''
         Adjust the data or the variable to certain upper or lower limits
         '''
-        if len(self.pos_y) > 1:
+        if isinstance(self.pos_y, collections.abc.Sized):
+        #if len(self.pos_y) > 1:
             for t in range(len(self.pos_y)):
                 inf = np.where(self.data.iloc[:, self.pos_y[t]] < self.inf_limit[t])[0]
                 sup = np.where(self.data.iloc[:, self.pos_y[t]] > self.sup_limit[t])[0]
@@ -315,7 +316,8 @@ class DL:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-            if len(self.pos_y)>1:
+            #if len(self.pos_y)>1:
+            if isinstance(self.pos_y, collections.abc.Sized):
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
@@ -346,8 +348,8 @@ class DL:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-            #if isinstance(self.pos_y, collections.abc.Sized):
-            if len(self.pos_y) > 1:
+            if isinstance(self.pos_y, collections.abc.Sized):
+            #if len(self.pos_y) > 1:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
@@ -1253,7 +1255,8 @@ class LSTM_model(DL):
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
 
         y_pred = res['y_pred']
-        if len(self.pos_y) > 1:
+        if isinstance(self.pos_y, collections.abc.Sized):
+        #if len(self.pos_y) > 1:
             y_pred = y_pred.reshape(-1, y_val.shape[1])
 
         print(y_pred.shape)
@@ -1262,7 +1265,8 @@ class LSTM_model(DL):
         if scalated[1]==True:
             y_val = np.array(self.scalar_y.inverse_transform(y_val))
 
-        if len(self.pos_y)>1:
+        if isinstance(self.pos_y, collections.abc.Sized):
+        #if len(self.pos_y)>1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
                 y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
