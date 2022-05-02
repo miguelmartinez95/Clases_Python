@@ -1256,11 +1256,12 @@ class LSTM_model(DL):
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
 
         y_pred = res['y_pred']
+        print(y_pred.shape)
+
+
         if isinstance(self.pos_y, collections.abc.Sized):
         #if len(self.pos_y) > 1:
             y_pred = y_pred.reshape(-1, y_val.shape[1])
-
-        print(y_pred.shape)
 
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
