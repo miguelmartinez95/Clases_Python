@@ -1266,7 +1266,7 @@ class LSTM_model(DL):
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if scalated[1]==True:
-            y_val = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_val)))
+            y_val = np.array(self.scalar_y.inverse_transform(y_val.reshape(-1,1)))
 
         if isinstance(self.pos_y, collections.abc.Sized):
         #if len(self.pos_y)>1:
