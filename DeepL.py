@@ -205,7 +205,7 @@ class DL:
         '''
         Adjust the data or the variable to certain upper or lower limits
         '''
-        if len(self.pos_y)>1:
+        if len(self.pos_y) > 1:
             for t in range(len(self.pos_y)):
                 inf = np.where(self.data.iloc[:, self.pos_y[t]] < self.inf_limit[t])[0]
                 sup = np.where(self.data.iloc[:, self.pos_y[t]] > self.sup_limit[t])[0]
