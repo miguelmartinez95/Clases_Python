@@ -1261,6 +1261,7 @@ class LSTM_model(DL):
             y_pred = y_pred.reshape(-1, y_val.shape[1])
 
         print(y_pred.shape)
+
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if scalated[1]==True:
