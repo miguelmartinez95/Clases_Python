@@ -1352,7 +1352,8 @@ class LSTM_model(DL):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1]-1, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+            #index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+            index_rad2 = np.where(np.sum(y_real <= self.inf_limit, axis=1) > 0)[0]
 
             index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 #
