@@ -1384,6 +1384,7 @@ class LSTM_model(DL):
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if daily == True:
+                        print(times)
                         cv, std_cv = evals(y_pred1, y_real1).cv_rmse_daily(mean_y, times)
                         nmbe, std_nmbe = evals(y_pred1, y_real1).nmbe_dayli(mean_y, times)
                         rmse, std_rmse = evals(y_pred1, y_real1).rmse_daily(times)
