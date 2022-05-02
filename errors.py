@@ -46,7 +46,8 @@ class Eval_metrics:
         cv=[0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
             ii=np.where(days==i)[0]
-            cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii])) / mean)
+            #cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii])) / mean)
+            cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real[ii], self.predict[ii])) / mean)
 
         std = np.std(cv)
         return(cv,std)
