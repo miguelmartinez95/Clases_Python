@@ -1390,7 +1390,7 @@ class LSTM_model(DL):
                     if daily == True:
                         print(times)
                         cv, std_cv = evals(y_pred1, y_real1).cv_rmse_daily(mean_y, times)
-                        nmbe, std_nmbe = evals(y_pred1, y_real1).nmbe_dayli(mean_y, times)
+                        nmbe, std_nmbe = evals(y_pred1, y_real1).nmbe_daily(mean_y, times)
                         rmse, std_rmse = evals(y_pred1, y_real1).rmse_daily(times)
                         r2 = evals(y_pred1, y_real1).r2()
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
@@ -1425,7 +1425,7 @@ class LSTM_model(DL):
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     if daily == True:
                         cv, std_cv = evals(y_pred, y_real).cv_rmse_daily(mean_y, times)
-                        nmbe, std_nmbe = evals(y_pred, y_real).nmbe_dayli(mean_y, times)
+                        nmbe, std_nmbe = evals(y_pred, y_real).nmbe_daily(mean_y, times)
                         rmse, std_rmse = evals(y_pred, y_real).rmse_daily(times)
                         r2 = evals(y_pred, y_real).r2()
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
