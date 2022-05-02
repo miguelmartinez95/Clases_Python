@@ -315,15 +315,15 @@ class DL:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-          #  if len(self.pos_y)>1:
-          #      self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-          #  else:
-          #      self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
-
-            if isinstance(self.pos_y, collections.abc.Sized):
+            if len(self.pos_y)>1:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+
+           # if isinstance(self.pos_y, collections.abc.Sized):
+           #     self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+           # else:
+           #     self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
             self.scalar_y = scalar_y
             self.scalar_x = scalars
@@ -346,7 +346,8 @@ class DL:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-            if isinstance(self.pos_y, collections.abc.Sized):
+            #if isinstance(self.pos_y, collections.abc.Sized):
+            if len(self.pos_y) > 1:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
