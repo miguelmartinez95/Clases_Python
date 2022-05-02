@@ -110,14 +110,14 @@ class DL:
                 limit2 = limit[1]
                 hours = restriction.hour
                 ii = np.where(hours < limit1 | hours > limit2)[0]
-                ii = ii[ii >= 0]
+                #ii = ii[ii >= 0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
             try:
                 rad = restriction
                 ii = np.where(rad <= limit)[0]
-                ii = ii[ii >= 0]
+                #ii = ii[ii >= 0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         else:
@@ -1031,9 +1031,6 @@ class LSTM_model(DL):
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
 
-                        y_pred[np.where(y_pred < self.inf_limit)[0]]=self.inf_limit
-                        y_pred[np.where(y_pred > self.sup_limit)[0]]=self.sup_limit
-
                         res = super().fix_values_0(times_val[z],
                                                       self.zero_problem, self.limits)
 
@@ -1042,35 +1039,41 @@ class LSTM_model(DL):
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
-
-                        if len(index_hour) > 0 and self.horizont == 0:
-                            y_pred1 = np.delete(y_pred, index_hour, 0)
-                            y_real1 = np.delete(y_real, index_hour, 0)
-                        elif len(index_hour) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_hour - 1, 0)
-                            y_real1 = np.delete(y_real, index_hour - 1, 0)
-                        else:
-                            y_pred1 = y_pred
+                        if len(y_pred <= 1):
+                            y_pred1 = np.nan
                             y_real1 = y_real
-
-                        #Outliers and missing values
-                        o = np.where(y_real1<self.inf_limit)[0]
-
-                        if len(o)>0:
-                            y_pred1 = np.delete(y_pred1,o,0)
-                            y_real1 = np.delete(y_real1,o, 0)
-
-                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                            cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            rmse[zz] = evals(y_pred1, y_real1).rmse()
-                            nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                         else:
-                            print('Missing values are detected when we are evaluating the predictions')
-                            cv[zz] = 9999
-                            rmse[zz] = 9999
-                            nmbe[zz] = 9999
+                            if len(index_hour) > 0 and self.horizont == 0:
+                                y_pred1 = np.delete(y_pred, index_hour, 0)
+                                y_real1 = np.delete(y_real, index_hour, 0)
+                            elif len(index_hour) > 0 and self.horizont > 0:
+                                y_pred1 = np.delete(y_pred, index_hour - 1, 0)
+                                y_real1 = np.delete(y_real, index_hour - 1, 0)
+                            else:
+                                y_pred1 = y_pred
+                                y_real1 = y_real
+
+                        # Outliers and missing values
+                        if self.mask == True and len(y_pred1) > 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(0) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                                times = np.delete(times, o, 0)
+                        if len(y_pred1) > 0:
+                            if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                                cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                rmse[zz] = evals(y_pred1, y_real1).rmse()
+                                nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                            else:
+                                print('Missing values are detected when we are evaluating the predictions')
+                                cv[zz] = 9999
+                                rmse[zz] = 9999
+                                nmbe[zz] = 9999
+                        else:
+                            raise NameError('Empty prediction')
+
                     elif self.zero_problem == 'radiation':
-                        print('*****Night-radiation fixed******')
                         print('*****Night-radiation fixed******')
                         place = np.where(names == 'radiation')[0]
                         scalar_x = self.scalar_x
@@ -1078,44 +1081,46 @@ class LSTM_model(DL):
                         res = super().fix_values_0(scalar_rad.inverse_transform(x_val[zz][:, x_val[zz].shape[1] - 1, place]),
                                                    self.zero_problem, self.limits)
                         index_rad = res['indexes_out']
-                        index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+                        index_rad2 = np.where(y_real <= self.inf_limit)[0]
                         index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
 
-                        if len(index_rad) > 0 and self.horizont == 0:
-                            y_pred1 = np.delete(y_pred, index_rad, 0)
-                            y_real1 = np.delete(y_real, index_rad, 0)
-                        elif len(index_rad) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
-                            y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
-                        else:
-                            y_pred1 = y_pred
+                        if len(y_pred) <= 1:
+                            y_pred1 = np.nan
                             y_real1 = y_real
-
-                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                            cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            rmse[zz] = evals(y_pred1, y_real1).rmse()
-                            nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
-
-                            #a = np.round(cv[zz], 2)
-                            #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                            #low = int(np.min(y_real1)) - int(np.min(y_real1) / 4)
-                            #plt.figure()
-                            #plt.ylim(low, up)
-                            #plt.plot(y_real1, color='black', label='Real')
-                            #plt.plot(y_pred1, color='blue', label='Prediction')
-                            #plt.legend()
-                            #plt.title("No rad - CV(RMSE)={}".format(str(a)))
-                            #plt.show()
-
-
                         else:
-                            print('Missing values are detected when we are evaluating the predictions')
-                            cv[zz] = 9999
-                            rmse[zz] = 9999
-                            nmbe[zz] = 9999
+                            if len(index_rad) > 0 and self.horizont == 0:
+                                y_pred1 = np.delete(y_pred, index_rad, 0)
+                                y_real1 = np.delete(y_real, index_rad, 0)
+                            elif len(index_rad) > 0 and self.horizont > 0:
+                                y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                                y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
+                            else:
+                                y_pred1 = y_pred
+                                y_real1 = y_real
+
+                        # Outliers and missing values
+                        if self.mask == True and len(y_pred1) > 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                                times = np.delete(times, o, 0)
+
+                        if len(y_pred1) > 0:
+                            if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                                cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                rmse[zz] = evals(y_pred1, y_real1).rmse()
+                                nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                            else:
+                                print('Missing values are detected when we are evaluating the predictions')
+                                cv[zz] = 9999
+                                rmse[zz] = 9999
+                                nmbe[zz] = 9999
+                        else:
+                            raise NameError('Empty prediction')
                     else:
                         y_real2 = y_real.copy()
 
@@ -1123,27 +1128,27 @@ class LSTM_model(DL):
                         reales.append(y_realF)
 
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        if self.mask == True and len(y_pred) > 0:
+                            o = np.where(y_real2 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred2 = np.delete(y_pred, o, 0)
+                                y_real2 = np.delete(y_real, o, 0)
+                            else:
+                                y_pred2 = y_pred
+                                y_real2 = y_real
 
-                        if len(o) > 0:
-                            y_pred2 = np.delete(y_pred, o, 0)
-                            y_real2 = np.delete(y_real, o, 0)
+                        if len(y_pred) > 0:
+                            if np.sum(np.isnan(y_pred2))==0 and np.sum(np.isnan(y_real2))==0:
+                                cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                                rmse[zz] = evals(y_pred2, y_real2).rmse()
+                                nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
+                            else:
+                                print('Missing values are detected when we are evaluating the predictions')
+                                cv[zz] = 9999
+                                rmse[zz] = 9999
+                                nmbe[zz] = 9999
                         else:
-                            y_pred2 = y_pred
-                            y_real2 = y_real
-
-                        if np.sum(np.isnan(y_pred2))==0 and np.sum(np.isnan(y_real2))==0:
-                            cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                            rmse[zz] = evals(y_pred2, y_real2).rmse()
-                            nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
-                        else:
-                            print('Missing values are detected when we are evaluating the predictions')
-                            cv[zz] = 9999
-                            rmse[zz] = 9999
-                            nmbe[zz] = 9999
-
-
-
+                            raise NameError('Empty prediction')
                     zz +=1
 
             res_final = {'preds': predictions, 'reals':reales, 'times_val':times_val, 'cv_rmse':cv,
@@ -1315,7 +1320,7 @@ class LSTM_model(DL):
                     y_real1 = y_real
 
             # Outliers and missing values
-            if len(y_pred1)>0:
+            if self.mask == True and len(y_pred1) > 0:
                 o = np.where(y_real1 < self.inf_limit)[0]
                 if len(0) > 0:
                     y_pred1 = np.delete(y_pred1, o, 0)
@@ -1359,7 +1364,6 @@ class LSTM_model(DL):
             index_rad = res['indexes_out']
             #index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
             index_rad2 = np.where(y_real <= self.inf_limit)[0]
-
             index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 #
             if len(y_pred) <= 1:
@@ -1418,11 +1422,13 @@ class LSTM_model(DL):
         else:
             # Outliers and missing values
             y_real2 = y_real.copy()
-            o = np.where(y_real2 < self.inf_limit)[0]
-            if len(o)>0:
-                y_pred = np.delete(y_pred, o, 0)
-                y_real = np.delete(y_real, o, 0)
-                times = np.delete(times, o, 0)
+
+            if self.mask == True and len(y_pred) > 0:
+                o = np.where(y_real2 < self.inf_limit)[0]
+                if len(o)>0:
+                    y_pred = np.delete(y_pred, o, 0)
+                    y_real = np.delete(y_real, o, 0)
+                    times = np.delete(times, o, 0)
             if len(y_pred)>0:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     if daily == True:
@@ -1910,11 +1916,11 @@ class MyProblem(ElementwiseProblem):
                             y_real1 = y_real
 
                         # Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
-
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                        if self.mask == True and len(y_pred1) > 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(0) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
 
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
@@ -1932,6 +1938,8 @@ class MyProblem(ElementwiseProblem):
                                                    self.zero_problem, self.limits)
 
                         index_rad = res['indexes_out']
+                        index_rad2 = np.where(y_real <= self.inf_limit)[0]
+                        index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
                         if len(index_rad) > 0 and self.horizont == 0:
                             y_pred1 = np.delete(y_pred, index_rad, 0)
@@ -1944,11 +1952,11 @@ class MyProblem(ElementwiseProblem):
                             y_real1 = y_real
 
                         # Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
-
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                        if self.mask == True and len(y_pred1) > 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
 
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
@@ -1960,15 +1968,15 @@ class MyProblem(ElementwiseProblem):
                     else:
                         y_real2=y_real.copy()
 
-                        # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
-
-                        if len(o) > 0:
-                            y_pred2 = np.delete(y_pred, o, 0)
-                            y_real2 = np.delete(y_real, o, 0)
-                        else:
-                            y_pred2 = y_pred
-                            y_real2 = y_real
+                        if self.mask == True and len(y_pred) > 0:
+                            # Outliers and missing values
+                            o = np.where(y_real2 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred2 = np.delete(y_pred, o, 0)
+                                y_real2 = np.delete(y_real, o, 0)
+                            else:
+                                y_pred2 = y_pred
+                                y_real2 = y_real
 
                         if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
 
