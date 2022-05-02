@@ -43,7 +43,6 @@ class Eval_metrics:
         :return: cv(rmse) day by day
         '''
         days =times.day
-        dd= pd.concat([self.real, self.predict,days ])
         cv=[0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
             ii=np.where(days==i)
@@ -71,7 +70,6 @@ class Eval_metrics:
         :return: rmse day by day
         '''
         days = times.day
-        dd = pd.concat([self.real, self.predict, days])
         rmse= [0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
             ii = np.where(days == i)
@@ -97,7 +95,6 @@ class Eval_metrics:
         y_true = y_true.reshape(len(y_true), 1)
         y_pred = y_pred.reshape(len(y_pred), 1)
         days = times.day
-        dd = pd.concat([self.real, self.predict, days])
         nmbe = [0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
             ii = np.where(days == i)
