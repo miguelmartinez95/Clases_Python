@@ -1239,6 +1239,7 @@ class LSTM_model(DL):
 
         if self.horizont == 0 and onebyone[1] == True:
             times = range(int(shape1/self.n_lags))
+            print('problems with the sample lag by lags and the radiation restriction')
         elif self.horizont == 0 and onebyone[1] == False:
             times = np.delete(times, range(self.n_lags-1), 0)
         else:
@@ -1263,7 +1264,7 @@ class LSTM_model(DL):
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if scalated[1]==True:
-            y_val = np.array(self.scalar_y.inverse_transform(y_val))
+            y_val = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_val)))
 
         if isinstance(self.pos_y, collections.abc.Sized):
         #if len(self.pos_y)>1:
