@@ -45,7 +45,7 @@ class Eval_metrics:
         days =times.day
         cv=[0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
-            ii=np.where(days==i)
+            ii=np.where(days==i)[0]
             cv[i]=100 * (np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii])) / mean)
 
         std = np.std(cv)
@@ -72,7 +72,7 @@ class Eval_metrics:
         days = times.day
         rmse= [0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
-            ii = np.where(days == i)
+            ii = np.where(days == i)[0]
             rmse[i] = np.sqrt(metrics.mean_squared_error(self.real.iloc[ii], self.predict.iloc[ii]))
 
         std = np.std(rmse)
@@ -97,7 +97,7 @@ class Eval_metrics:
         days = times.day
         nmbe = [0 for x in range(len(np.unique(days)))]
         for i in np.unique(days):
-            ii = np.where(days == i)
+            ii = np.where(days == i)[0]
             nmbe[i] = 100*(np.mean(y_true.iloc[ii] - y_pred.iloc[ii]) / mean)
 
         std=np.std(nmbe)
