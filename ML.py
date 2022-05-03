@@ -1314,6 +1314,7 @@ class MLP(ML):
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
+        print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dropout,dictionary)
