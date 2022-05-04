@@ -115,11 +115,17 @@ class Eval_metrics:
             if self.real.shape[1] >= 2:
                 var = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
-                    var[i] = np.mean((self.real[:, i]- self.predict[:, i])/self.real[:,i])
+                    a=self.real[:,i]
+                    a[np.where(a==0)[0]]=1
+                    var[i] = np.mean(np.abs((self.real[:, i]- self.predict[:, i])/a))
 
                 var = np.mean(var)
             else:
-                var = np.mean((self.real- self.predict)/self.real)
+                a = self.real
+                a[np.where(a == 0)[0]] = 1
+                var = np.mean((self.real- self.predict)/a)
         else:
-            var = np.mean((self.real- self.predict)/self.real)
+            a = self.real
+            a[np.where(a == 0)[0]] = 1
+            var = np.mean((self.real - self.predict) / a)
         return(var)
