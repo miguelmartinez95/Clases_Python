@@ -26,7 +26,7 @@ class Eval_metrics:
 
     def cv_rmse(self, mean):
         if len(self.real.shape) > 1:
-            if self.real.shape[1]>2:
+            if self.real.shape[1]>=2:
                 cv = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
                     cv[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])) / mean[i])
@@ -56,7 +56,7 @@ class Eval_metrics:
 
     def rmse(self):
         if len(self.real.shape) > 1:
-            if self.real.shape[1] > 2:
+            if self.real.shape[1] >= 2:
                 rmse = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
                     rmse[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])))
