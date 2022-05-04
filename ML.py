@@ -604,7 +604,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
+    def cv_analysis(self,fold,x_individual, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -615,19 +615,27 @@ class MLP(ML):
         import random
 
 
-
-        names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
+        if isinstance(x_individual, list):
+            names = x_individual.drop(x_individual.columns[self.pos_y], axis=1).columns
+            x =pd.DataFrame(x_individual.drop(x_individual.columns[self.pos_y],axis=1))
+            if self.type == 'series':
+                y = pd.DataFrame(x_individual.iloc[:, range(self.n_steps)])
+            else:
+                y = pd.DataFrame(x_individual.iloc[:, self.pos_y])
+        else:
+            names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
+            x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
+            if self.type == 'series':
+                y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
+            else:
+                y = pd.DataFrame(self.data.iloc[:, self.pos_y])
         print('##########################'
               '################################'
               'CROSS-VALIDATION'
               '#################################'
               '################################')
         layers = len(neurons)
-        x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
-        if self.type=='series':
-            y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
-        else:
-            y =pd.DataFrame(self.data.iloc[:,self.pos_y])
+
         x=x.reset_index(drop=True)
         y=y.reset_index(drop=True)
 
@@ -645,7 +653,10 @@ class MLP(ML):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
 
         if self.type=='classification':
-            data2 = self.data
+            if isinstance(x_individual, list):
+                data2=x_individual
+            else:
+                data2 = self.data
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
