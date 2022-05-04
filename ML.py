@@ -616,19 +616,19 @@ class MLP(ML):
 
 
         if isinstance(x_individual, list):
-            names = x_individual.drop(x_individual.columns[self.pos_y], axis=1).columns
-            x =pd.DataFrame(x_individual.drop(x_individual.columns[self.pos_y],axis=1))
-            if self.type == 'series':
-                y = pd.DataFrame(x_individual.iloc[:, range(self.n_steps)])
-            else:
-                y = pd.DataFrame(x_individual.iloc[:, self.pos_y])
-        else:
             names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
             x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
             if self.type == 'series':
                 y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
             else:
                 y = pd.DataFrame(self.data.iloc[:, self.pos_y])
+        else:
+            names = x_individual.drop(x_individual.columns[self.pos_y], axis=1).columns
+            x = pd.DataFrame(x_individual.drop(x_individual.columns[self.pos_y], axis=1))
+            if self.type == 'series':
+                y = pd.DataFrame(x_individual.iloc[:, range(self.n_steps)])
+            else:
+                y = pd.DataFrame(x_individual.iloc[:, self.pos_y])
         print('##########################'
               '################################'
               'CROSS-VALIDATION'
@@ -654,9 +654,9 @@ class MLP(ML):
 
         if self.type=='classification':
             if isinstance(x_individual, list):
-                data2=x_individual
-            else:
                 data2 = self.data
+            else:
+                data2=x_individual
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
