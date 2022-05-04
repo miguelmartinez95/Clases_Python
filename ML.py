@@ -1557,6 +1557,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         cvs[z] = 9999
             complexity = MyProblem_mlp.complex_mlp(neurons, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
+            print(dictionary[name1] )
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             return res_final['cvs'], res_final['complexity']
 
