@@ -1308,6 +1308,7 @@ class MLP(ML):
         :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
         :param parallel: how many processes are parallelise
+        if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
         manager = multiprocessing.Manager()
@@ -1404,6 +1405,7 @@ class MyProblem_mlp(ElementwiseProblem):
         :param dictionary: dictionary to fill with the options tested
         :param q:operator to differentiate when there is parallelisation and the results must be a queue
         :return: cv(rmse) and complexity of the model tested
+        if mean_y is empty a variation task will be applied
         '''
 
         from pathlib import Path
@@ -1503,7 +1505,10 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                        cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        if mean_y.size == 0:
+                            cvs[z]=evals(y_pred2, y_real2).variation_rate()
+                        else:
+                            cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                 elif self.zero_problem == 'radiation':
 
                     print('*****Night-radiation fixed******')
@@ -1533,7 +1538,10 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_pred1 = y_pred
                             y_real1 = y_real
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                        cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        if mean_y.size == 0:
+                            cvs[z]=evals(y_pred2, y_real2).variation_rate()
+                        else:
+                            cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     else:
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
@@ -1551,7 +1559,10 @@ class MyProblem_mlp(ElementwiseProblem):
                         y_pred2 = y_pred
                         y_real2 = y_real
                     if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
-                        cvs[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                        if mean_y.size == 0:
+                            cvs[z]=evals(y_pred2, y_real2).variation_rate()
+                        else:
+                            cvs[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                     else:
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
