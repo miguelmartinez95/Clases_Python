@@ -614,8 +614,6 @@ class MLP(ML):
         from pathlib import Path
         import random
 
-
-
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
         print('##########################'
               '################################'
