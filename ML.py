@@ -644,7 +644,7 @@ class MLP(ML):
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
 
-        if self.type=='classification'::
+        if self.type=='classification':
             data2 = self.data
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
