@@ -657,9 +657,12 @@ class MLP(ML):
 
             # Train the model
             times=[0 for x in range(fold)]
-            cv=[0 for x in range(fold)]
-            rmse=[0 for x in range(fold)]
-            nmbe = [0 for x in range(fold)]
+            #cv=[0 for x in range(fold)]
+            #rmse=[0 for x in range(fold)]
+            #nmbe = [0 for x in range(fold)]
+            cv=list()
+            rmse=list()
+            nmbe=list()
             predictions=[]
             reales = []
             for z in range(fold):
@@ -747,9 +750,10 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred1, y_real1).rmse()
-                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+
+                    cv.append(evals(y_pred1, y_real1).cv_rmse(mean_y))
+                    rmse.append(evals(y_pred1, y_real1).rmse())
+                    nmbe.append(evals(y_pred1, y_real1).nmbe(mean_y))
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
@@ -783,19 +787,9 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred1, y_real1).rmse()
-                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
-
-                    #a = np.round(cv[z], 2)
-                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    #low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
-                    #plt.figure()
-                    #plt.ylim(low, up)
-                    #plt.plot(y_real1, color='black', label='Real')
-                    #plt.plot(y_pred1, color='blue', label='Prediction')
-                    #plt.legend()
-                    #plt.title("No radiation - CV(RMSE)={}".format(str(a)))
+                    cv.append(evals(y_pred1, y_real1).cv_rmse(mean_y))
+                    rmse.append(evals(y_pred1, y_real1).rmse())
+                    nmbe.append(evals(y_pred1, y_real1).nmbe(mean_y))
 
                 else:
                     if self.type == 'series':
@@ -809,9 +803,9 @@ class MLP(ML):
                             y_pred = np.delete(y_pred, o, 0)
                             y_real = np.delete(y_real, o, 0)
 
-                    cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred, y_real).rmse()
-                    nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
+                    cv.append(evals(y_pred, y_real).cv_rmse(mean_y))
+                    rmse.append(evals(y_pred, y_real).rmse())
+                    nmbe.append(evals(y_pred, y_real).nmbe(mean_y))
 
                 if plot==True and len(y_realF.shape)>1:
                     s = np.max(y_realF.iloc[:,0]).astype(int) + 15
@@ -1089,28 +1083,13 @@ class MLP(ML):
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    if len(self.pos_y)>1:
-                        cv=[0 for x in range(len(self.pos_y))]
-                        rmse=[0 for x in range(len(self.pos_y))]
-                        nmbe=[0 for x in range(len(self.pos_y))]
-                        r2=[0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
-                            else:
-                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
-                            rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
-                            nmbe[t] = evals(y_pred1[:,t], y_real1[:,t]).nmbe(mean_y[t])
-                            r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
+                    if mean_y.size == 0:
+                        cv = evals(y_pred1, y_real1).variation_rate()
                     else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred1, y_real1).variation_rate()
-                        else:
-                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
-                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                        r2 = evals(y_pred, y_real).r2()
+                        cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    rmse = evals(y_pred, y_real).rmse()
+                    nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                    r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
