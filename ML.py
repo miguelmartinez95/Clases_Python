@@ -749,6 +749,7 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
+
                     cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     rmse[z] = evals(y_pred1, y_real1).rmse()
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
@@ -1018,7 +1019,7 @@ class MLP(ML):
         :param model: trained model
         :param x_val: x to predict
         :param y_val: y to predict
-        if mean_y is empty a variation rate will be applied as cv in result
+        if mean_y is empty a variation rate will be applied as cv in result. The others relative will be nan
         :return: predictions with the errors depending of zero_problem
         '''
 
@@ -1099,19 +1100,22 @@ class MLP(ML):
                         for t in range(len(self.pos_y)):
                             if mean_y.size == 0:
                                 cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
+                                nmbe[t] = np.nan
                             else:
                                 cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
+                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
+
                             rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
-                            nmbe[t] = evals(y_pred1[:,t], y_real1[:,t]).nmbe(mean_y[t])
                             r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
                     else:
                         if mean_y.size == 0:
                             cv = evals(y_pred1, y_real1).variation_rate()
+                            nmbe = np.nan
                         else:
                             cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
 
                         rmse = evals(y_pred, y_real).rmse()
-                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1167,19 +1171,22 @@ class MLP(ML):
                         for t in range(len(self.pos_y)):
                             if mean_y.size == 0:
                                 cv[t] = evals(y_pred1[:, t], y_real[:, t]).variation_rate()
+                                nmbe[t] = np.nan
                             else:
+                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
                                 cv[t] = evals(y_pred1[:, t], y_real1[:, t]).cv_rmse(mean_y[t])
+
                             rmse[t] = evals(y_pred1[:, t], y_real1[:, t]).rmse()
-                            nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
                             r2[t] = evals(y_pred1[:, t], y_real1[:, t]).r2()
                     else:
                         if mean_y.size == 0:
                             cv = evals(y_pred1, y_real1).variation_rate()
+                            nmbe=np.nan
                         else:
                             cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
 
                         rmse = evals(y_pred, y_real).rmse()
-                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1210,19 +1217,22 @@ class MLP(ML):
                         for t in range(len(self.pos_y)):
                             if mean_y.size == 0:
                                 cv[t] = evals(y_pred[:,t], y_real[:,t]).variation_rate()
+                                nmbe[t] = np.nan
                             else:
                                 cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
+                                nmbe[t] = evals(y_pred[:, t], y_real[:, t]).nmbe(mean_y[t])
+
                             rmse[t] = evals(y_pred[:,t], y_real[:,t]).rmse()
-                            nmbe[t] = evals(y_pred[:,t], y_real[:,t]).nmbe(mean_y[t])
                             r2[t] = evals(y_pred[:,t], y_real[:,t]).r2()
                     else:
                         if mean_y.size == 0:
                             cv = evals(y_pred, y_real).variation_rate()
+                            nmbe = np.nan
                         else:
                             cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
 
                         rmse = evals(y_pred, y_real).rmse()
-                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
