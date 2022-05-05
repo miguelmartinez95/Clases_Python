@@ -790,16 +790,6 @@ class MLP(ML):
                     rmse[z] = evals(y_pred1, y_real1).rmse()
                     nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
 
-                    #a = np.round(cv[z], 2)
-                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    #low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
-                    #plt.figure()
-                    #plt.ylim(low, up)
-                    #plt.plot(y_real1, color='black', label='Real')
-                    #plt.plot(y_pred1, color='blue', label='Prediction')
-                    #plt.legend()
-                    #plt.title("No radiation - CV(RMSE)={}".format(str(a)))
-
                 else:
                     if self.type == 'series':
                         y_pred = np.concatenate(y_pred)
