@@ -604,7 +604,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self,fold,x_individual, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
+    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -644,11 +644,8 @@ class MLP(ML):
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
 
-        if self.type=='classification':
-            if isinstance(x_individual, list):
-                data2 = self.data
-            else:
-                data2=x_individual
+        if self.type=='classification'::
+            data2 = self.data
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
