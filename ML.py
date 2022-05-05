@@ -604,14 +604,13 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
+    def cv_analysis(self,fold,x_individual, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
         :param plot: True plots
         :return: predictions, real values, errors and the times needed to train
         '''
-
         from pathlib import Path
         import random
 
@@ -645,7 +644,10 @@ class MLP(ML):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
 
         if self.type=='classification':
-            data2 = self.data
+            if isinstance(x_individual, list):
+                data2 = self.data
+            else:
+                data2=x_individual
             yy = data2.iloc[:,self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
@@ -657,12 +659,9 @@ class MLP(ML):
 
             # Train the model
             times=[0 for x in range(fold)]
-            #cv=[0 for x in range(fold)]
-            #rmse=[0 for x in range(fold)]
-            #nmbe = [0 for x in range(fold)]
-            cv=list()
-            rmse=list()
-            nmbe=list()
+            cv=[0 for x in range(fold)]
+            rmse=[0 for x in range(fold)]
+            nmbe = [0 for x in range(fold)]
             predictions=[]
             reales = []
             for z in range(fold):
@@ -750,10 +749,9 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-
-                    cv.append(evals(y_pred1, y_real1).cv_rmse(mean_y))
-                    rmse.append(evals(y_pred1, y_real1).rmse())
-                    nmbe.append(evals(y_pred1, y_real1).nmbe(mean_y))
+                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred1, y_real1).rmse()
+                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
@@ -787,9 +785,19 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-                    cv.append(evals(y_pred1, y_real1).cv_rmse(mean_y))
-                    rmse.append(evals(y_pred1, y_real1).rmse())
-                    nmbe.append(evals(y_pred1, y_real1).nmbe(mean_y))
+                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred1, y_real1).rmse()
+                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+
+                    #a = np.round(cv[z], 2)
+                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
+                    #low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
+                    #plt.figure()
+                    #plt.ylim(low, up)
+                    #plt.plot(y_real1, color='black', label='Real')
+                    #plt.plot(y_pred1, color='blue', label='Prediction')
+                    #plt.legend()
+                    #plt.title("No radiation - CV(RMSE)={}".format(str(a)))
 
                 else:
                     if self.type == 'series':
@@ -803,9 +811,9 @@ class MLP(ML):
                             y_pred = np.delete(y_pred, o, 0)
                             y_real = np.delete(y_real, o, 0)
 
-                    cv.append(evals(y_pred, y_real).cv_rmse(mean_y))
-                    rmse.append(evals(y_pred, y_real).rmse())
-                    nmbe.append(evals(y_pred, y_real).nmbe(mean_y))
+                    cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
+                    rmse[z] = evals(y_pred, y_real).rmse()
+                    nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
 
                 if plot==True and len(y_realF.shape)>1:
                     s = np.max(y_realF.iloc[:,0]).astype(int) + 15
@@ -1083,13 +1091,28 @@ class MLP(ML):
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    if mean_y.size == 0:
-                        cv = evals(y_pred1, y_real1).variation_rate()
+                    if len(self.pos_y)>1:
+                        cv=[0 for x in range(len(self.pos_y))]
+                        rmse=[0 for x in range(len(self.pos_y))]
+                        nmbe=[0 for x in range(len(self.pos_y))]
+                        r2=[0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
+                            else:
+                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
+                            rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
+                            nmbe[t] = evals(y_pred1[:,t], y_real1[:,t]).nmbe(mean_y[t])
+                            r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
                     else:
-                        cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    rmse = evals(y_pred, y_real).rmse()
-                    nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                    r2 = evals(y_pred, y_real).r2()
+                        if mean_y.size == 0:
+                            cv = evals(y_pred1, y_real1).variation_rate()
+                        else:
+                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+
+                        rmse = evals(y_pred, y_real).rmse()
+                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                        r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1226,7 +1249,7 @@ class MLP(ML):
         return res
 
     def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
-                         xlimit_sup,dropout, dictionary, weights):
+                         xlimit_sup,dropout, dictionary):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -1253,13 +1276,13 @@ class MLP(ML):
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,weights, dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,weights, dictionary)
+                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary)
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           # sampling =g,
@@ -1309,7 +1332,7 @@ class MLP(ML):
         else:
             pass
         return (obj, struct, obj_T, struct_T, res)
-    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel, weights=[]):
+    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
         '''
         :param l_dense: maximun layers dense
         :param batch: batch size
@@ -1328,7 +1351,7 @@ class MLP(ML):
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dropout,dictionary, weights)
+                                                                            xlimit_sup, dropout,dictionary)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
@@ -1364,7 +1387,7 @@ class MyProblem_mlp(ElementwiseProblem):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
     def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
                  sup_limit, type, data,scalar_x, med, contador,
-                 n_var,l_dense, batch, xlimit_inf, xlimit_sup,dropout,weights, dictionary, **kwargs):
+                 n_var,l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1394,7 +1417,6 @@ class MyProblem_mlp(ElementwiseProblem):
         self.xlimit_inf = xlimit_inf
         self.xlimit_sup = xlimit_sup
         self.dropout = dropout
-        self.weights = weights
         self.n_var = n_var
         self.dictionary = dictionary
     @staticmethod
@@ -1517,17 +1539,9 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_real1 = np.delete(y_real1, o, 0)
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
-                            e=evals(y_pred2, y_real2).variation_rate()
-                            if len(e)>1:
-                                cvs[z]=np.sum(e*self.weigths)
-                            else:
-                                cvs[z] = np.sum(e * self.weigths)
+                            cvs[z]=evals(y_pred2, y_real2).variation_rate()
                         else:
-                            e=evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            if len(e) > 1:
-                                cvs[z] = np.sum(e * self.weigths)
-                            else:
-                                cvs[z] = np.sum(e * self.weigths)
+                            cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                 elif self.zero_problem == 'radiation':
 
                     print('*****Night-radiation fixed******')
@@ -1558,17 +1572,9 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_real1 = y_real
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
-                            e = evals(y_pred2, y_real2).variation_rate()
-                            if len(e) > 1:
-                                cvs[z] = np.sum(e * self.weigths)
-                            else:
-                                cvs[z] = np.sum(e * self.weigths)
+                            cvs[z]=evals(y_pred2, y_real2).variation_rate()
                         else:
-                            e = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            if len(e) > 1:
-                                cvs[z] = np.sum(e * self.weigths)
-                            else:
-                                cvs[z] = np.sum(e * self.weigths)
+                            cvs[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
                     else:
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
@@ -1587,17 +1593,9 @@ class MyProblem_mlp(ElementwiseProblem):
                         y_real2 = y_real
                     if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
                         if mean_y.size == 0:
-                            e = evals(y_pred2, y_real2).variation_rate()
-                            if len(e) > 1:
-                                cvs[z] = np.sum(e * self.weigths)
-                            else:
-                                cvs[z] = np.sum(e * self.weigths)
+                            cvs[z]=evals(y_pred2, y_real2).variation_rate()
                         else:
-                            e = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            if len(e) > 1:
-                                cvs[z] = np.sum(e * self.weigths)
-                            else:
-                                cvs[z] = np.sum(e * self.weigths)
+                            cvs[z] = evals(y_pred2, y_real2).cv_rmse(mean_y)
                     else:
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
