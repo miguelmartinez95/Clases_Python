@@ -614,27 +614,18 @@ class MLP(ML):
         from pathlib import Path
         import random
 
-
-        if isinstance(x_individual, list):
-            names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
-            x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
-            if self.type == 'series':
-                y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
-            else:
-                y = pd.DataFrame(self.data.iloc[:, self.pos_y])
-        else:
-            names = x_individual.drop(x_individual.columns[self.pos_y], axis=1).columns
-            x = pd.DataFrame(x_individual.drop(x_individual.columns[self.pos_y], axis=1))
-            if self.type == 'series':
-                y = pd.DataFrame(x_individual.iloc[:, range(self.n_steps)])
-            else:
-                y = pd.DataFrame(x_individual.iloc[:, self.pos_y])
+        names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
         print('##########################'
               '################################'
               'CROSS-VALIDATION'
               '#################################'
               '################################')
         layers = len(neurons)
+        x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
+        if self.type=='series':
+            y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
+        else:
+            y =pd.DataFrame(self.data.iloc[:,self.pos_y])
 
         x=x.reset_index(drop=True)
         y=y.reset_index(drop=True)
@@ -1027,6 +1018,7 @@ class MLP(ML):
         :param model: trained model
         :param x_val: x to predict
         :param y_val: y to predict
+        if mean_y is empty a variation rate will be applied as cv in result
         :return: predictions with the errors depending of zero_problem
         '''
 
@@ -1064,11 +1056,8 @@ class MLP(ML):
 
 
         print(y_pred)
-        #y_predF = np.concatenate(y_pred.copy())
-        #y_predF = pd.DataFrame(y_predF)
         print(y_predF.shape)
         y_predF.index = times
-        #y_realF = pd.DataFrame(np.concatenate(y_real).copy())
         y_realF.index = y_predF.index
 
         if self.zero_problem == 'schedule':
@@ -1102,10 +1091,28 @@ class MLP(ML):
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                    rmse = evals(y_pred1, y_real1).rmse()
-                    r2 = evals(y_pred1, y_real1).r2()
+                    if len(self.pos_y)>1:
+                        cv=[0 for x in range(len(self.pos_y))]
+                        rmse=[0 for x in range(len(self.pos_y))]
+                        nmbe=[0 for x in range(len(self.pos_y))]
+                        r2=[0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
+                            else:
+                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
+                            rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
+                            nmbe[t] = evals(y_pred1[:,t], y_real1[:,t]).nmbe(mean_y[t])
+                            r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
+                    else:
+                        if mean_y.size == 0:
+                            cv = evals(y_pred1, y_real1).variation_rate()
+                        else:
+                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+
+                        rmse = evals(y_pred, y_real).rmse()
+                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                        r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1152,20 +1159,28 @@ class MLP(ML):
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                    rmse = evals(y_pred1, y_real1).rmse()
-                    r2 = evals(y_pred1, y_real1).r2()
-                    #a = np.round(cv, 2)
-                    #up = int(np.max(y_real1)) + int(np.max(y_real1) / 4)
-                    #low = int(np.min(y_real1)) + int(np.min(y_real1) / 4)
-                    #plt.figure()
-                    #plt.ylim(low, up)
-                    #plt.plot(y_real1, color='black', label='Real')
-                    #plt.plot(y_pred1, color='blue', label='Prediction')
-                    #plt.legend()
-                    #plt.title("No radiation - CV(RMSE)={}".format(str(a)))
+                    if len(self.pos_y) > 1:
+                        cv = [0 for x in range(len(self.pos_y))]
+                        rmse = [0 for x in range(len(self.pos_y))]
+                        nmbe = [0 for x in range(len(self.pos_y))]
+                        r2 = [0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred1[:, t], y_real[:, t]).variation_rate()
+                            else:
+                                cv[t] = evals(y_pred1[:, t], y_real1[:, t]).cv_rmse(mean_y[t])
+                            rmse[t] = evals(y_pred1[:, t], y_real1[:, t]).rmse()
+                            nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
+                            r2[t] = evals(y_pred1[:, t], y_real1[:, t]).r2()
+                    else:
+                        if mean_y.size == 0:
+                            cv = evals(y_pred1, y_real1).variation_rate()
+                        else:
+                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
 
+                        rmse = evals(y_pred, y_real).rmse()
+                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                        r2 = evals(y_pred, y_real).r2()
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1193,12 +1208,19 @@ class MLP(ML):
                         nmbe=[0 for x in range(len(self.pos_y))]
                         r2=[0 for x in range(len(self.pos_y))]
                         for t in range(len(self.pos_y)):
-                            cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred[:,t], y_real[:,t]).variation_rate()
+                            else:
+                                cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
                             rmse[t] = evals(y_pred[:,t], y_real[:,t]).rmse()
                             nmbe[t] = evals(y_pred[:,t], y_real[:,t]).nmbe(mean_y[t])
                             r2[t] = evals(y_pred[:,t], y_real[:,t]).r2()
                     else:
-                        cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        if mean_y.size == 0:
+                            cv = evals(y_pred, y_real).variation_rate()
+                        else:
+                            cv = evals(y_pred, y_real).cv_rmse(mean_y)
+
                         rmse = evals(y_pred, y_real).rmse()
                         nmbe = evals(y_pred, y_real).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
@@ -1416,7 +1438,7 @@ class MyProblem_mlp(ElementwiseProblem):
         :param dictionary: dictionary to fill with the options tested
         :param q:operator to differentiate when there is parallelisation and the results must be a queue
         :return: cv(rmse) and complexity of the model tested
-        if mean_y is empty a variation task will be applied
+        if mean_y is empty a variation rate will be applied
         '''
 
         from pathlib import Path
