@@ -30,8 +30,6 @@ class Eval_metrics:
                 cv = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
                     cv[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])) / mean[i])
-
-                cv= np.mean(cv)
             else:
                 cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
         else:
@@ -60,8 +58,6 @@ class Eval_metrics:
                 rmse = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
                     rmse[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])))
-
-                rmse = np.mean(rmse)
             else:
                 rmse = np.sqrt(metrics.mean_squared_error(self.real, self.predict))
         else:
@@ -82,11 +78,27 @@ class Eval_metrics:
         return(rmse,std)
 
     def nmbe(self,mean):
-        y_true = np.array(self.real)
-        y_pred = np.array(self.predict)
-        y_true = y_true.reshape(len(y_true), 1)
-        y_pred = y_pred.reshape(len(y_pred), 1)
-        nmbe = np.mean(y_true - y_pred) / mean
+        if len(self.real.shape) > 1:
+            if self.real.shape[1] >= 2:
+                nmbe = [0 for x in range(self.real.shape[1])]
+                for i in range(self.real.shape[1]):
+                    y_true = np.array(self.real[:,i])
+                    y_pred = np.array(self.predict[:,i])
+                    y_true = y_true.reshape(len(y_true), 1)
+                    y_pred = y_pred.reshape(len(y_pred), 1)
+                    nmbe[i] = np.mean(y_true - y_pred) / mean[i]
+            else:
+                y_true = np.array(self.real)
+                y_pred = np.array(self.predict)
+                y_true = y_true.reshape(len(y_true), 1)
+                y_pred = y_pred.reshape(len(y_pred), 1)
+                nmbe = np.mean(y_true - y_pred) / mean
+        else:
+            y_true = np.array(self.real)
+            y_pred = np.array(self.predict)
+            y_true = y_true.reshape(len(y_true), 1)
+            y_pred = y_pred.reshape(len(y_pred), 1)
+            nmbe = np.mean(y_true - y_pred) / mean
         return (nmbe * 100)
 
     def nmbe_daily(self,mean,times):
@@ -102,7 +114,6 @@ class Eval_metrics:
         for i in range(len(np.unique(days))):
             ii = np.where(days == np.unique(days)[i])[0]
             nmbe[i] = 100*(np.mean(y_true[ii] - y_pred[ii]) / mean)
-
         std=np.std(nmbe)
         return (nmbe,std)
 
@@ -118,8 +129,6 @@ class Eval_metrics:
                     a=self.real[:,i]
                     a[np.where(a==0)[0]]=1
                     var[i] = np.mean(np.abs((self.real[:, i]- self.predict[:, i])/a))
-
-                var = np.mean(var)
             else:
                 a = self.real
                 a[np.where(a == 0)[0]] = 1
