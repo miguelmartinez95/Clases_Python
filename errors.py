@@ -129,6 +129,7 @@ class Eval_metrics:
                     a=self.real[:,i]
                     a[np.where(a==0)[0]]=1
                     var[i] = np.mean(abs(self.real[:, i]- self.predict[:, i])/a)
+                    print(var[i])
             else:
                 a = self.real
                 a[np.where(a == 0)[0]] = 1
