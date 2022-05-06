@@ -1538,15 +1538,17 @@ class MyProblem_mlp(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e*self.weights)
-                            else:
                                 cvs[z]=np.sum(e)
+                            else:
+                                cvs[z] = np.sum(e * self.weights)
+
                         else:
                             e = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e*self.weights)
+                                cvs[z] = np.sum(e)
                             else:
-                                cvs[z]=np.sum(e)
+                                cvs[z] = np.sum(e * self.weights)
+
                 elif self.zero_problem == 'radiation':
 
                     print('*****Night-radiation fixed******')
@@ -1579,15 +1581,17 @@ class MyProblem_mlp(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e*self.weights)
+                                cvs[z] = np.sum(e)
                             else:
-                                cvs[z]=np.sum(e)
+                                cvs[z] = np.sum(e * self.weights)
+
                         else:
                             e = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e*self.weights)
+                                cvs[z] = np.sum(e)
                             else:
-                                cvs[z]=np.sum(e)
+                                cvs[z] = np.sum(e * self.weights)
+
                     else:
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
@@ -1608,18 +1612,21 @@ class MyProblem_mlp(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e*self.weights)
+                                cvs[z] = np.sum(e)
                             else:
-                                cvs[z]=np.sum(e)
+                                cvs[z] = np.sum(e * self.weights)
+
                         else:
                             e = evals(y_pred2, y_real2).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e*self.weights)
+                                cvs[z] = np.sum(e)
                             else:
-                                cvs[z]=np.sum(e)
+                                cvs[z] = np.sum(e * self.weights)
+
                     else:
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
+
             complexity = MyProblem_mlp.complex_mlp(neurons, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             print(dictionary[name1] )
