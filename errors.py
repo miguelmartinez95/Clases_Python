@@ -140,4 +140,4 @@ class Eval_metrics:
             a = self.real
             a[np.where(a == 0)[0]] = 1
             var = np.mean(abs(self.real - self.predict) / a)
-        return(var*100)
+        return(var)

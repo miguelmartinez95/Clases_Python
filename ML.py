@@ -1614,6 +1614,8 @@ class MyProblem_mlp(ElementwiseProblem):
                             if isinstance(self.weights, list):
                                 cvs[z] = np.sum(e)
                             else:
+                                print(e)
+                                print(self.weights)
                                 cvs[z] = np.sum(e * self.weights)
 
                         else:
