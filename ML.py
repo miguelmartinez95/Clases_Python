@@ -1611,7 +1611,6 @@ class MyProblem_mlp(ElementwiseProblem):
                     if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
-                            print(e)
                             if isinstance(self.weights, list):
                                 cvs[z] = np.sum(e)
                             else:
