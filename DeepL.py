@@ -640,9 +640,10 @@ class LSTM_model(DL):
                 else:
                     out_end = in_end+horizont
 
+                xx = data.drop(data.columns[pos_y], axis=1)
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
-                    xx = data.drop(data.columns[pos_y], axis=1)
+
                     #xx = np.delete(data,pos_y,1)
                     x_input = xx.iloc[in_start:in_end,:]
                     # x_input = x_input.reshape((len(x_input), 1))
