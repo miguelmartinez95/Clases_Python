@@ -855,7 +855,7 @@ class LSTM_model(DL):
 
         predictions  =np.array(predictions)
         if n_outputs>1:
-            y_pred=predictions
+            y_pred=predictions.reshape((predictions.shape[0], predictions.shape[2]))
         else:
             y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
         res = {'y_pred': y_pred}
