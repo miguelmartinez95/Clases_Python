@@ -632,6 +632,7 @@ class LSTM_model(DL):
                 #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
                 limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
 
+            xx = data.drop(data.columns[pos_y], axis=1)
             for _ in range(limit):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
@@ -640,10 +641,9 @@ class LSTM_model(DL):
                 else:
                     out_end = in_end+horizont
 
-                xx = data.drop(data.columns[pos_y], axis=1)
+
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
-
                     #xx = np.delete(data,pos_y,1)
                     x_input = xx.iloc[in_start:in_end,:]
                     # x_input = x_input.reshape((len(x_input), 1))
@@ -668,7 +668,7 @@ class LSTM_model(DL):
                 #in_start += onebyone
 
         dd= len(data) - in_start
-
+        print('Data supervised')
         return(np.array(X), np.array(y),timesF, dd)
 
     @staticmethod
