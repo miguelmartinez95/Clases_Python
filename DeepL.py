@@ -849,7 +849,6 @@ class LSTM_model(DL):
                 yhat=yhat
             else:
                 yhat = yhat[0]
-            print(yhat.shape)
             predictions.append(yhat)
             #history.append(tt[i,:])
             l1 =l2
@@ -1209,21 +1208,20 @@ class LSTM_model(DL):
         print(x_train.shape)
         print(x_test.shape)
         print(y_train.shape)
-        print(y_train.reshape(-1,1).shape)
         if isinstance(model, list):
             if self.type=='regression':
-                model = self.__class__.built_model_regression(x_train, y_train.reshape(-1,1),neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
+                model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
                 time_start = time()
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
             else:
-                model = self.__class__.built_model_classification(x_train, y_train.reshape(-1,1),neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout)
+                model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout)
                 time_start = time()
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
         else:
             time_start = time()
-            model_trained, history = self.__class__.train_model(model, x_train, y_train.reshape(-1,1), x_test, y_test, pacience,
+            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,
                                                                 batch)
             times = round(time() - time_start, 3)
 
