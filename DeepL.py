@@ -841,7 +841,7 @@ class LSTM_model(DL):
             # flatten data
             #input_x = data[l1:l2, :]
             #input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
-            input_x=data.iloc[i,:,:]
+            input_x=data[i,:,:]
             print(input_x.shape)
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
