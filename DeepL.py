@@ -1269,14 +1269,14 @@ class LSTM_model(DL):
         print(y_pred.shape)
 
 
-        if isinstance(self.pos_y, collections.abc.Sized):
-        #if len(self.pos_y) > 1:
-            y_pred = y_pred.reshape(-1, y_val.shape[1])
+        #if isinstance(self.pos_y, collections.abc.Sized):
+        ##if len(self.pos_y) > 1:
+        #    y_pred = y_pred.reshape(-1, y_val.shape[1])
 
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if scalated[1]==True:
-            y_val = np.array(self.scalar_y.inverse_transform(y_val.reshape(-1,1)))
+            y_val = np.array(self.scalar_y.inverse_transform(y_val))
 
 
         if isinstance(self.pos_y, collections.abc.Sized):
