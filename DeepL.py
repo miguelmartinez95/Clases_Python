@@ -825,7 +825,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def predict_model(model,n_lags, x_val,batch):
+    def predict_model(model,n_lags, x_val,batch, n_outputs):
         '''
         :param model: trained model
         :param n_lags: lags to built lstm blocks
@@ -845,7 +845,10 @@ class LSTM_model(DL):
             print(input_x.shape)
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
-            yhat = yhat[0]
+            if n_outputs>1:
+                yhat=yhat
+            else:
+                yhat = yhat[0]
             print(yhat.shape)
             predictions.append(yhat)
             #history.append(tt[i,:])
@@ -853,8 +856,10 @@ class LSTM_model(DL):
             l2 += n_lags
 
         predictions  =np.array(predictions)
-
-        y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
+        if n_outputs>1:
+            y_pred=predictions
+        else:
+            y_pred = predictions.reshape((predictions.shape[0] * predictions.shape[1], 1))
         res = {'y_pred': y_pred}
         return res
 
@@ -973,7 +978,7 @@ class LSTM_model(DL):
                     modelF, history = self.__class__.train_model(modelF,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
-                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch)
+                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, len(self.pos_y))
                     y_pred = res['y_pred']
 
 
@@ -1261,7 +1266,7 @@ class LSTM_model(DL):
         print(y_val.shape)
 
 
-        res = self.__class__.predict_model(model, self.n_lags,  x_val,batch)
+        res = self.__class__.predict_model(model, self.n_lags,  x_val,batch, len(self.pos_y))
 
         y_pred = res['y_pred']
         print(y_pred.shape)
@@ -1884,7 +1889,7 @@ class MyProblem(ElementwiseProblem):
                     model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
                                                        batch)
 
-                    res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch)
+                    res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, len(self.pos_y))
                     y_pred = res['y_pred']
 #
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
