@@ -833,14 +833,16 @@ class LSTM_model(DL):
         '''
 
         data = np.array(x_val)
-        data = data.reshape((data.shape[0] * data.shape[1], data.shape[2]))
+        #data = data.reshape((data.shape[0] * data.shape[1], data.shape[2]))
         predictions = list()
         l1 = 0
         l2 = n_lags
         for i in range(x_val.shape[0]):
             # flatten data
-            input_x = data[l1:l2, :]
-            input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
+            #input_x = data[l1:l2, :]
+            #input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
+            input_x=data.iloc[i,:,:]
+            print(input_x.shape)
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
             yhat = yhat[0]
