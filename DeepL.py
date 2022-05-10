@@ -646,7 +646,7 @@ class LSTM_model(DL):
             yy = yy.iloc[range(limity)]
             L=list()
             for i in range(xx.shape[1]):
-                L.append(np.split(np.array(xx.iloc[:,i]), int(len(xx)/n_lags)))
+                L.append(np.split(np.array(xx.iloc[:,i]), int(np.floor(len(xx)/n_lags))))
             X=np.dstack(L)
 
             if horizont==0:
