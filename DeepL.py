@@ -633,7 +633,7 @@ class LSTM_model(DL):
                 limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
 
 
-            limitx = np.floor(len(data)/n_lags)*n_lags
+            limitx = int(np.floor(len(data)/n_lags)*n_lags)
             if horizont==0:
                 limity=limitx
             else:
