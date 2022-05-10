@@ -632,44 +632,69 @@ class LSTM_model(DL):
                 #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
                 limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
 
+
+            limitx = np.floor(len(data)/n_lags)*n_lags
+            if horizont==0:
+                limity=limitx
+            else:
+                limity =limitx+horizont
+
             xx = data.drop(data.columns[pos_y], axis=1)
-            for _ in range(limit):
-                # define the end of the input sequence
-                in_end = in_start + n_lags
-                if horizont ==0:
-                    out_end = in_end
-                else:
-                    out_end = in_end+horizont
+            yy= data.iloc[:,pos_y]
+
+            xx = xx.iloc[range(limitx)]
+            yy = yy.iloc[range(limity)]
+            L=list()
+            for i in range(xx.shape[1]):
+                L.append(np.split(np.array(xx.iloc[:,i]), int(len(xx)/n_lags)))
+            X=np.dstack(L)
+
+            if horizont==0:
+                seq = list(range(n_lags-1,limity-1, n_lags))
+                y =yy[seq]
+            else:
+                seq = list(range(n_lags+horizont-1,limity+horizont-1, n_lags))
+                y =yy[seq]
+
+#            for _ in range(limit):
+#                # define the end of the input sequence
+#                in_end = in_start + n_lags
+#                if horizont ==0:
+#                    out_end = in_end
+#                else:
+#                    out_end = in_end+horizont
 
 
-                # ensure we have enough data for this instance
-                if out_end <= len(data):
-                    #xx = np.delete(data,pos_y,1)
-                    x_input = xx.iloc[in_start:in_end,:]
-                    # x_input = x_input.reshape((len(x_input), 1))
-                    X.append(x_input)
-                    # yy = data[:,pos_y].reshape(-1,len(pos_y))
-                    yy = data.iloc[:,pos_y]
+#                # ensure we have enough data for this instance
+#                if out_end <= len(data):
+#                    #xx = np.delete(data,pos_y,1)
+#                    x_input = xx.iloc[in_start:in_end,:]
+#                    # x_input = x_input.reshape((len(x_input), 1))
+#                    X.append(x_input)
+#                    # yy = data[:,pos_y].reshape(-1,len(pos_y))
+#                    yy = data.iloc[:,pos_y]
 
-                    if horizont==0:
-                        y.append(yy.iloc[out_end-1])
-                        timesF.append(np.array([out_end-1]))
-                    else:
-                        y.append(yy.iloc[in_end:out_end])
-                        timesF.append(list(range(in_end,out_end)))
-                    #se selecciona uno
-                # move along one time step
-                if horizont==0 and onebyone[1]==True:
-                    in_start+=n_lags
-                elif horizont==0 and onebyone[1]==False:
-                    in_start += 1
-                else:
-                    in_start += horizont
-                #in_start += onebyone
+#                    if horizont==0:
+#                        y.append(yy.iloc[out_end-1])
+#                        timesF.append(np.array([out_end-1]))
+#                    else:
+#                        y.append(yy.iloc[in_end:out_end])
+#                        timesF.append(list(range(in_end,out_end)))
+#                    #se selecciona uno
+#                # move along one time step
+#                if horizont==0 and onebyone[1]==True:
+#                    in_start+=n_lags
+#                elif horizont==0 and onebyone[1]==False:
+#                    in_start += 1
+#                else:
+#                    in_start += horizont
+#                #in_start += onebyone
 
-        dd= len(data) - in_start
+#        dd= len(data) - in_start
+        dd= len(data) - limitx
         print('Data supervised')
-        return(np.array(X), np.array(y),timesF, dd)
+        #return(np.array(X), np.array(y),timesF, dd)
+        return(X, np.array(y),timesF, dd)
 
     @staticmethod
     def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout):
