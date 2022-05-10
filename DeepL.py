@@ -650,10 +650,10 @@ class LSTM_model(DL):
             X=np.dstack(L)
 
             if horizont==0:
-                seq = list(range(n_lags,limity+1, n_lags))
+                seq = list(range(n_lags-1,limity, n_lags))
                 y =yy.iloc[seq]
             else:
-                seq = list(range(n_lags+horizont,limity+horizont+1, n_lags))
+                seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
                 y =yy.iloc[seq]
 
 #            for _ in range(limit):
