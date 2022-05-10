@@ -651,10 +651,10 @@ class LSTM_model(DL):
 
             if horizont==0:
                 seq = list(range(n_lags-1,limity-1, n_lags))
-                y =yy[seq]
+                y =yy.iloc[seq]
             else:
                 seq = list(range(n_lags+horizont-1,limity+horizont-1, n_lags))
-                y =yy[seq]
+                y =yy.iloc[seq]
 
 #            for _ in range(limit):
 #                # define the end of the input sequence
