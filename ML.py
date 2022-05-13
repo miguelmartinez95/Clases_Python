@@ -1,7 +1,6 @@
 
 from sklearn.preprocessing import MinMaxScaler
 import sys
-#sys.path.insert(1,'E:\Documents\Doctorado\Clases_python\Clases_python_git')
 from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
@@ -28,8 +27,6 @@ if gpus:
     print(e)
 
 
-
-
 class ML:
     def info(self):
         print(('Super class to built different machine learning models. This class has other more specific classes associated with it  \n'
@@ -39,6 +36,7 @@ class ML:
                'Limit is the radiation limit and schedule is the working hours'
                'IMPORTANT: the variables that can be lagged to the end of data frame'
               ))
+
     def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit ):
         self.data = data
         self.horizont = horizont
@@ -54,11 +52,12 @@ class ML:
         self.mask_value = mask_value
         self.sup_limit = sup_limit
         self.inf_limit = inf_limit
+
     @staticmethod
     def cv_division(x,y, fold):
         '''
         :param fold: division for cv_analysis
-        :return: data divided into train, test and validations in addition to the indexes division
+        :return: data divided into train, test and validations in addition to the indexes division for a CV analysis
         '''
         x = x.reset_index(drop=True)
         y = y.reset_index(drop=True)
@@ -79,20 +78,23 @@ class ML:
                 X_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
                 X_train.append(x.drop(range(w,w2)))
 
-                a = y.iloc[range(w,w2)]
+                a = y.iloc[range(w, w2)]
                 Y_val.append(a.iloc[range(len(a)-math.ceil(len(a)/2), len(a)-1)])
                 Y_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
-                Y_train.append(y.drop(range(w,w2)))
-                indexes.append(np.array([w2-math.ceil(len(a)/2)+1,w2]))
-                w=w2
-                w2+=step
-                if(w2 > x.shape[0] and w < x.shape[0]):
+                Y_train.append(y.drop(range(w, w2)))
+                indexes.append(np.array([w2-math.ceil(len(a)/2)+1, w2]))
+                w = w2
+                w2 += step
+                if w2 > x.shape[0] and w < x.shape[0]:
                     w2 = x.shape[0]
         except:
             raise NameError('Problems with the sample division in the cv classic')
+
         res = {'x_test': X_test, 'x_train':X_train,'x_val':X_val, 'y_test':Y_test, 'y_train':Y_train, 'y_val':Y_val,
             'indexes':indexes}
-        return(res)
+
+        return res
+
     @staticmethod
     def fix_values_0(restriction, zero_problem, limit):
         '''
@@ -123,6 +125,7 @@ class ML:
             'Unknown situation with nights'
         res = {'indexes_out': ii}
         return res
+
     @staticmethod
     def cortes(x, D, lim):
         '''
@@ -135,6 +138,7 @@ class ML:
         Y = np.zeros((lim, int(D / lim)))
         i = 0
         s = 0
+        gap=0
         while i <= D:
             if D - i < lim:
                 Y = np.delete(Y, s-1, 1)
@@ -156,12 +160,13 @@ class ML:
         :param x:
         :param D: length of data
         :param lim: dimension of the curves
-        :return: data divided in curves of specific length
+        :return: data divided in curves of specific length but one by one time step
         '''
 
         Y = np.zeros((lim, D-(lim-1)))
         i = 0
         s = 0
+        gap=0
         while i <= D:
             print(i)
             if D - i < lim:
@@ -182,10 +187,10 @@ class ML:
     def ts(new_data, look_back, pred_col, names, lag):
         '''
         :param look_back: amount of lags
-        :param pred_col: variables to lagged
+        :param pred_col: variables to lagged (colum index lagged variables)
         :param names: name variables
         :param lag: name of lag-- variable lag1
-        :return: dataframe with lagged data
+        :return: dataframe with lagged data. Intended to have variables to lag in the last columns
         '''
         t = new_data.copy()
         t['id'] = range(0, len(t))
@@ -202,6 +207,7 @@ class ML:
         pred_value.set_index('id', inplace=True)
         final_df = pd.concat([t, pred_value], axis=1)
         return final_df
+
     def introduce_lags(self, lags, var_lag):
         '''
         :param lags: amount of lags for each n_lags selected in MLP
@@ -227,6 +233,7 @@ class ML:
                 raise NameError('Problems introducing time lags')
         else:
             print('No lags selected')
+
     def adjust_limits(self):
         '''
         Adjust the data or the variable to certain upper or lower limits
@@ -237,26 +244,36 @@ class ML:
             self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit, len(inf))
         if len(sup)>0:
             self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
+
     def adapt_horizont(self, onebyone):
         '''
         Move the data sample to connected the y with the x based on the future selected
+        After introduce_lags
+        n_steps=0 one by one
+        Consideration of horizont 0 o 1
         '''
+        if self.horizont==0:
+            self.data = self.data
+        else:
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+            y = self.data.iloc[:, self.pos_y]
+            y = y.drop(y.index[range(self.horizont)], axis=0)
+            X = X.drop(X.index[range(X.shape[0] - self.horizont, X.shape[0])], axis=0)
+            self.data = pd.concat([y, X], axis=1)
+
         if self.n_steps==0:
             self.data = self.data
         else:
             if self.type=='series':
-                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-                y = self.data.iloc[:,self.pos_y]
-                y = y.drop(y.index[0], axis=0)
-                X = X.drop(X.index[X.shape[0] - 1], axis=0)
                 index1 = X.index
 
                 if onebyone==True:
                     y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
                     y=pd.DataFrame(y.transpose())
                     if gap > 0:
-                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
-                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
+                        X = X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
+                        index1 = np.delete(index1, range(X.shape[0] - gap, X.shape[0]))
+
                     X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
                     index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
 
@@ -282,7 +299,6 @@ class ML:
                 print(X.shape)
                 print(y.shape)
 
-
                 X.index = index1
                 y.index = index1
 
@@ -290,21 +306,9 @@ class ML:
                     self.data = pd.concat([y, X], axis=1)
                 else:
                     self.data = pd.concat([X, y], axis=1)
-
             else:
-                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-                y = self.data.iloc[:,self.pos_y]
-                for t in range(self.horizont):
-                    y =y.drop(y.index[0], axis=0)
-                    X = X.drop(X.index[X.shape[0] - 1], axis=0)
+                print('Not series, nothign to do')
 
-                X=X.reset_index(drop=True)
-                X.index = y.index
-
-                if any(self.pos_y == 0):
-                    self.data = pd.concat([y, X.set_index(y.index)], axis=1)
-                else:
-                    self.data = pd.concat([X.set_index(y.index),y], axis=1)
         print('Horizont adjusted!')
 
     def scalating(self, scalar_limits, groups, x, y):
