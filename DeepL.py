@@ -938,7 +938,7 @@ class LSTM_model(DL):
                     else:
                         index_val = np.delete(index_val, range(n_lags), axis=0)
                 else:
-                    index_val = index_val[np.concatenate(ind_val)]
+                    index_val = ind_val
 
                 times_val.append(index_val)
 
