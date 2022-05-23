@@ -1540,7 +1540,7 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_real1 = np.delete(y_real1, o, 0)
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
-                            e=evals(y_pred2, y_real2).variation_rate()
+                            e=evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
                                 cvs[z]=np.sum(e)
                             else:
@@ -1583,7 +1583,7 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_real1 = y_real
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
-                            e=evals(y_pred2, y_real2).variation_rate()
+                            e=evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
                                 cvs[z] = np.sum(e)
                             else:
