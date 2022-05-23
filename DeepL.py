@@ -652,9 +652,11 @@ class LSTM_model(DL):
             if horizont==0:
                 seq = list(range(n_lags-1,limity, n_lags))
                 y =yy.iloc[seq]
+                timesF = yy.index[seq]
             else:
                 seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
                 y =yy.iloc[seq]
+                timesF= yy.index[seq]
 
 #            for _ in range(limit):
 #                # define the end of the input sequence
