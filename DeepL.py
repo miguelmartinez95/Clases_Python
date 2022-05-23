@@ -910,12 +910,12 @@ class LSTM_model(DL):
                     w = np.where(var==values[1])[0][0]
                     w2 = np.where(var==values[1])[0][len(np.where(var==values[1])[0])-1]
                 elif len(place)==2:
-                    w = np.where((var.iloc[:,0]==values[1][0])&(var.iloc[:,1]==values[1][1]))[0][0]
-                    w2 = np.where((var.iloc[:,0]==values[1][0])&(var.iloc[:,1]==values[1][1]))[0][len(np.where((var.iloc[:,0]==values[1][0])&(var.iloc[:,1]==values[1][1]))[0])-1]
+                    w = np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0][0]
+                    w2 = np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0][len(np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0])-1]
                 elif len(place)==3:
-                    w = np.where((var.iloc[:, 0] == values[1][0]) & (var.iloc[:, 1] == values[1][1])&(var.iloc[:, 2] == values[1][2]))[0][0]
-                    w2 = np.where((var.iloc[:, 0] == values[1][0]) & (var.iloc[:, 1] == values[1][1])&(var.iloc[:, 2] == values[1][2]))[0][
-                        len(np.where((var.iloc[:, 0] == values[1][0]) & (var.iloc[:, 1] == values[1][1])&(var.iloc[:, 2] == values[1][2]))[0]) - 1]
+                    w = np.where((var.iloc[:, 0] == values[1][t][0]) & (var.iloc[:, 1] == values[1][t][1])&(var.iloc[:, 2] == values[1][t][2]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][t][0]) & (var.iloc[:, 1] == values[1][t][1])&(var.iloc[:, 2] == values[1][t][2]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][t][0]) & (var.iloc[:, 1] == values[1][t][1])&(var.iloc[:, 2] == values[1][t][2]))[0]) - 1]
                 else:
                     raise(NameError('Not considered'))
 
