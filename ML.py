@@ -11,7 +11,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.layers import Masking, Dropout
 from datetime import datetime
 from time import time
-import skfda
+#import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
