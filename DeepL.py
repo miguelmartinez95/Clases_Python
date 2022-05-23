@@ -20,7 +20,7 @@ from keras.layers import RepeatVector
 from keras.layers import Dropout
 from keras.constraints import maxnorm
 from keras.layers import TimeDistributed
-import skfda
+#import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
