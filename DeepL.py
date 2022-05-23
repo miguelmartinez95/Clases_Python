@@ -1791,12 +1791,13 @@ class LSTM_model(DL):
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
 
-        manager = multiprocessing.Manager()
-        dictionary = manager.dict()
-        contador = manager.list()
-        contador.append(0)
-        print('start!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
+        if __name__ == '__main__':
+            manager = multiprocessing.Manager()
+            dictionary = manager.dict()
+            contador = manager.list()
+            contador.append(0)
+            print('start!!!')
+            obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
