@@ -887,10 +887,11 @@ class LSTM_model(DL):
         return res
 
     @staticmethod
-    def cv_division_lstm(data, horizont, fold, pos_y,n_lags, onebyone):
+    def cv_division_lstm(data, horizont, fold, pos_y,n_lags, onebyone, values):
         '''
         :return: Division to cv analysis considering that with lstm algorithm the data can not be divided into simple pieces.
         It can only be divided with a initial part and a final part
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         return: train, test, and validation samples. Indexes for test samples (before division into test-validation)
         '''
         X_test = []
@@ -899,43 +900,48 @@ class LSTM_model(DL):
         Y_test = []
         Y_train = []
         Y_val = []
-        ###################################################################################
 
-        step = int(data.shape[0] / fold)
-        w = 0
-        w2 = step
-        times_val = []
-        ####################################################################################
+        if values:
+            times_val = []
+            place = values[2]
+            var= data.iloc[:,place]
+            for t in range(values[0]):
+                if len(place)==1:
+                    w = np.where(var==values[1])[0][0]
+                    w2 = np.where(var==values[1])[0][len(np.where(var==values[1])[0])-1]
+                elif len(place)==2:
+                    w = np.where((var.iloc[:,0]==values[1][0])&(var.iloc[:,1]==values[1][1]))[0][0]
+                    w2 = np.where((var.iloc[:,0]==values[1][0])&(var.iloc[:,1]==values[1][1]))[0][len(np.where((var.iloc[:,0]==values[1][0])&(var.iloc[:,1]==values[1][1]))[0])-1]
+                elif len(place)==3:
+                    w = np.where((var.iloc[:, 0] == values[1][0]) & (var.iloc[:, 1] == values[1][1])&(var.iloc[:, 2] == values[1][2]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][0]) & (var.iloc[:, 1] == values[1][1])&(var.iloc[:, 2] == values[1][2]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][0]) & (var.iloc[:, 1] == values[1][1])&(var.iloc[:, 2] == values[1][2]))[0]) - 1]
+                else:
+                    raise(NameError('Not considered'))
 
-        try:
-           for i in range(2):
-                train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
+                train, val, index_val = LSTM_model.split_dataset(data, n_lags, w, w2)
 
-                index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2))]
-                val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
-                test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
+                index_val = index_val[range(index_val.shape[0] - math.ceil(index_val.shape[0] / 2))]
+                st = int(train.shape[0]/3)
+                test= train[range(train.shape[0]-st, train.shape[0]),:,:]
+                train=np.delete(train, list(range(train.shape[0]-st, train.shape[0])), 0)
 
-                x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
-                x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
-                x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
-                #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
+                x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, pos_y, n_lags, horizont, onebyone)
+                x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, pos_y, n_lags, horizont, onebyone)
+                x_val, y_val, ind_val, dif = LSTM_model.to_supervised(val, pos_y, n_lags, horizont, onebyone)
 
-                #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
-                if onebyone[0]==True:
-                    if horizont==0:
-                        index_val = np.delete(index_val, range(n_lags-1), axis=0)
+                if onebyone[0] == True:
+                    if horizont == 0:
+                        index_val = np.delete(index_val, range(n_lags - 1), axis=0)
                     else:
                         index_val = np.delete(index_val, range(n_lags), axis=0)
                 else:
-                    index_val=index_val[np.concatenate(ind_val)]
-                #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
+                    index_val = index_val[np.concatenate(ind_val)]
 
                 times_val.append(index_val)
 
                 print(len(index_val))
                 print(y_val.shape)
-
-
                 X_test.append(x_test)
                 X_train.append(x_train)
                 X_val.append(x_val)
@@ -943,14 +949,58 @@ class LSTM_model(DL):
                 Y_train.append(y_train)
                 Y_val.append(y_val)
 
-                w = data.shape[0]-w2
-                w2 = data.shape[0]
-        except:
-            raise NameError('Problems with the sample division in the cv classic')
+        else:
+
+            ###################################################################################
+
+            step = int(data.shape[0] / fold)
+            w = 0
+            w2 = step
+            times_val = []
+            ####################################################################################
+
+            try:
+               for i in range(2):
+                    train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
+
+                    index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2))]
+                    val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
+                    test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
+
+                    x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
+                    x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
+                    x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
+                    #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
+
+                    #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
+                    if onebyone[0]==True:
+                        if horizont==0:
+                            index_val = np.delete(index_val, range(n_lags-1), axis=0)
+                        else:
+                            index_val = np.delete(index_val, range(n_lags), axis=0)
+                    else:
+                        index_val=index_val[np.concatenate(ind_val)]
+                    #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
+
+                    times_val.append(index_val)
+
+                    print(len(index_val))
+                    print(y_val.shape)
+                    X_test.append(x_test)
+                    X_train.append(x_train)
+                    X_val.append(x_val)
+                    Y_test.append(y_test)
+                    Y_train.append(y_train)
+                    Y_val.append(y_val)
+
+                    w = data.shape[0]-w2
+                    w2 = data.shape[0]
+            except:
+                raise NameError('Problems with the sample division in the cv classic')
         res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_val':times_val}
         return res
 
-    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense, pacience, batch,mean_y,plot, q=[], model=[]):
+    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,plot, q=[], model=[]):
         '''
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
@@ -964,7 +1014,7 @@ class LSTM_model(DL):
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
 
-        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags)
+        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags, onebyone,[])
 
         x_test =np.array(res['x_test'])
         x_train=np.array(res['x_train'])
@@ -1221,6 +1271,10 @@ class LSTM_model(DL):
         test = res['data']
 
         print('Data in three dimensions')
+        print('DATA:', train[0,:,:])
+        print('DATA:', train[10,:,:])
+        print('DATA:', train[200,:,:])
+        print('DATA:', train[500,:,:])
 
         #x_test, y_test,ind_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
         #x_train, y_train,ind_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
@@ -1638,7 +1692,7 @@ class LSTM_model(DL):
         res = {'errors': results, 'options': options, 'best': top_results}
         return res
 
-    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone):
+    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone,values):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -1665,11 +1719,11 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone)
+                                self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
@@ -1723,7 +1777,7 @@ class LSTM_model(DL):
 
         return (obj, struct,obj_T, struct_T,  res)
 
-    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone):
+    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone,values):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
@@ -1741,7 +1795,7 @@ class LSTM_model(DL):
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
-        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone)
+        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -1799,7 +1853,7 @@ class MyProblem(ElementwiseProblem):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 #
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
-                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone, **kwargs):
+                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1835,6 +1889,7 @@ class MyProblem(ElementwiseProblem):
         self.n_var = n_var
         self.dictionary =dictionary
         self.onebyone =onebyone
+        self.values=values
 
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
@@ -1862,6 +1917,7 @@ class MyProblem(ElementwiseProblem):
         :param rep:repetition of the estimation in each subsample
         :param dictionary: dictionary to fill with the options tested
         :param q:operator to differentiate when there is parallelisation and the results must be a queue
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :return: cv(rmse) and complexity of the model tested
         '''
         name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, np.array([pacience]))))
@@ -1879,7 +1935,7 @@ class MyProblem(ElementwiseProblem):
 #
         names = data.columns
         names = np.delete(names, self.pos_y)
-        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.onebyone)
+        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.onebyone,self.values)
 #
         x_test = np.array(res['x_test'])
         x_train = np.array(res['x_train'])
@@ -1899,7 +1955,7 @@ class MyProblem(ElementwiseProblem):
 #
             # Train the model
             zz = 0
-            for z in range(2):
+            for z in range(values[0]):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     time_start = time()
