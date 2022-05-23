@@ -1692,7 +1692,7 @@ class LSTM_model(DL):
         res = {'errors': results, 'options': options, 'best': top_results}
         return res
 
-    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone,values):
+    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -1719,11 +1719,11 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                self.scalar_x,self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
+                                self.scalar_x, self.dropout,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
@@ -1795,6 +1795,7 @@ class LSTM_model(DL):
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
+        print('start!!!')
         obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
 
         np.savetxt('objectives_selected.txt', obj)
