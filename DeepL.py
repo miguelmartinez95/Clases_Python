@@ -1033,7 +1033,12 @@ class LSTM_model(DL):
 
         if self.type=='regression':
             if isinstance(model, list):
-                model1 = self.__class__.built_model_regression(x_train[0],y_train[0].reshape(-1,1),neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+                if len(y_train[0].shape)>1:
+                    ytrain=y_train[0]
+                else:
+                    y_train=y_train[0].reshape(-1, 1)
+
+                model1 = self.__class__.built_model_regression(x_train[0],ytrain,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
 
             else:
                 model1=model
@@ -1963,12 +1968,20 @@ class MyProblem(ElementwiseProblem):
             for z in range(self.values[0]):
                 print('Fold number', z)
                 time_start = time()
-                model = LSTM_model.built_model_regression(x_train[z], y_train[z].reshape(-1, 1), neurons_lstm,
+                if len(y_train[z].shape)>1:
+                    ytrain=y_train[z]
+                    ytest=y_test[z]
+                else:
+                    y_train=y_train[z].reshape(-1, 1)
+                    ytest=y_test[z].reshape(-1,1)
+                model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
                                                           self.dropout)
-                model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
+                model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                    batch)
+
+
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, len(self.pos_y))
                 y_pred = res['y_pred']
 
