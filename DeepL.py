@@ -1067,7 +1067,7 @@ class LSTM_model(DL):
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
-                    if len(y_real.shape)>1:
+                    if len(y_val[z].shape)>1:
                         y_real = y_val[z]
                     else:
                         y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
@@ -1992,10 +1992,11 @@ class MyProblem(ElementwiseProblem):
                 y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                 y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                 #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                if len(y_real.shape)>1:
+                if len(val[z].shape)>1:
                     y_real=y_val[z]
                 else:
                     y_real = y_val[z].reshape(-1, 1)
+
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
                 print(y_pred.shape)
                 y_predF = y_pred.copy()
