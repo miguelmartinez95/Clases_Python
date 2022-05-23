@@ -1777,7 +1777,7 @@ class LSTM_model(DL):
 
         return (obj, struct,obj_T, struct_T,  res)
 
-    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone,values):
+    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights=[]):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
@@ -1795,7 +1795,7 @@ class LSTM_model(DL):
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
-        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values)
+        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -1853,7 +1853,7 @@ class MyProblem(ElementwiseProblem):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 #
     def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
-                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
+                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -1890,6 +1890,7 @@ class MyProblem(ElementwiseProblem):
         self.dictionary =dictionary
         self.onebyone =onebyone
         self.values=values
+        self.weights=weights
 
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
@@ -1955,127 +1956,138 @@ class MyProblem(ElementwiseProblem):
 #
             # Train the model
             zz = 0
-            for z in range(values[0]):
+            for z in range(self.values[0]):
                 print('Fold number', z)
-                for zz2 in range(rep):
-                    time_start = time()
+                time_start = time()
+                model = LSTM_model.built_model_regression(x_train[z], y_train[z].reshape(-1, 1), neurons_lstm,
+                                                          neurons_dense,
+                                                          self.mask, self.mask_value, self.repeat_vector,
+                                                          self.dropout)
+                model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
+                                                   batch)
+                res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, len(self.pos_y))
+                y_pred = res['y_pred']
 
-                    model = LSTM_model.built_model_regression(x_train[z], y_train[z].reshape(-1, 1), neurons_lstm,
-                                                              neurons_dense,
-                                                              self.mask, self.mask_value, self.repeat_vector,
-                                                              self.dropout)
-                    model, history = LSTM_model.train_model(model, x_train[z], y_train[z].reshape(-1,1), x_test[z], y_test[z].reshape(-1,1), pacience,
-                                                       batch)
-
-                    res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, len(self.pos_y))
-                    y_pred = res['y_pred']
-#
-                    y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
-                    #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                    y_real = y_val[z].reshape(-1, 1)
-                    y_real = np.array(self.scalar_y.inverse_transform(y_real))
-
-
-                    print(y_pred.shape)
-                    y_predF = y_pred.copy()
-                    y_predF = pd.DataFrame(y_predF)
-                    y_predF.index = times_val[z]
-                    y_realF = y_real.copy()
-                    y_realF = pd.DataFrame(y_realF)
-                    y_realF.index = times_val[z]
-
-                    if self.zero_problem == 'schedule':
-                        print('*****Night-schedule fixed******')
-
-                        res = DL.fix_values_0(times_val[z],
-                                                   self.zero_problem, self.limits)
-
-                        index_hour = res['indexes_out']
-
-                        if len(index_hour) > 0 and self.horizont == 0:
-                            y_pred1 = np.delete(y_pred, index_hour, 0)
-                            y_real1 = np.delete(y_real, index_hour, 0)
-                        elif len(index_hour) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, index_hour - 1, 0)
-                            y_real1 = np.delete(y_real, index_hour - 1, 0)
+                y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+                y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                y_real = y_val[z].reshape(-1, 1)
+                y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                print(y_pred.shape)
+                y_predF = y_pred.copy()
+                y_predF = pd.DataFrame(y_predF)
+                y_predF.index = times_val[z]
+                y_realF = y_real.copy()
+                y_realF = pd.DataFrame(y_realF)
+                y_realF.index = times_val[z]
+                if self.zero_problem == 'schedule':
+                    print('*****Night-schedule fixed******')
+                    res = DL.fix_values_0(times_val[z],
+                                               self.zero_problem, self.limits)
+                    index_hour = res['indexes_out']
+                    if len(index_hour) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_hour, 0)
+                        y_real1 = np.delete(y_real, index_hour, 0)
+                    elif len(index_hour) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, index_hour - 1, 0)
+                        y_real1 = np.delete(y_real, index_hour - 1, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+                    # Outliers and missing values
+                    if self.mask == True and len(y_pred1) > 0:
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(0) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                        if mean_y.size == 0:
+                            e = evals(y_pred1, y_real1).variation_rate()
+                            if isinstance(self.weights, list):
+                                cvs[zz] = np.sum(e)
+                            else:
+                                cvs[zz] = np.sum(e * self.weights)
                         else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
-
+                            e = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            if isinstance(self.weights, list):
+                                cvs[zz] = np.sum(e)
+                            else:
+                                cvs[zz] = np.sum(e * self.weights)
+                    else:
+                        print('Missing values are detected when we are evaluating the predictions')
+                        cvs[zz] = 9999
+                elif self.zero_problem == 'radiation':
+                    print('*****Night-radiation fixed******')
+                    place = np.where(names == 'radiation')[0]
+                    scalar_rad = self.scalar_x['radiation']
+                    res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+                                               self.zero_problem, self.limits)
+                    index_rad = res['indexes_out']
+                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
+                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+                    if len(index_rad) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_rad, 0)
+                        y_real1 = np.delete(y_real, index_rad, 0)
+                    elif len(index_rad) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                        y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+                    # Outliers and missing values
+                    if self.mask == True and len(y_pred1) > 0:
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                        if mean_y.size == 0:
+                            e = evals(y_pred1, y_real1).variation_rate()
+                            if isinstance(self.weights, list):
+                                cvs[zz] = np.sum(e)
+                            else:
+                                cvs[zz] = np.sum(e * self.weights)
+                        else:
+                            e = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            if isinstance(self.weights, list):
+                                cvs[zz] = np.sum(e)
+                            else:
+                                cvs[zz] = np.sum(e * self.weights)
+                    else:
+                        print('Missing values are detected when we are evaluating the predictions')
+                        cvs[zz] = 9999
+                else:
+                    y_real2=y_real.copy()
+                    if self.mask == True and len(y_pred) > 0:
                         # Outliers and missing values
-                        if self.mask == True and len(y_pred1) > 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(0) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-
-                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                            cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        o = np.where(y_real2 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred2 = np.delete(y_pred, o, 0)
+                            y_real2 = np.delete(y_real, o, 0)
+                        else:
+                            y_pred2 = y_pred
+                            y_real2 = y_real
+                    if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+                        if mean_y.size == 0:
+                            e=evals(y_pred2, y_real2).variation_rate()
+                            if isinstance(self.weights, list):
+                                cvs[zz] = np.sum(e)
+                            else:
+                                print(e)
+                                print(self.weights)
+                                cvs[zz] = np.sum(e * self.weights)
 
                         else:
-                            print('Missing values are detected when we are evaluating the predictions')
-                            cvs[zz] = 9999
-
-                    elif self.zero_problem == 'radiation':
-                        print('*****Night-radiation fixed******')
-                        place = np.where(names == 'radiation')[0]
-                        scalar_rad = self.scalar_x['radiation']
-
-                        res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
-                                                   self.zero_problem, self.limits)
-
-                        index_rad = res['indexes_out']
-                        index_rad2 = np.where(y_real <= self.inf_limit)[0]
-                        index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
-
-                        if len(index_rad) > 0 and self.horizont == 0:
-                            y_pred1 = np.delete(y_pred, index_rad, 0)
-                            y_real1 = np.delete(y_real, index_rad, 0)
-                        elif len(index_rad) > 0 and self.horizont > 0:
-                            y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
-                            y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
-                        else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
-
-                        # Outliers and missing values
-                        if self.mask == True and len(y_pred1) > 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-
-                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                            cvs[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-
-                        else:
-                            print('Missing values are detected when we are evaluating the predictions')
-                            cvs[zz] = 9999
+                            e = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                            if isinstance(self.weights, list):
+                                cvs[zz] = np.sum(e)
+                            else:
+                                cvs[zz] = np.sum(e * self.weights)
 
                     else:
-                        y_real2=y_real.copy()
-
-                        if self.mask == True and len(y_pred) > 0:
-                            # Outliers and missing values
-                            o = np.where(y_real2 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred2 = np.delete(y_pred, o, 0)
-                                y_real2 = np.delete(y_real, o, 0)
-                            else:
-                                y_pred2 = y_pred
-                                y_real2 = y_real
-
-                        if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
-
-                            cvs[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-
-                        else:
-                            print('Missing values are detected when we are evaluating the predictions')
-                            cvs[zz] = 9999
-
+                        print('Missing values are detected when we are evaluating the predictions')
+                        cvs[zz] = 9999
 
                 zz += 1
 #
