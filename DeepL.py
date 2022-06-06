@@ -785,9 +785,9 @@ class LSTM_model(DL):
         if layers_lstm<2:
             if mask == True:
                 model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                model.add(LSTM(neurons_lstm[k], activation='relu'))
+                model.add(LSTM(neurons_lstm, activation='relu'))
             else:
-                model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features),
+                model.add(LSTM(neurons_lstm, input_shape=(n_timesteps, n_features),
                                activation='relu'))
         else:
             for k in range(layers_lstm):
