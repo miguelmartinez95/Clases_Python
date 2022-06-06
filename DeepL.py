@@ -1291,10 +1291,10 @@ class LSTM_model(DL):
         test = res['data']
 
         print('Data in three dimensions')
-        print('DATA:', train[0,:,:])
-        print('DATA:', train[10,:,:])
-        print('DATA:', train[200,:,:])
-        print('DATA:', train[500,:,:])
+        #print('DATA:', train[0,:,:])
+        #print('DATA:', train[10,:,:])
+        #print('DATA:', train[200,:,:])
+        #print('DATA:', train[500,:,:])
 
         #x_test, y_test,ind_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
         #x_train, y_train,ind_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
