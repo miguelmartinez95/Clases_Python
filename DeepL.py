@@ -780,26 +780,36 @@ class LSTM_model(DL):
         n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
 
         model = Sequential()
-        for k in range(layers_lstm):
-            if k==0 and repeat_vector==True:
-                if mask==True:
-                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                    model.add(LSTM(neurons_lstm[k],activation='relu'))
-                    model.add(RepeatVector(n_timesteps))
-                else:
-                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features),activation='relu'))
-                    model.add(RepeatVector(n_timesteps))
 
-            elif k==0 and repeat_vector==False:
-                if mask == True:
-                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                    model.add(LSTM(neurons_lstm[k], return_sequences=True,activation='relu'))
-                else:
-                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), return_sequences=True,activation='relu'))
-            elif k==layers_lstm-1:
-                model.add(LSTM(neurons_lstm[k],activation='relu'))
+
+        if layers_lstm<2:
+            if mask == True:
+                model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                model.add(LSTM(neurons_lstm[k], activation='relu'))
             else:
-                model.add(LSTM(neurons_lstm[k],return_sequences=True,activation='relu'))
+                model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features),
+                               activation='relu'))
+        else:
+            for k in range(layers_lstm):
+                if k==0 and repeat_vector==True:
+                    if mask==True:
+                        model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                        model.add(LSTM(neurons_lstm[k],activation='relu'))
+                        model.add(RepeatVector(n_timesteps))
+                    else:
+                        model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features),activation='relu'))
+                        model.add(RepeatVector(n_timesteps))
+
+                elif k==0 and repeat_vector==False:
+                    if mask == True:
+                        model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                        model.add(LSTM(neurons_lstm[k], return_sequences=True,activation='relu'))
+                    else:
+                        model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), return_sequences=True,activation='relu'))
+                elif k==layers_lstm-1:
+                    model.add(LSTM(neurons_lstm[k],activation='relu'))
+                else:
+                    model.add(LSTM(neurons_lstm[k],return_sequences=True,activation='relu'))
 
         if layers_neurons>0:
             if dropout>0:
