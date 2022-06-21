@@ -431,8 +431,8 @@ class DL:
             raise NameError('Problem with the limit of sample creating the functional sample')
 
 
-        y1 = y.iloc[range(start+1)]
-        y2 = y.iloc[range(end-1, len(y))]
+        #y1 = y.iloc[range(start+1)]
+        #y2 = y.iloc[range(end-1, len(y))]
 
         y_short = y.iloc[range(start+1,end-1)]
         if len(y_short) % (step*24)!=0:
@@ -479,27 +479,33 @@ class DL:
         o_final = np.intersect1d(o1,o2)
 
         print('El número de outliers detectado es:',len(o_final))
-        if len(o_final)>0:
-            out = index2[o_final]
+        #if len(o_final)>0:
+        #    out = index2[o_final]
+#
+#
+        #    for t in range(len(o_final)):
+        #        w = np.empty(fd_y.shape[1])
+        #        w[:] = self.mask_value
+        #        fd_y[out[t],:]= w
+#
+        #Y = fd_y.flatten()
+#
+        #Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
+        #if len(Y) != long:
+        #    print(len(Y))
+        #    print(long)
+        #    raise NameError('Sample size error in the second joint')
 
-
-            for t in range(len(o_final)):
-                w = np.empty(fd_y.shape[1])
-                w[:] = self.mask_value
-                fd_y[out[t],:]= w
-
-        Y = fd_y.flatten()
-
-        Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
-        if len(Y) != long:
-            print(len(Y))
-            print(long)
-            raise NameError('Sample size error in the second joint')
-
-        Y.index=self.data.index
-        self.data.iloc[:,self.pos_y] = Y
+        #Y.index=self.data.index
+        #self.data.iloc[:,self.pos_y] = Y
 
         print('Data have been modified masking the outliers days!')
+        if len(o_final)>0:
+            O = index2[o_final]
+        else:
+            O = np.nan
+
+        return O
 
 
 
