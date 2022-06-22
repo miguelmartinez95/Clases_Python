@@ -473,8 +473,8 @@ class DL:
         fd = fd_y2.tolist()
         fd1 = skfda.FDataGrid(fd, grid)
 
-        out_detector1 = skfda.exploratory.outliers.IQROutlierDetector(factor=3, depth_method=skfda.exploratory.depth.BandDepth())    #MSPlotOutlierDetector()
-        out_detector2 = skfda.exploratory.outliers.LocalOutlierFactor(n_neighbors=int(fd_y2.shape[0]/5))
+        out_detector1 = skfda.exploratory.outliers.IQROutlierDetector(factor=1, depth_method=skfda.exploratory.depth.BandDepth())    #MSPlotOutlierDetector()
+        out_detector2 = skfda.exploratory.outliers.LocalOutlierFactor(n_neighbors=7)
         oo1 = out_detector1.fit_predict(fd1)
         oo2 = out_detector2.fit_predict(fd1)
         o1 = np.where(oo1 ==-1)[0]
