@@ -435,7 +435,9 @@ class DL:
         #y2 = y.iloc[range(end-1, len(y))]
 
         #y_short = y.iloc[range(start+1,end-1)]
-        y_short=y
+        y_short=y.iloc[:,0]
+        print(y_short.shape)
+
         if len(y_short) % (step*24)!=0:
             print(len(y_short))
             print(len(y_short)/(step*24))
