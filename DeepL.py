@@ -505,6 +505,7 @@ class DL:
         else:
             O = np.nan
 
+        print(O)
         return O
 
 
