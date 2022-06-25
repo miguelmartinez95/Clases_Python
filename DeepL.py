@@ -1059,6 +1059,8 @@ class LSTM_model(DL):
                 else:
                     y_train=y_train[0].reshape(-1, 1)
 
+                print(neurons_lstm)
+                print(neurons_dense)
                 model1 = self.__class__.built_model_regression(x_train[0],ytrain,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
 
             else:
