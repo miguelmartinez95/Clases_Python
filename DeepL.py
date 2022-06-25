@@ -1071,7 +1071,7 @@ class LSTM_model(DL):
             zz= 0
             predictions = []
             reales = []
-            for z in range(2):
+            for z in range(len(x_train)):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     modelF = model1
