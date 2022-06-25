@@ -1985,9 +1985,6 @@ class MyProblem(ElementwiseProblem):
         #print(y_train.shape)
 #
         if self.type == 'regression':
-
-#
-#
             # Train the model
             zz = 0
             for z in range(self.values[0]):
@@ -2011,15 +2008,30 @@ class MyProblem(ElementwiseProblem):
                 y_pred = res['y_pred']
 
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                y_val = np.array(self.scalar_y.inverse_transform(y_val))
+
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    # if len(self.pos_y)>1:
+                    for t in range(len(self.pos_y)):
+                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                    y_real = y_val
+                else:
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                    y_real = y_val.reshape((len(y_val), 1))
+
+                #y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+                #y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                #y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                 #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
                 if len(y_val[z].shape)>1:
                     y_real=y_val[z]
                 else:
                     y_real = y_val[z].reshape(-1, 1)
 
-                y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                #y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                y_real=y_val
                 print(y_pred.shape)
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
@@ -2123,7 +2135,6 @@ class MyProblem(ElementwiseProblem):
                                 print(e)
                                 print(self.weights)
                                 cvs[zz] = np.sum(e * self.weights)
-
                         else:
                             e = evals(y_pred2, y_real2).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
