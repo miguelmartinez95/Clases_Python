@@ -1667,7 +1667,7 @@ class LSTM_model(DL):
 
         return res
 
-    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, batch, mean_y,parallel,top,values):
+    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, onebyone,batch, mean_y,parallel,top,values):
         '''
         :param fold: assumed division of data sample
         :param rep: repetitions of cv analysis considering the intial or the final of sample
@@ -1691,7 +1691,7 @@ class LSTM_model(DL):
                         options['neurons_dense'].append(neuron_dense)
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
-                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False)
+                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense,onebyone, paciences[i], batch, mean_y,values,False)
                         results[w] = np.mean(res['cv_rmse'])
                         deviations[w] = np.std(res['cv_rmse'])
                         w += 1
