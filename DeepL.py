@@ -519,11 +519,12 @@ class LSTM_model(DL):
         print('Class to built LSTM models.')
 
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout, type):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout,weights, type):
         super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
         self.type = type
+        self.weights=weights
 
     @staticmethod
     def three_dimension(data_new, n_inputs):
@@ -1022,7 +1023,7 @@ class LSTM_model(DL):
         res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_val':times_val}
         return res
 
-    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,plot, q=[], model=[]):
+    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,values,plot, q=[], model=[]):
         '''
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
@@ -1036,7 +1037,7 @@ class LSTM_model(DL):
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
 
-        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags, onebyone,[])
+        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags, onebyone,values)
 
         x_test =np.array(res['x_test'])
         x_train=np.array(res['x_train'])
@@ -1173,9 +1174,31 @@ class LSTM_model(DL):
                                 times = np.delete(times, o, 0)
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                                cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                                rmse[zz] = evals(y_pred1, y_real1).rmse()
-                                nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                                if mean_y.size == 0:
+                                    e = evals(y_pred1, y_real1).variation_rate()
+                                    if isinstance(self.weights, list):
+                                        cv[zz] = np.sum(e)
+                                    else:
+                                        print(e)
+                                        print(self.weights)
+                                        cv[zz] = np.sum(e * self.weights)
+                                    rmse[zz] = np.nan
+                                    nmbe[zz] = np.nan
+                                else:
+                                    e_cv = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                                    e_r = evals(y_pred2, y_real2).rmse()
+                                    e_n = evals(y_pred2, y_real2).nmbe(mean_y)
+                                    if isinstance(self.weights, list):
+                                        cv[zz] = np.sum(e_cv)
+                                        rmse[zz] = np.sum(e_r)
+                                        nmbe[zz] = np.sum(e_n)
+                                    else:
+                                        cv[zz] = np.sum(e_cv * self.weights)
+                                        rmse[zz] = np.sum(e_r * self.weights)
+                                        nmbe[zz] = np.sum(e_n * self.weights)
+                                #cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                #rmse[zz] = evals(y_pred1, y_real1).rmse()
+                                #nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                             else:
                                 print('Missing values are detected when we are evaluating the predictions')
                                 cv[zz] = 9999
@@ -1222,9 +1245,32 @@ class LSTM_model(DL):
 
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                                cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                                rmse[zz] = evals(y_pred1, y_real1).rmse()
-                                nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
+                                if mean_y.size == 0:
+                                    e = evals(y_pred1, y_real1).variation_rate()
+                                    if isinstance(self.weights, list):
+                                        cv[zz] = np.sum(e)
+                                    else:
+                                        print(e)
+                                        print(self.weights)
+                                        cv[zz] = np.sum(e * self.weights)
+                                    rmse[zz] = np.nan
+                                    nmbe[zz] = np.nan
+                                else:
+                                    e_cv = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                                    e_r = evals(y_pred2, y_real2).rmse()
+                                    e_n = evals(y_pred2, y_real2).nmbe(mean_y)
+                                    if isinstance(self.weights, list):
+                                        cv[zz] = np.sum(e_cv)
+                                        rmse[zz] = np.sum(e_r)
+                                        nmbe[zz] = np.sum(e_n)
+                                    else:
+                                        cv[zz] = np.sum(e_cv * self.weights)
+                                        rmse[zz] = np.sum(e_r * self.weights)
+                                        nmbe[zz] = np.sum(e_n * self.weights)
+
+                                #cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                #rmse[zz] = evals(y_pred1, y_real1).rmse()
+                                #nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                             else:
                                 print('Missing values are detected when we are evaluating the predictions')
                                 cv[zz] = 9999
@@ -1250,9 +1296,31 @@ class LSTM_model(DL):
 
                         if len(y_pred) > 0:
                             if np.sum(np.isnan(y_pred2))==0 and np.sum(np.isnan(y_real2))==0:
-                                cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                                rmse[zz] = evals(y_pred2, y_real2).rmse()
-                                nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
+                                if mean_y.size == 0:
+                                    e = evals(y_pred2, y_real2).variation_rate()
+                                    if isinstance(self.weights, list):
+                                        cv[zz] = np.sum(e)
+                                    else:
+                                        print(e)
+                                        print(self.weights)
+                                        cv[zz] = np.sum(e * self.weights)
+                                    rmse[zz]=np.nan
+                                    nmbe[zz]=np.nan
+                                else:
+                                    e_cv = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                                    e_r = evals(y_pred2, y_real2).rmse()
+                                    e_n = evals(y_pred2, y_real2).nmbe(mean_y)
+                                    if isinstance(self.weights, list):
+                                        cv[zz] = np.sum(e_cv)
+                                        rmse[zz] = np.sum(e_r)
+                                        nmbe[zz] = np.sum(e_n)
+                                    else:
+                                        cv[zz] = np.sum(e_cv * self.weights)
+                                        rmse[zz] = np.sum(e_r * self.weights)
+                                        nmbe[zz] = np.sum(e_n * self.weights)
+                                    #cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                                    #rmse[zz] = evals(y_pred2, y_real2).rmse()
+                                    #nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
                             else:
                                 print('Missing values are detected when we are evaluating the predictions')
                                 cv[zz] = 9999
@@ -1599,7 +1667,7 @@ class LSTM_model(DL):
 
         return res
 
-    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, batch, mean_y,parallel,top):
+    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, batch, mean_y,parallel,top,values):
         '''
         :param fold: assumed division of data sample
         :param rep: repetitions of cv analysis considering the intial or the final of sample
@@ -1623,7 +1691,7 @@ class LSTM_model(DL):
                         options['neurons_dense'].append(neuron_dense)
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
-                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False)
+                        res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False)
                         results[w] = np.mean(res['cv_rmse'])
                         deviations[w] = np.std(res['cv_rmse'])
                         w += 1
@@ -1886,8 +1954,8 @@ class MyProblem(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 #
-    def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, med, contador,
-                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights, **kwargs):
+    def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
+                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
