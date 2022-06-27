@@ -2223,7 +2223,9 @@ class MyProblem(ElementwiseProblem):
             complexity = MyProblem.complex(neurons_lstm,neurons_dense, 50000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
+            print(res_final)
             return res_final['cvs'], res_final['complexity']
+
 #
     @staticmethod
     def bool4(x, l_lstm, l_dense):
