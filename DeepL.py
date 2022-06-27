@@ -971,6 +971,7 @@ class LSTM_model(DL):
                 Y_test.append(y_test)
                 Y_train.append(y_train)
                 Y_val.append(y_val)
+                print('cv_division done')
 
         else:
 
