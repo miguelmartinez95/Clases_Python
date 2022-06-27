@@ -2236,6 +2236,8 @@ class MyProblem(ElementwiseProblem):
 #
         x1 = x[range(l_lstm)]
         x2 = x[range(l_lstm, l_lstm+l_dense)]
+        print(x1)
+        print(x2)
 #
 
         if len(x2) == 2:
