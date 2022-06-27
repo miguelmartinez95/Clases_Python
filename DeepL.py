@@ -2065,9 +2065,11 @@ class MyProblem(ElementwiseProblem):
                 if len(y_train[z].shape)>1:
                     ytrain=y_train[z]
                     ytest=y_test[z]
+                    yval=y_val[z]
                 else:
-                    y_train=y_train[z].reshape(-1, 1)
+                    ytrain=y_train[z].reshape(-1, 1)
                     ytest=y_test[z].reshape(-1,1)
+                    y_val=y_val[z].reshape(-1,1)
                 model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
@@ -2079,8 +2081,9 @@ class MyProblem(ElementwiseProblem):
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, len(self.pos_y))
                 y_pred = res['y_pred']
 
+                print(yval)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                y_val = np.array(self.scalar_y.inverse_transform(y_val))
+                y_val = np.array(self.scalar_y.inverse_transform(yval))
 
                 if isinstance(self.pos_y, collections.abc.Sized):
                     # if len(self.pos_y)>1:
