@@ -2296,12 +2296,9 @@ class MyProblem(ElementwiseProblem):
                 a_lstm = np.array([0])
         else:
             raise NameError('Option not considered')
-#
-
         print('checked the x options')
         return a_lstm, a_dense
-#
-#
+
     def _evaluate(self, x, out, *args, **kwargs):
         g1 = MyProblem.bool4(np.delete(x, len(x)-1), self.l_lstm, self.l_dense)
         out["G"] = g1
