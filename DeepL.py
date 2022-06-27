@@ -1837,7 +1837,7 @@ class LSTM_model(DL):
                           mutation=get_mutation("int_pm", prob=0.1))
 
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
-                                                              n_last=int(pop_size/2), nth_gen=2, n_max_gen=None,
+                                                              n_last=int(pop_size/2), nth_gen=5, n_max_gen=None,
                                                               n_max_evals=6000)
 
         res = minimize(problem,
@@ -2297,6 +2297,8 @@ class MyProblem(ElementwiseProblem):
         else:
             raise NameError('Option not considered')
 #
+
+        print('checked the x options')
         return a_lstm, a_dense
 #
 #
