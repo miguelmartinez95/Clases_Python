@@ -1922,6 +1922,7 @@ class MyRepair(Repair):
         self.l_dense = l_dense
 
     def _do(self, problem, pop, **kwargs):
+        print('fixing x')
         for k in range(len(pop)):
             x = pop[k].X
             xx = x[range(self.l_lstm + self.l_dense)]
@@ -1948,7 +1949,7 @@ class MyRepair(Repair):
                 x2[r_dense] = 0
             x = np.concatenate((x1, x2, np.array([x[len(x) - 1]])))
             pop[k].X = x
-
+        print('x fixed')
         return pop
 
 
