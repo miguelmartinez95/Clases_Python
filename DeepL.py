@@ -1793,6 +1793,7 @@ class LSTM_model(DL):
 
         print('Process finished!!!')
         res = {'errors': results, 'options': options, 'best': top_results}
+        print(res['best'])
         return res
 
     def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
