@@ -1791,9 +1791,10 @@ class LSTM_model(DL):
             options['neurons_lstm'].pop(zz)
             options['pacience'].pop(zz)
 
+        print(top_results)
         np.savetxt('top_results1.txt', top_results)
         np.savetxt('results1.txt', results)
-        print(top_results)
+
         print('Process finished!!!')
         res = {'errors': results, 'options': options, 'best': top_results}
         print(res['best'])
