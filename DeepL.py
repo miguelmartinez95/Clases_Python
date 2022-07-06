@@ -1629,7 +1629,6 @@ class LSTM_model(DL):
                         nmbe=np.mean(nmbe)
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
                                'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2}
-
                     else:
                         if mean_y.size == 0:
                             e = evals(y_pred, y_real).variation_rate()
