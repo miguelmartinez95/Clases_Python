@@ -1631,9 +1631,33 @@ class LSTM_model(DL):
                                'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2}
 
                     else:
-                        cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                        nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                        rmse = evals(y_pred, y_real).rmse()
+                        if mean_y.size == 0:
+                            e = evals(y_pred, y_real).variation_rate()
+                            if isinstance(self.weights, list):
+                                cv = np.sum(e)
+                            else:
+                                print(e)
+                                print(self.weights)
+                                cv = np.sum(e * self.weights)
+                            rmse = np.nan
+                            nmbe = np.nan
+                            r2=np.nan
+                        else:
+                            e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                            e_r = evals(y_pred, y_real).rmse()
+                            e_n = evals(y_pred, y_real).nmbe(mean_y)
+                            r2 = evals(y_pred, y_real).r2()
+                            if isinstance(self.weights, list):
+                                cv = np.sum(e_cv)
+                                rmse = np.sum(e_r)
+                                nmbe = np.sum(e_n)
+                            else:
+                                cv = np.sum(e_cv * self.weights)
+                                rmse = np.sum(e_r * self.weights)
+                                nmbe = np.sum(e_n * self.weights)
+                        #cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        #nmbe = evals(y_pred, y_real).nmbe(mean_y)
+                        #rmse = evals(y_pred, y_real).rmse()
                         r2 = evals(y_pred, y_real).r2()
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2}
