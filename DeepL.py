@@ -1792,8 +1792,8 @@ class LSTM_model(DL):
             options['pacience'].pop(zz)
 
         print(top_results)
-        np.savetxt('top_results1.txt', top_results)
-        np.savetxt('results1.txt', results)
+        #np.savetxt('errrors1.txt', top_results['error'])
+        #np.savetxt('results1.txt', results)
 
         print('Process finished!!!')
         res = {'errors': results, 'options': options, 'best': top_results}
@@ -2228,7 +2228,7 @@ class MyProblem(ElementwiseProblem):
 
                 zz += 1
 #
-            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 50000, 8)
+            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 1000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
