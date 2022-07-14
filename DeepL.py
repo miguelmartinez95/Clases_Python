@@ -26,6 +26,10 @@ import multiprocessing
 from multiprocessing import Process,Manager,Queue
 import collections
 
+
+'''
+Conexion con GPUs
+'''
 import tensorflow as tf
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -58,6 +62,9 @@ class DL:
     @staticmethod
     def cv_division(x,y, fold):
         '''
+        Division de la muestra en trozos según fold para datos normales y no recurrentes
+        Para datos recurrentes más abajo está cv_division_lstm
+
         :param fold: division for cv_analysis
         :return: data divided into train, test and validations in addition to the indexes division
         '''
@@ -99,6 +106,8 @@ class DL:
     @staticmethod
     def fix_values_0(restriction, zero_problem, limit):
         '''
+        Function to fix incorrect values based on some restriction
+
         :param restriction: schedule hours or irradiance variable depending on the zero_problem
         :param zero_problem: schedule or radiation
         :param limit: limit hours or radiation limit
@@ -183,6 +192,8 @@ class DL:
 
     def introduce_lags(self, lags, var_lag):
         '''
+        Introduction of lags moving the sample
+
         :param lags: amount of lags
         :param var_lag: label of lagged variables
         :return: data lagged
@@ -293,6 +304,8 @@ class DL:
 
     def scalating(self, scalar_limits, groups, x, y):
         '''
+        Scalate date bsed on MinMax scaler and certain limits
+
         :param scalar_limits: limit of the scalar data
         :param groups: groups defining the different variable groups to be scaled together
         :return: data scaled depending if x, y or both are scaled
@@ -407,6 +420,10 @@ class DL:
 
     def fda_outliers(self, freq):
         '''
+        Function to detect functional outliers
+
+        REVISE !!!
+
         :param freq: amount of values in a hour (value to divide 60 and the result is the amount of data in a hour)
         :return: the variable y with missing value in the days considered as outliers
         '''
@@ -513,7 +530,6 @@ class DL:
 
 
 
-
 class LSTM_model(DL):
     def info(self):
         print('Class to built LSTM models.')
@@ -554,11 +570,11 @@ class LSTM_model(DL):
         :param cut1: lower limit to divided into train - test
         :param cut2: upper limit to divided into train - test
         :return: data divided into train - test in three dimensions
+        Also returnin the index modified if some index was left over
        '''
 
        index=data_new1.index
        data_new1=data_new1.reset_index(drop=True)
-
        data_new = data_new1.copy()
 
        train, test = data_new.drop(range(cut1, cut2)), data_new.iloc[range(cut1, cut2)]
@@ -586,7 +602,6 @@ class LSTM_model(DL):
        # restructure into windows of  data
        train1 = np.array(np.split(train, len(train) / n_inputs))
        test1 = np.array(np.split(test, len(test) / n_inputs))
-       #index_test = np.array(np.split(index_test, len(index_test) / n_inputs))
 
        return train1, test1, index_test
 
@@ -594,6 +609,8 @@ class LSTM_model(DL):
     @staticmethod
     def to_supervised(train,pos_y, n_lags, horizont, onebyone):
         '''
+        Relate x and y based on lags and future horizont
+
         :param horizont: horizont to the future selected
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :return: x (past) and y (future horizont) considering the past-future relations selected
@@ -618,7 +635,6 @@ class LSTM_model(DL):
 
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
-                    #xx = np.delete(data,pos_y,1)
                     xx = data.drop(data.columns[pos_y],axis=1)
                     x_input = xx.iloc[in_start:in_end,:]
                     # x_input = x_input.reshape((len(x_input), 1))
@@ -642,7 +658,6 @@ class LSTM_model(DL):
             else:
                 #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
                 limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
-
 
             limitx = int(np.floor(len(data)/n_lags)*n_lags)
             if horizont==0:
@@ -669,49 +684,16 @@ class LSTM_model(DL):
                 y =yy.iloc[seq]
                 timesF= yy.index[seq]
 
-#            for _ in range(limit):
-#                # define the end of the input sequence
-#                in_end = in_start + n_lags
-#                if horizont ==0:
-#                    out_end = in_end
-#                else:
-#                    out_end = in_end+horizont
-
-
-#                # ensure we have enough data for this instance
-#                if out_end <= len(data):
-#                    #xx = np.delete(data,pos_y,1)
-#                    x_input = xx.iloc[in_start:in_end,:]
-#                    # x_input = x_input.reshape((len(x_input), 1))
-#                    X.append(x_input)
-#                    # yy = data[:,pos_y].reshape(-1,len(pos_y))
-#                    yy = data.iloc[:,pos_y]
-
-#                    if horizont==0:
-#                        y.append(yy.iloc[out_end-1])
-#                        timesF.append(np.array([out_end-1]))
-#                    else:
-#                        y.append(yy.iloc[in_end:out_end])
-#                        timesF.append(list(range(in_end,out_end)))
-#                    #se selecciona uno
-#                # move along one time step
-#                if horizont==0 and onebyone[1]==True:
-#                    in_start+=n_lags
-#                elif horizont==0 and onebyone[1]==False:
-#                    in_start += 1
-#                else:
-#                    in_start += horizont
-#                #in_start += onebyone
-
-#        dd= len(data) - in_start
         dd= len(data) - limitx
         print('Data supervised')
-        #return(np.array(X), np.array(y),timesF, dd)
+
         return(X, np.array(y),timesF, dd)
 
     @staticmethod
     def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout):
         '''
+        WORK IN PROGRESS!!!
+
         :param mask: True or False
         :param repeat_vector: True or False
         :return: the model architecture built to be trained
@@ -851,7 +833,7 @@ class LSTM_model(DL):
 
         '''
         :param model: model architecture built
-        :return: model trained
+        :return: model trained based on pacience
         '''
         print('TRAIN:', train_x1.shape)
         print('TRAIN_Y:',train_y1.shape)
@@ -876,7 +858,8 @@ class LSTM_model(DL):
     def predict_model(model,n_lags, x_val,batch, n_outputs):
         '''
         :param model: trained model
-        :param n_lags: lags to built lstm blocks
+        :param n_lags: lags to built lstm block
+        :param n_outputs: how many variables want to estimate
         :return: predictions in the validation sample, considering the selected moving window
         '''
 
@@ -912,7 +895,11 @@ class LSTM_model(DL):
     @staticmethod
     def cv_division_lstm(data, horizont, fold, pos_y,n_lags, onebyone, values):
         '''
+            MODIFICATION TO DIVIDE INTO MORE PIECES????
+
         :return: Division to cv analysis considering that with lstm algorithm the data can not be divided into simple pieces.
+        The validation sample is extracted from the first test sample
+        If values the division is previously defined
         It can only be divided with a initial part and a final part
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         return: train, test, and validation samples. Indexes for test samples (before division into test-validation)
@@ -976,7 +963,6 @@ class LSTM_model(DL):
         else:
 
             ###################################################################################
-
             step = int(data.shape[0] / fold)
             w = 0
             w2 = step
@@ -994,9 +980,7 @@ class LSTM_model(DL):
                     x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
-                    #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], train.shape[2]))
 
-                    #index_val = index_val.reshape((index_val.shape[0] * index_val.shape[1], 1))
                     if onebyone[0]==True:
                         if horizont==0:
                             index_val = np.delete(index_val, range(n_lags-1), axis=0)
@@ -1004,7 +988,6 @@ class LSTM_model(DL):
                             index_val = np.delete(index_val, range(n_lags), axis=0)
                     else:
                         index_val=index_val[np.concatenate(ind_val)]
-                    #index_val = np.delete(index_val, range(index_val.shape[0]-n_lags, index_val.shape[0]), axis=0)
 
                     times_val.append(index_val)
 
@@ -1026,10 +1009,14 @@ class LSTM_model(DL):
 
     def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,values,plot, q=[], model=[]):
         '''
+        :param values specific values to divide the sample
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
         :param q: queue that inform us if paralyse or not
+        :param model if model we have a pretrained model
         :param plot: True plots
+        if mean_y is size 0 the evaluation will be with variation rates
         :return: Considering what zero_problem is mentioned, return thre predictions, real values, errors and computational times needed to train the models
         '''
 
@@ -1046,12 +1033,11 @@ class LSTM_model(DL):
         y_test=np.array(res['y_test'])
         y_train =np.array(res['y_train'])
         y_val =np.array(res['y_val'])
-#
+
         times_val = res['time_val']
 
         print(times_val[0].shape)
         print(y_val[0].shape)
-
 
         if self.type=='regression':
             if isinstance(model, list):
@@ -1060,9 +1046,7 @@ class LSTM_model(DL):
                 else:
                     y_train=y_train[0].reshape(-1, 1)
 
-                print(neurons_lstm)
-                print(neurons_dense)
-                model1 = self.__class__.built_model_regression(x_train[0],ytrain,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
+                model1 = self.__class__.built_model_regression(x_train[0],y_train,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout)
 
             else:
                 model1=model
@@ -1084,8 +1068,6 @@ class LSTM_model(DL):
 
                     res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, len(self.pos_y))
                     y_pred = res['y_pred']
-
-
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
@@ -1136,7 +1118,6 @@ class LSTM_model(DL):
                             a = 'Subsample-'
                             b = str(z) + '.png'
                             plt.show()
-
 
                     y_predF = y_pred.copy()
                     y_predF = pd.DataFrame(y_predF)
@@ -1199,9 +1180,6 @@ class LSTM_model(DL):
                                         cv[zz] = np.sum(e_cv * self.weights)
                                         rmse[zz] = np.sum(e_r * self.weights)
                                         nmbe[zz] = np.sum(e_n * self.weights)
-                                #cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                                #rmse[zz] = evals(y_pred1, y_real1).rmse()
-                                #nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                             else:
                                 print('Missing values are detected when we are evaluating the predictions')
                                 cv[zz] = 9999
@@ -1270,10 +1248,6 @@ class LSTM_model(DL):
                                         cv[zz] = np.sum(e_cv * self.weights)
                                         rmse[zz] = np.sum(e_r * self.weights)
                                         nmbe[zz] = np.sum(e_n * self.weights)
-
-                                #cv[zz] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                                #rmse[zz] = evals(y_pred1, y_real1).rmse()
-                                #nmbe[zz] = evals(y_pred1, y_real1).nmbe(mean_y)
                             else:
                                 print('Missing values are detected when we are evaluating the predictions')
                                 cv[zz] = 9999
@@ -1321,9 +1295,6 @@ class LSTM_model(DL):
                                         cv[zz] = np.sum(e_cv * self.weights)
                                         rmse[zz] = np.sum(e_r * self.weights)
                                         nmbe[zz] = np.sum(e_n * self.weights)
-                                    #cv[zz] = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                                    #rmse[zz] = evals(y_pred2, y_real2).rmse()
-                                    #nmbe[zz] = evals(y_pred2, y_real2).nmbe(mean_y)
                             else:
                                 print('Missing values are detected when we are evaluating the predictions')
                                 cv[zz] = 9999
@@ -1359,7 +1330,8 @@ class LSTM_model(DL):
     def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[]):
         '''
         :return: the trained model and the time required to be trained
-
+        onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        if model we have a pretrained model
         Instance to train model outside these classes
         '''
         from datetime import datetime
@@ -1372,13 +1344,7 @@ class LSTM_model(DL):
         test = res['data']
 
         print('Data in three dimensions')
-        #print('DATA:', train[0,:,:])
-        #print('DATA:', train[10,:,:])
-        #print('DATA:', train[200,:,:])
-        #print('DATA:', train[500,:,:])
 
-        #x_test, y_test,ind_test,dif =self.__class__.to_supervised(test, self.pos_y, self.n_lags, self.horizont,onebyone)
-        #x_train, y_train,ind_train,dif = self.__class__.to_supervised(train, self.pos_y, self.n_lags, self.horizont, onebyone)
         x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags, self.horizont,
                                                                      onebyone)
         x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags, self.horizont,
@@ -1400,8 +1366,7 @@ class LSTM_model(DL):
                 times = round(time() - time_start, 3)
         else:
             time_start = time()
-            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,
-                                                                batch)
+            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,batch)
             times = round(time() - time_start, 3)
 
         if save_model==True:
@@ -1414,7 +1379,10 @@ class LSTM_model(DL):
     def predict(self, model, val,names,mean_y,batch,times, onebyone, scalated,daily,plotting):
         '''
         :param model: trained model
-        :param scalated: 0 predict 1 real
+        times: dates for plot
+        :param scalated: 0 prediction sample 1 real sample
+        daily: option to generate results day by day
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :return: prediction with the built metrics
         Instance to predict certain samples outside these classes
         '''
@@ -1448,11 +1416,6 @@ class LSTM_model(DL):
         y_pred = res['y_pred']
         print(y_pred.shape)
 
-
-        #if isinstance(self.pos_y, collections.abc.Sized):
-        ##if len(self.pos_y) > 1:
-        #    y_pred = y_pred.reshape(-1, y_val.shape[1])
-
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         if scalated[1]==True:
@@ -1460,7 +1423,6 @@ class LSTM_model(DL):
 
 
         if isinstance(self.pos_y, collections.abc.Sized):
-        #if len(self.pos_y)>1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
                 y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
@@ -1469,8 +1431,6 @@ class LSTM_model(DL):
             y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
             y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
             y_real = y_val.reshape((len(y_val), 1))
-
-        y_real=y_val
 
         print(y_pred)
 
@@ -1482,7 +1442,6 @@ class LSTM_model(DL):
 
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
-
 
             res = super().fix_values_0(self.times,
                                        self.zero_problem, self.limits)
@@ -1525,10 +1484,30 @@ class LSTM_model(DL):
                         nmbe=np.mean(nmbe)
                         res = {'y_pred': y_predF, 'cv_rmse': cv,'std_cv': std_cv, 'nmbe': nmbe,'std_nmbe': std_nmbe, 'rmse': rmse,'std_rmse': std_rmse, 'r2': r2}
                     else:
-                        cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                        nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                        rmse = evals(y_pred1, y_real1).rmse()
-                        r2 = evals(y_pred1, y_real1).r2()
+                        if mean_y.size == 0:
+                            e = evals(y_pred1, y_real1).variation_rate()
+                            if isinstance(self.weights, list):
+                                cv= np.sum(e)
+                            else:
+                                print(e)
+                                print(self.weights)
+                                cv= np.sum(e * self.weights)
+                            rmse= np.nan
+                            nmbe= np.nan
+                        else:
+                            e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            e_r = evals(y_pred1, y_real1).rmse()
+                            e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                            r2 = evals(y_pred1, y_real1).r2()
+                            if isinstance(self.weights, list):
+                                cv = np.sum(e_cv)
+                                rmse = np.sum(e_r)
+                                nmbe = np.sum(e_n)
+                            else:
+                                cv= np.sum(e_cv * self.weights)
+                                rmse = np.sum(e_r * self.weights)
+                                nmbe= np.sum(e_n * self.weights)
+
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2}
                 else:
@@ -1550,7 +1529,6 @@ class LSTM_model(DL):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1]-1, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            #index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
             index_rad2 = np.where(y_real <= self.inf_limit)[0]
             index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 #
@@ -1591,10 +1569,29 @@ class LSTM_model(DL):
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
                                'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2}
                     else:
-                        cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                        nmbe = evals(y_pred1, y_real1).nmbe(mean_y)
-                        rmse = evals(y_pred1, y_real1).rmse()
-                        r2 = evals(y_pred1, y_real1).r2()
+                        if mean_y.size == 0:
+                            e = evals(y_pred1, y_real1).variation_rate()
+                            if isinstance(self.weights, list):
+                                cv = np.sum(e)
+                            else:
+                                print(e)
+                                print(self.weights)
+                                cv = np.sum(e * self.weights)
+                            rmse = np.nan
+                            nmbe = np.nan
+                        else:
+                            e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            e_r = evals(y_pred1, y_real1).rmse()
+                            e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                            r2 = evals(y_pred1, y_real1).r2()
+                            if isinstance(self.weights, list):
+                                cv = np.sum(e_cv)
+                                rmse = np.sum(e_r)
+                                nmbe = np.sum(e_n)
+                            else:
+                                cv = np.sum(e_cv * self.weights)
+                                rmse = np.sum(e_r * self.weights)
+                                nmbe = np.sum(e_n * self.weights)
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2}
                 else:
@@ -1654,10 +1651,6 @@ class LSTM_model(DL):
                                 cv = np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
                                 nmbe = np.sum(e_n * self.weights)
-                        #cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                        #nmbe = evals(y_pred, y_real).nmbe(mean_y)
-                        #rmse = evals(y_pred, y_real).rmse()
-                        r2 = evals(y_pred, y_real).r2()
                         res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2}
                 else:
@@ -1670,9 +1663,6 @@ class LSTM_model(DL):
                            'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
-
-
-        #res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
 
         y_realF = pd.DataFrame(y_realF)
         y_realF.index = y_predF.index
@@ -1690,17 +1680,19 @@ class LSTM_model(DL):
             plt.show()
             plt.savefig('plot1.png')
 
-
         return res
 
     def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, onebyone,batch, mean_y,parallel,top,values):
         '''
+        Parallelisation is not work tested!!!
+
         :param fold: assumed division of data sample
         :param rep: repetitions of cv analysis considering the intial or the final of sample
         :param parallel: 0 no paralyse
         :param top: number of best solution selected
         :return: errors obtained with the options considered together  with the best solutions
         '''
+
         results = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
         deviations = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
 
@@ -1740,8 +1732,6 @@ class LSTM_model(DL):
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
                         if z < parallel and w<contador:
-                            #multiprocessing.set_start_method('fork')
-                            #multiprocessing.set_start_method('spawn')
                             p = Process(target=self.cv_analysis,
                                         args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
                             p.start()
@@ -1758,8 +1748,6 @@ class LSTM_model(DL):
                                 res2.append(q.get()[1])
 
                             processes=[]
-                            #multiprocessing.set_start_method('fork')
-                            #multiprocessing.set_start_method('spawn')
                             q = Queue()
                             p = Process(target=self.cv_analysis,
                                         args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
@@ -1815,8 +1803,6 @@ class LSTM_model(DL):
             options['pacience'].pop(zz)
 
         print(top_results)
-        #np.savetxt('errrors1.txt', top_results['error'])
-        #np.savetxt('results1.txt', results)
 
         print('Process finished!!!')
         res = {'errors': results, 'options': options, 'best': top_results}
@@ -1867,7 +1853,9 @@ class LSTM_model(DL):
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size/2), nth_gen=5, n_max_gen=None,
                                                               n_max_evals=6000)
-
+        '''
+        Termination can be with tolerance or with generations limit
+        '''
         res = minimize(problem,
                        algorithm,
                        termination,
@@ -1883,7 +1871,9 @@ class LSTM_model(DL):
 
             r_final = pd.DataFrame(rf)
             scal = MinMaxScaler(feature_range=(0, 1))
-            rf = scal.fit_transform(r_final)
+            obj1 = r_final.iloc[:,0]
+            obj2 = r_final.iloc[:,1]
+            rf = pd.concat([scal.fit_transform(obj1), scal.fit_transform(obj2)], axis=1)
 
             I = get_decomposition("pbi").do(np.array(rf), weights).argmin()
             rf = scal.inverse_transform(rf)
@@ -1921,7 +1911,6 @@ class LSTM_model(DL):
         :param parallel: how many processes are parallelise
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
-
 
         manager = multiprocessing.Manager()
         dictionary = manager.dict()
@@ -1966,7 +1955,6 @@ class MyRepair(Repair):
                     x1[r_lstm] = 0
             elif len(r_lstm) > 1:
                 x1[r_lstm] = 0
-
 
             if len(r_dense) == 1:
                 if r_dense == 0:
@@ -2038,14 +2026,14 @@ class MyProblem(ElementwiseProblem):
             neurons_lstm = neurons_lstm[neurons_lstm > 0]
         if any(neurons_dense == 0):
             neurons_dense = neurons_dense[neurons_dense > 0]
-#
-#
+
+
         u = len(neurons_lstm) + len(neurons_dense)
-#
+
         F = 0.25 * (u / max_H) + 0.75 * np.sum(np.concatenate((neurons_lstm, neurons_dense))) / max_N
-#
+
         return F
-#
+
     def cv_nsga(self,data,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
         '''
         :param fold:assumed division of the sample for cv
@@ -2056,22 +2044,20 @@ class MyProblem(ElementwiseProblem):
         :return: cv(rmse) and complexity of the model tested
         '''
         name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, np.array([pacience]))))
-#
+
         try:
             a0, a1 = dictionary[name1]
             return a0, a1
-#
+
         except KeyError:
             pass
         cvs = [0 for x in range(rep*2)]
-#
         print(type(data))
-#
-#
+
         names = data.columns
         names = np.delete(names, self.pos_y)
         res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.onebyone,self.values)
-#
+
         x_test = np.array(res['x_test'])
         x_train = np.array(res['x_train'])
         x_val = np.array(res['x_val'])
@@ -2080,9 +2066,6 @@ class MyProblem(ElementwiseProblem):
         y_val = np.array(res['y_val'])
         #
         times_val = res['time_val']
-
-        #print(x_train[0].shape)
-        #print(y_train.shape)
 #
         if self.type == 'regression':
             # Train the model
@@ -2097,7 +2080,7 @@ class MyProblem(ElementwiseProblem):
                 else:
                     ytrain=y_train[z].reshape(-1, 1)
                     ytest=y_test[z].reshape(-1,1)
-                    y_val=y_val[z].reshape(-1,1)
+                    yval=y_val[z].reshape(-1,1)
                 model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
@@ -2114,7 +2097,6 @@ class MyProblem(ElementwiseProblem):
                 y_val = np.array(self.scalar_y.inverse_transform(yval))
 
                 if isinstance(self.pos_y, collections.abc.Sized):
-                    # if len(self.pos_y)>1:
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
                         y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
@@ -2124,16 +2106,11 @@ class MyProblem(ElementwiseProblem):
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                     y_real = y_val.reshape((len(y_val), 1))
 
-                #y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                #y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                #y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-                #y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
                 if len(y_val[z].shape)>1:
                     y_real=y_val[z]
                 else:
                     y_real = y_val[z].reshape(-1, 1)
 
-                #y_real = np.array(self.scalar_y.inverse_transform(y_real))
                 y_real=y_val
                 print(y_pred.shape)
                 y_predF = y_pred.copy()
@@ -2351,6 +2328,5 @@ class MyProblem(ElementwiseProblem):
             self.contador, '\n #########################')
 
         self.contador[0] += 1
-#
+
         out["F"] = np.column_stack([f1, f2])
-#
