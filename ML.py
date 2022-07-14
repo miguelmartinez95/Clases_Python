@@ -11,13 +11,17 @@ from keras.callbacks import ModelCheckpoint
 from keras.layers import Masking, Dropout
 from datetime import datetime
 from time import time
-#import skfda
+import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
+
+'''
+Conecting with GUPs
+'''
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
@@ -56,6 +60,8 @@ class ML:
     @staticmethod
     def cv_division(x,y, fold):
         '''
+        Division de la muestra en trozos según fold para datos normales y no recurrentes
+
         :param fold: division for cv_analysis
         :return: data divided into train, test and validations in addition to the indexes division for a CV analysis
         '''
@@ -98,6 +104,7 @@ class ML:
     @staticmethod
     def fix_values_0(restriction, zero_problem, limit):
         '''
+        Function to fix incorrect values based on some restriction
         :param restriction: schedule hours or irradiance variable depending on the zero_problem
         :param zero_problem: schedule or radiation
         :param limit: limit hours or radiation limit
@@ -210,6 +217,8 @@ class ML:
 
     def introduce_lags(self, lags, var_lag):
         '''
+        Introduction of lags moving the sample
+
         :param lags: amount of lags for each n_lags selected in MLP
         :param var_lag: label of lagged variables. Amount of variables starting by the end
         :return: data lagged
@@ -248,6 +257,7 @@ class ML:
     def adapt_horizont(self, onebyone):
         '''
         Move the data sample to connected the y with the x based on the future selected
+        Adapt to series data!!
         After introduce_lags
         n_steps=0 one by one
         Consideration of horizont 0 o 1
@@ -295,7 +305,6 @@ class ML:
                     print('El total a quitar de time_val es:', fuera)
 
                 X = X.reset_index(drop=True)
-
                 print(X.shape)
                 print(y.shape)
 
@@ -313,6 +322,8 @@ class ML:
 
     def scalating(self, scalar_limits, groups, x, y):
         '''
+        Scalate date bsed on MinMax scaler and certain limits
+
         :param scalar_limits: limit of the scalar data
         :param groups: groups defining the different variable groups to be scaled together
         :return: data scaled depending if x, y or both are scaled
@@ -407,6 +418,10 @@ class ML:
         self.data.index=ii
     def fda_outliers(self, freq):
         '''
+        Function to detect functional outliers
+
+        REVISE !!!
+
         :param freq: amount of values in a hour
         :return: the variable y with missing value in the days considered as outliers
         '''
@@ -489,13 +504,16 @@ class ML:
         Y.index = self.data.index
         self.data.iloc[:, self.pos_y] = Y
         print('Data have been modified converting the outliers days in missing values!')
+
+
 class MLP(ML):
     def info(self):
         print(('Class to built MLP models. \n'
               'All the parameters comes from the ML class except the activation functions'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit, type):
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
         super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit)
         self.type = type
+        self.weights = weights
         '''
         n_steps= distance of the time predicted (4)
         I want to predict the moment four steps in future
@@ -523,6 +541,7 @@ class MLP(ML):
             return (ANN_model)
         except:
             raise NameError('Problems building the MLP')
+
     @staticmethod
     def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout, outputs):
         '''
@@ -568,6 +587,7 @@ class MLP(ML):
     @staticmethod
     def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout,n_steps):
         '''
+        The main diference is the n_steps. Focused on estimate one variable to several steps in future
         :param inputs:amount of inputs
         :param mask:True or false
         :return: the MLP architecture
@@ -606,6 +626,7 @@ class MLP(ML):
             return(ANN_model)
         except:
             raise NameError('Problems building the MLP')
+
 
     def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
         '''
@@ -750,9 +771,38 @@ class MLP(ML):
                             y_pred1 = y_pred
                             y_real1 = y_real
 
-                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred1, y_real1).rmse()
-                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+                    if len(y_pred1) > 0:
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred1, y_real1).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e)
+                                else:
+                                    print(e)
+                                    print(self.weights)
+                                    cv[z] = np.sum(e * self.weights)
+                                rmse[z] = np.nan
+                                nmbe[z] = np.nan
+                            else:
+                                e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                e_r = evals(y_pred1, y_real1).rmse()
+                                e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e_cv)
+                                    rmse[z] = np.sum(e_r)
+                                    nmbe[z] = np.sum(e_n)
+                                else:
+                                    cv[z] = np.sum(e_cv * self.weights)
+                                    rmse[z] = np.sum(e_r * self.weights)
+                                    nmbe[z] = np.sum(e_n * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[z] = 9999
+                            rmse[z] = 9999
+                            nmbe[z] = 9999
+                    else:
+                        raise NameError('Empty prediction')
+
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
@@ -786,9 +836,38 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-                    cv[z] = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred1, y_real1).rmse()
-                    nmbe[z] = evals(y_pred1, y_real1).nmbe(mean_y)
+
+                    if len(y_pred1) > 0:
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred1, y_real1).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e)
+                                else:
+                                    print(e)
+                                    print(self.weights)
+                                    cv[z] = np.sum(e * self.weights)
+                                rmse[z] = np.nan
+                                nmbe[z] = np.nan
+                            else:
+                                e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                e_r = evals(y_pred1, y_real1).rmse()
+                                e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e_cv)
+                                    rmse[z] = np.sum(e_r)
+                                    nmbe[z] = np.sum(e_n)
+                                else:
+                                    cv[z] = np.sum(e_cv * self.weights)
+                                    rmse[z] = np.sum(e_r * self.weights)
+                                    nmbe[z] = np.sum(e_n * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[z] = 9999
+                            rmse[z] = 9999
+                            nmbe[z] = 9999
+                    else:
+                        raise NameError('Empty prediction')
 
                 else:
                     if self.type == 'series':
@@ -802,9 +881,37 @@ class MLP(ML):
                             y_pred = np.delete(y_pred, o, 0)
                             y_real = np.delete(y_real, o, 0)
 
-                    cv[z] = evals(y_pred, y_real).cv_rmse(mean_y)
-                    rmse[z] = evals(y_pred, y_real).rmse()
-                    nmbe[z] = evals(y_pred, y_real).nmbe(mean_y)
+                    if len(y_pred) > 0:
+                        if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred, y_real).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e)
+                                else:
+                                    print(e)
+                                    print(self.weights)
+                                    cv[z] = np.sum(e * self.weights)
+                                rmse[z] = np.nan
+                                nmbe[z] = np.nan
+                            else:
+                                e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                                e_r = evals(y_pred, y_real).rmse()
+                                e_n = evals(y_pred, y_real).nmbe(mean_y)
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e_cv)
+                                    rmse[z] = np.sum(e_r)
+                                    nmbe[z] = np.sum(e_n)
+                                else:
+                                    cv[z] = np.sum(e_cv * self.weights)
+                                    rmse[z] = np.sum(e_r * self.weights)
+                                    nmbe[z] = np.sum(e_n * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[z] = 9999
+                            rmse[z] = 9999
+                            nmbe[z] = 9999
+                    else:
+                        raise NameError('Empty prediction')
 
                 if plot==True and len(y_realF.shape)>1:
                     s = np.max(y_realF.iloc[:,0]).astype(int) + 15
@@ -1016,16 +1123,12 @@ class MLP(ML):
         y_val = val.iloc[:,self.pos_y]
         x_val = val.drop(val.columns[self.pos_y], axis=1)
 
-        #times = np.delete(times, range(self.n_lags + self.n_steps), axis=0)
-
-
         x_val=x_val.reset_index(drop=True)
         y_val=y_val.reset_index(drop=True)
         y_pred = model.predict(pd.DataFrame(x_val))
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
 
-        #for t in range(y_pred.shape[1]):
         if len(self.pos_y)>1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
@@ -1332,7 +1435,7 @@ class MLP(ML):
         else:
             pass
         return (obj, struct, obj_T, struct_T, res)
-    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights=[]):
+    def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
         '''
         :param l_dense: maximun layers dense
         :param batch: batch size
@@ -1351,7 +1454,7 @@ class MLP(ML):
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dropout,dictionary, weights)
+                                                                            xlimit_sup, dropout,dictionary, self.weights)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
@@ -1699,6 +1802,9 @@ class MyProblem_mlp(ElementwiseProblem):
             self.contador, '\n #########################')
         self.contador[0] += 1
         out["F"] = np.column_stack([f1, f2])
+
+
+
 
 #class XGB(ML):
 #    def info(self):

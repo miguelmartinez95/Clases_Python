@@ -236,6 +236,7 @@ class DL:
     def adapt_horizont(self, onebyone):
         '''
         Move the data sample to connected the y with the x based on the future selected
+
         '''
         if self.n_steps == 0:
             self.data = self.data
@@ -1169,9 +1170,9 @@ class LSTM_model(DL):
                                     rmse[zz] = np.nan
                                     nmbe[zz] = np.nan
                                 else:
-                                    e_cv = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                                    e_r = evals(y_pred2, y_real2).rmse()
-                                    e_n = evals(y_pred2, y_real2).nmbe(mean_y)
+                                    e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                    e_r = evals(y_pred1, y_real1).rmse()
+                                    e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                                     if isinstance(self.weights, list):
                                         cv[zz] = np.sum(e_cv)
                                         rmse[zz] = np.sum(e_r)
