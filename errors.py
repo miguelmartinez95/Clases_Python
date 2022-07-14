@@ -118,8 +118,21 @@ class Eval_metrics:
         return (nmbe,std)
 
     def r2(self):
-        r2=metrics.r2_score(self.real, self.predict)
-        return(r2)
+        if len(self.real.shape) > 1:
+            if self.real.shape[1] >= 2:
+                r2_score = [0 for x in range(self.real.shape[1])]
+                for i in range(self.real.shape[1]):
+                    r2_score[i]=metrics.r2_score(self.real.iloc[:,i], self.predict.iloc[:,i])
+
+            else:
+                r2_score = metrics.r2_score(self.real, self.predict)
+
+        else:
+            y_true = np.array(self.real)
+            y_pred = np.array(self.predict)
+            r2_score = metrics.r2_score(y_true, y_pred)
+
+        return(r2_score)
 
     def variation_rate(self):
         if len(self.real.shape) > 1:
