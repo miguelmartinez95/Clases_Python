@@ -1018,8 +1018,6 @@ class LSTM_model(DL):
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
 
 
-
-
                     if onebyone[0]==True:
                         if horizont==0:
                             index_val = np.delete(index_val, range(n_lags-1), axis=0)
@@ -2096,7 +2094,6 @@ class MyProblem(ElementwiseProblem):
         except KeyError:
             pass
         cvs = [0 for x in range(rep*2)]
-        print(type(data))
 
         names = self.names
         names = np.delete(names, self.pos_y)
@@ -2148,17 +2145,17 @@ class MyProblem(ElementwiseProblem):
                 print(y_val[z].shape)
                 print(x_val[z].shape)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                y_val = np.array(self.scalar_y.inverse_transform(yval))
+                y_real = np.array(self.scalar_y.inverse_transform(yval))
 
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
                         y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
-                    y_real = y_val
+                    y_real = y_real
                 else:
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-                    y_real = y_val.reshape(-1, 1)
+                    y_real = y_real.reshape(-1, 1)
 
                 #if len(y_val[z].shape)>1:
                 #    y_real=y_val[z]
