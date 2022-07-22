@@ -663,12 +663,12 @@ class LSTM_model(DL):
             limitx = int(np.floor(len(data)/n_lags)*n_lags)-horizont
             limity =limitx+horizont
 
-            print(X.shape[0])
             print(limitx)
 
             xx = data.drop(data.columns[pos_y], axis=1)
             yy= data.iloc[:,pos_y]
 
+            print(xx.shape[0])
             xx = xx.iloc[range(limitx)]
             yy = yy.iloc[range(limity)]
             L=list()
@@ -1000,7 +1000,10 @@ class LSTM_model(DL):
                         else:
                             index_val = np.delete(index_val, range(n_lags), axis=0)
                     else:
-                        index_val=index_val[ind_val]
+                        if isinstance(ind_val, list):
+                            index_val = index_val[np.concatenate(ind_val)]
+                        else:
+                            index_val=index_val[ind_val]
 
                     times_val.append(index_val)
 
