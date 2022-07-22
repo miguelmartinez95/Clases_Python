@@ -696,7 +696,7 @@ class LSTM_model(DL):
             seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
             print('########################################################'
                   '#######################################################'
-                  'sequencia Y', seq,''###################################')
+                  'sequencia Y', seq,'###################################')
             y =yy.iloc[seq]
             timesF= yy.index[seq]
 
