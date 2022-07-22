@@ -688,7 +688,7 @@ class LSTM_model(DL):
            #     seq =# list(range(n_lags+horizont-1,limity+horizont, n_lags))
            #     y =yy.iloc[seq]
            #     timesF= yy.index[seq]
-            seq = list(range(n_lags+horizont,limity+horizont, n_lags))
+            seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
             y =yy.iloc[seq]
             timesF= yy.index[seq]
 
