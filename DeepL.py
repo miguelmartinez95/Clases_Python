@@ -2137,10 +2137,10 @@ class MyProblem(ElementwiseProblem):
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                     y_real = y_val.reshape((len(y_val), 1))
 
-                if len(y_val[z].shape)>1:
-                    y_real=y_val[z]
-                else:
-                    y_real = y_val[z].reshape(-1, 1)
+                #if len(y_val[z].shape)>1:
+                #    y_real=y_val[z]
+                #else:
+                #    y_real = y_val[z].reshape(-1, 1)
 
                 y_real=y_val
                 print(y_pred.shape)
@@ -2190,10 +2190,6 @@ class MyProblem(ElementwiseProblem):
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
-
-                    print(names)
-                    print(x_val[z].shape)
-                    print(place)
 
                     res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
                                                self.zero_problem, self.limits)
