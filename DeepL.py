@@ -1374,6 +1374,7 @@ class LSTM_model(DL):
         print(x_train.shape)
         print(x_test.shape)
         print('Y',y_train.shape)
+        y_train=pd.DataFrame(y_train)
         if isinstance(model, list):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout)
@@ -2123,7 +2124,6 @@ class MyProblem(ElementwiseProblem):
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
 
-                print(yval)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_val = np.array(self.scalar_y.inverse_transform(yval))
 
@@ -2144,6 +2144,7 @@ class MyProblem(ElementwiseProblem):
 
                 #y_real=y_val
                 print(y_pred.shape)
+                print(times_val[z])
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_val[z]
