@@ -624,8 +624,9 @@ class LSTM_model(DL):
         in_start = 0
         # step over the entire history one time step at a time
         if onebyone[0]==True:
-            timesF.append(np.array([0]))
+            #timesF.append(np.array([0]))
             for _ in range(len(data)-(n_lags + horizont)+1):
+                timesF.append(_ + n_lags-1+horizont)
             #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
@@ -633,7 +634,6 @@ class LSTM_model(DL):
                     out_end = in_end
                 else:
                     out_end = in_end+horizont
-
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
                     xx = data.drop(data.columns[pos_y],axis=1)
@@ -652,19 +652,19 @@ class LSTM_model(DL):
                 in_start += 1
 
         else:
-            if horizont==0 and onebyone[1]==True:
-                limit = int((len(data) - (n_lags + horizont)) / n_lags) + 1
-            elif horizont==0 and onebyone[1]==False:
-                limit=int((len(data)-(n_lags + horizont))/1)+1
-            else:
-                #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
-                limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
+            #if horizont==0 and onebyone[1]==True:
+            #    limit = int((len(data) - (n_lags + horizont)) / n_lags) + 1
+            #elif horizont==0 and onebyone[1]==False:
+            #    limit=int((len(data)-(n_lags + horizont))/1)+1
+            #else:
+            #    #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
+            #    limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
 
-            limitx = int(np.floor(len(data)/n_lags)*n_lags)
-            if horizont==0:
-                limity=limitx
-            else:
-                limity =limitx+horizont
+            limitx = int(np.floor(len(data)/n_lags)*n_lags)-horizont
+            limity =limitx+horizont
+
+            print(X.shape[0])
+            print(limitx)
 
             xx = data.drop(data.columns[pos_y], axis=1)
             yy= data.iloc[:,pos_y]
@@ -672,18 +672,25 @@ class LSTM_model(DL):
             xx = xx.iloc[range(limitx)]
             yy = yy.iloc[range(limity)]
             L=list()
+
+            ''''
+            Dividimos en cachitos en función de los lags
+            '''
             for i in range(xx.shape[1]):
                 L.append(np.split(np.array(xx.iloc[:,i]), int(np.floor(len(xx)/n_lags))))
             X=np.dstack(L)
 
-            if horizont==0:
-                seq = list(range(n_lags-1,limity, n_lags))
-                y =yy.iloc[seq]
-                timesF = yy.index[seq]
-            else:
-                seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
-                y =yy.iloc[seq]
-                timesF= yy.index[seq]
+           # if horizont==0:
+           #     seq = list(range(n_lags-1,limity, n_lags))
+           #     y =yy.iloc[seq]
+           #     timesF = yy.index[seq]
+           # else:
+           #     seq =# list(range(n_lags+horizont-1,limity+horizont, n_lags))
+           #     y =yy.iloc[seq]
+           #     timesF= yy.index[seq]
+            seq = list(range(n_lags+horizont,limity+horizont, n_lags))
+            y =yy.iloc[seq]
+            timesF= yy.index[seq]
 
         dd= len(data) - limitx
         print('Data supervised')
@@ -984,13 +991,16 @@ class LSTM_model(DL):
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
 
+                    print(ind_val)
+
+
                     if onebyone[0]==True:
                         if horizont==0:
                             index_val = np.delete(index_val, range(n_lags-1), axis=0)
                         else:
                             index_val = np.delete(index_val, range(n_lags), axis=0)
                     else:
-                        index_val=index_val[np.concatenate(ind_val)]
+                        index_val=index_val[ind_val]
 
                     times_val.append(index_val)
 
