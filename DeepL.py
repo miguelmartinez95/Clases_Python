@@ -2142,7 +2142,7 @@ class MyProblem(ElementwiseProblem):
                 #else:
                 #    y_real = y_val[z].reshape(-1, 1)
 
-                y_real=y_val
+                #y_real=y_val
                 print(y_pred.shape)
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
