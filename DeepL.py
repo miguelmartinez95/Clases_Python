@@ -44,10 +44,11 @@ class DL:
     def info(self):
         print('Super class to built different deep learning models. This class has other more specific classes associated with it  ')
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
+        self.scalar_x = scalar_x
         self.scalar_x = scalar_x
         self.zero_problem = zero_problem
         self.times = times
@@ -58,6 +59,7 @@ class DL:
         self.mask_value = mask_value
         self.sup_limit = sup_limit
         self.inf_limit = inf_limit
+        self.names=names
 
     @staticmethod
     def cv_division(x,y, fold):
@@ -537,11 +539,12 @@ class LSTM_model(DL):
 
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector,dropout,weights, type):
-        super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit)
+        super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
         self.type = type
         self.weights=weights
+
 
     @staticmethod
     def three_dimension(data_new, n_inputs):
@@ -1036,7 +1039,7 @@ class LSTM_model(DL):
         :return: Considering what zero_problem is mentioned, return thre predictions, real values, errors and computational times needed to train the models
         '''
 
-        names = self.data.columns
+        names = self.names
         names = np.delete(names ,self.pos_y)
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
@@ -1392,7 +1395,7 @@ class LSTM_model(DL):
         return res
 
 
-    def predict(self, model, val,names,mean_y,batch,times, onebyone, scalated,daily,plotting):
+    def predict(self, model, val,mean_y,batch,times, onebyone, scalated,daily,plotting):
         '''
         :param model: trained model
         times: dates for plot
@@ -1539,7 +1542,7 @@ class LSTM_model(DL):
 
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
-            place = np.where(names == 'radiation')[0]
+            place = np.where(self.names == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1]-1, place]),
@@ -2070,7 +2073,7 @@ class MyProblem(ElementwiseProblem):
         cvs = [0 for x in range(rep*2)]
         print(type(data))
 
-        names = data.columns
+        names = self.names
         names = np.delete(names, self.pos_y)
         res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.onebyone,self.values)
 
