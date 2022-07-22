@@ -2131,7 +2131,7 @@ class MyProblem(ElementwiseProblem):
                                                           self.dropout)
                 model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                    batch)
-                print(y_val[z].shape)
+
                 if isinstance(self.pos_y, collections.abc.Sized):
                     outputs=len(self.pos_y)
                 else:
@@ -2140,7 +2140,8 @@ class MyProblem(ElementwiseProblem):
 
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
-
+                print(y_val[z].shape)
+                print(x_val[z].shape)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_val = np.array(self.scalar_y.inverse_transform(yval))
 
@@ -2210,8 +2211,9 @@ class MyProblem(ElementwiseProblem):
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
-                    print(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]))
-                    res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+                    #res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+                    #                           self.zero_problem, self.limits)
+                    res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
                     index_rad2 = np.where(y_real <= self.inf_limit)[0]
