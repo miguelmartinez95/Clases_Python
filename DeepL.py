@@ -989,20 +989,19 @@ class LSTM_model(DL):
                for i in range(2):
                     train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
-                    print(test.shape)
+                    print('####',test.shape)
                     print(len(index_val))
 
-                    index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2), index_val.shape[0])]
+                    index_val = index_val[range(len(index_val)-math.ceil(len(index_val)/2), len(index_val))]
                     val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
+                    print(len(index_val))
                     x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
 
 
-                    print(ind_val)
-                    print(len(ind_val))
 
 
                     if onebyone[0]==True:
