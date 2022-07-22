@@ -997,6 +997,7 @@ class LSTM_model(DL):
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
                     print(len(index_val))
+                    print(test.shape)
                     x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
