@@ -631,7 +631,7 @@ class LSTM_model(DL):
         if onebyone[0]==True:
             #timesF.append(np.array([0]))
             for _ in range(len(data)-(n_lags + horizont)+1):
-                timesF.append(_ + n_lags-1+horizont)
+                timesF.append(data.index[_ + n_lags-1+horizont])
             #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
@@ -639,14 +639,15 @@ class LSTM_model(DL):
                     out_end = in_end
                 else:
                     out_end = in_end+horizont
+
+                xx = data.drop(data.columns[pos_y], axis=1)
+                yy = data.iloc[:,pos_y]
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
-                    xx = data.drop(data.columns[pos_y],axis=1)
                     x_input = xx.iloc[in_start:in_end,:]
                     # x_input = x_input.reshape((len(x_input), 1))
                     X.append(x_input)
                     #yy = data[:,pos_y].reshape(-1,len(pos_y))
-                    yy = data.iloc[:,pos_y]
 
                     if horizont==0:
                         y.append(yy.iloc[out_end-1])
@@ -2114,7 +2115,7 @@ class MyProblem(ElementwiseProblem):
             # Train the model
             zz = 0
             if self.values:
-                stop=self.values[0]
+                stop=len(self.values[0])
             else:
                 stop=len(x_train)
             for z in range(stop):
@@ -2126,9 +2127,9 @@ class MyProblem(ElementwiseProblem):
                     ytest=y_test[z]
                     yval=y_val[z]
                 else:
-                    ytrain=y_train[z].reshape(-1, 1)
-                    ytest=y_test[z].reshape(-1,1)
-                    yval=y_val[z].reshape(-1,1)
+                    ytrain=y_train[z].reshape(len(y_train[z]), 1)
+                    ytest=y_test[z].reshape(len(y_test[z]),1)
+                    yval=y_val[z].reshape(len(y_val[z]),1)
                 model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
@@ -2144,7 +2145,7 @@ class MyProblem(ElementwiseProblem):
 
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
-                print(y_val[z].shape)
+                print(yval.shape)
                 print(x_val[z].shape)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_val = np.array(self.scalar_y.inverse_transform(yval))
