@@ -991,7 +991,10 @@ class LSTM_model(DL):
 
                     print('####',test.shape)
                     print(len(index_val))
-                    index_val = LSTM_model.three_dimension(index_val, n_lags)
+
+
+                    r = LSTM_model.three_dimension(index_val, n_lags)
+                    index_val=r['data']
                     print(index_val.shape)
 
 
