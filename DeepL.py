@@ -2185,7 +2185,8 @@ class MyProblem(ElementwiseProblem):
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
 
-                    print(x_val[z][:, self.n_lags - 1, place])
+                    print(x_val[z].shape)
+                    print(place)
 
                     res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
                                                self.zero_problem, self.limits)
