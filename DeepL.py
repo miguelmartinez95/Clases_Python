@@ -682,6 +682,9 @@ class LSTM_model(DL):
             ''''
             Dividimos en cachitos en función de los lags
             '''
+            while xx.shape[0]%n_lags !=0:
+                xx=xx.drop(xx.index[xx.shape[0]-1])
+
             for i in range(xx.shape[1]):
                 L.append(np.split(np.array(xx.iloc[:,i]), int(np.floor(len(xx)/n_lags))))
             X=np.dstack(L)
