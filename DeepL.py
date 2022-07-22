@@ -2144,7 +2144,9 @@ class MyProblem(ElementwiseProblem):
 
                 #y_real=y_val
                 print(y_pred.shape)
-                print(times_val[z])
+                print(y_real.shape)
+                print(times_val[z].shape)
+
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_val[z]
