@@ -1006,7 +1006,7 @@ class LSTM_model(DL):
 
                     print(len(index_val))
                     print(val.shape)
-
+                    index_val= index_val.reshape(index_val.shape[0]*index_val.shape[1],1)
 
                     x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
