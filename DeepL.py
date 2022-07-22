@@ -2108,8 +2108,13 @@ class MyProblem(ElementwiseProblem):
                 model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                    batch)
 
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    outputs=len(self.pos_y)
+                else:
+                    outputs =1
 
-                res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, len(self.pos_y))
+
+                res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
 
                 print(yval)
