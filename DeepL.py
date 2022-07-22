@@ -991,7 +991,7 @@ class LSTM_model(DL):
 
                     print(train.shape)
 
-                    index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2))]
+                    index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2), index_val.shape[0])]
                     val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
