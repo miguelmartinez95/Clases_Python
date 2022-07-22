@@ -1855,11 +1855,11 @@ class LSTM_model(DL):
 
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x,self.dropout,weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem(self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x, self.dropout,weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
@@ -1995,7 +1995,7 @@ class MyProblem(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 #
-    def __init__(self, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
+    def __init__(self,names, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
@@ -2006,6 +2006,7 @@ class MyProblem(ElementwiseProblem):
                          #elementwise_evaluation=True,
                          **kwargs)
 
+        self.names=names
         self.data=data
         self.horizont = horizont
         self.scalar_y = scalar_y
