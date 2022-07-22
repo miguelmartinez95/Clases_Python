@@ -2086,7 +2086,11 @@ class MyProblem(ElementwiseProblem):
         if self.type == 'regression':
             # Train the model
             zz = 0
-            for z in range(self.values[0]):
+            if self.values:
+                stop=self.values[0]
+            else:
+                stop=len(x_train)
+            for z in range(stop):
                 print('Fold number', z)
                 time_start = time()
                 if len(y_train[z].shape)>1:
