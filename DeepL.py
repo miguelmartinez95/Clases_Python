@@ -2099,6 +2099,7 @@ class MyProblem(ElementwiseProblem):
                 stop=len(x_train)
             for z in range(stop):
                 print('Fold number', z)
+
                 time_start = time()
                 if len(y_train[z].shape)>1:
                     ytrain=y_train[z]
@@ -2114,7 +2115,7 @@ class MyProblem(ElementwiseProblem):
                                                           self.dropout)
                 model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                    batch)
-
+                print(y_val[z].shape)
                 if isinstance(self.pos_y, collections.abc.Sized):
                     outputs=len(self.pos_y)
                 else:
@@ -2357,7 +2358,7 @@ class MyProblem(ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]*10
 
-        f1, f2 = self.cv_nsga(self.data,10,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_nsga(self.data,10,4, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
