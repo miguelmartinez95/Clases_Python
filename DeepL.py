@@ -1451,8 +1451,12 @@ class LSTM_model(DL):
         print(x_val.shape)
         print(y_val.shape)
 
+        if isinstance(self.pos_y, collections.abc.Sized):
+            outputs = len(self.pos_y)
+        else:
+            outputs = 1
 
-        res = self.__class__.predict_model(model, self.n_lags,  x_val,batch, len(self.pos_y))
+        res = self.__class__.predict_model(model, self.n_lags,  x_val,batch, outputs)
 
         y_pred = res['y_pred']
         print(y_pred.shape)
