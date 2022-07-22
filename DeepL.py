@@ -999,7 +999,10 @@ class LSTM_model(DL):
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
 
+                    print(index_val)
+                    print(len(index_val))
                     print(ind_val)
+                    print(len(ind_val))
 
 
                     if onebyone[0]==True:
