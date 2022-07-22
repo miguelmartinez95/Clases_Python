@@ -2190,7 +2190,7 @@ class MyProblem(ElementwiseProblem):
                         if len(0) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
@@ -2233,7 +2233,7 @@ class MyProblem(ElementwiseProblem):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
@@ -2260,7 +2260,7 @@ class MyProblem(ElementwiseProblem):
                         else:
                             y_pred2 = y_pred
                             y_real2 = y_real
-                    if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
                             if isinstance(self.weights, list):
