@@ -655,6 +655,7 @@ class LSTM_model(DL):
                     #se selecciona uno
                 # move along one time step
                 in_start += 1
+            dd=len(data)-len(data)-(n_lags + horizont)+1
 
         else:
             #if horizont==0 and onebyone[1]==True:
@@ -700,7 +701,7 @@ class LSTM_model(DL):
             y =yy.iloc[seq]
             timesF= yy.index[seq]
 
-        dd= len(data) - limitx
+            dd= len(data) - limitx
         print('Data supervised')
 
         return(X, np.array(y),timesF, dd)
