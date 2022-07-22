@@ -2191,6 +2191,7 @@ class MyProblem(ElementwiseProblem):
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
 
+                    print(names)
                     print(x_val[z].shape)
                     print(place)
 
