@@ -992,12 +992,13 @@ class LSTM_model(DL):
                     print('####',test.shape)
                     print(len(index_val))
 
-                    index_val = index_val[range(len(index_val)-math.ceil(len(index_val)/2), len(index_val))]
+                    index_val = index_val[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0])]
                     val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
                     print(len(index_val))
                     print(test.shape)
+
                     x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
