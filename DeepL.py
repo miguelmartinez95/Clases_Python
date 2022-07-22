@@ -694,6 +694,9 @@ class LSTM_model(DL):
            #     y =yy.iloc[seq]
            #     timesF= yy.index[seq]
             seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
+            print('########################################################'
+                  '#######################################################'
+                  'sequencia Y', seq,''###################################')
             y =yy.iloc[seq]
             timesF= yy.index[seq]
 
@@ -2358,7 +2361,7 @@ class MyProblem(ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]*10
 
-        f1, f2 = self.cv_nsga(self.data,10,4, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_nsga(self.data,4,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## Evaluacion ',
             self.contador, '\n #########################')
