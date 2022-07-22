@@ -2145,7 +2145,7 @@ class MyProblem(ElementwiseProblem):
 
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
-                print(yval.shape)
+                print(y_val[z].shape)
                 print(x_val[z].shape)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_val = np.array(self.scalar_y.inverse_transform(yval))
