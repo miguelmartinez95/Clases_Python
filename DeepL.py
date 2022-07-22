@@ -974,6 +974,8 @@ class LSTM_model(DL):
                for i in range(2):
                     train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
 
+                    print(train.shape)
+
                     index_val = index_val[range(index_val.shape[0]-math.ceil(index_val.shape[0]/2))]
                     val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
