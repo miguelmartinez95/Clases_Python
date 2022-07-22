@@ -2212,9 +2212,7 @@ class MyProblem(ElementwiseProblem):
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
-                    #res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
-                    #                           self.zero_problem, self.limits)
-                    res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, place]),
+                    res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
                     index_rad2 = np.where(y_real <= self.inf_limit)[0]
