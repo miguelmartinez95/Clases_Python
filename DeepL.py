@@ -124,7 +124,7 @@ class DL:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
             try:
-                rad = restriction
+                rad = np.array(restriction)
                 ii = np.where(rad <= limit)[0]
                 #ii = ii[ii >= 0]
             except:
