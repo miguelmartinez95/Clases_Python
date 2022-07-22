@@ -991,8 +991,12 @@ class LSTM_model(DL):
 
                     print('####',test.shape)
                     print(len(index_val))
+                    index_val = LSTM_model.three_dimension(index_val, n_lags)
+                    print(index_val.shape)
 
-                    index_val = index_val[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0])]
+
+                    index_val = index_val[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
+                    #index_val = index_val[range(len(index_val)-math.ceil(len(index_val)/2), len(index_val))]
                     val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
