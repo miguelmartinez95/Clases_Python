@@ -1918,9 +1918,10 @@ class LSTM_model(DL):
 
             r_final = pd.DataFrame(rf)
             scal = MinMaxScaler(feature_range=(0, 1))
-            obj1 = r_final.iloc[:,0]
-            obj2 = r_final.iloc[:,1]
-            rf = pd.concat([scal.fit_transform(obj1), scal.fit_transform(obj2)], axis=1)
+            #obj1 = r_final.iloc[:,0]
+            #obj2 = r_final.iloc[:,1]
+            #rf = pd.concat([scal.fit_transform(obj1), scal.fit_transform(obj2)], axis=1)
+            rf =scal.fit_transform(r_final)
 
             I = get_decomposition("pbi").do(np.array(rf), weights).argmin()
             rf = scal.inverse_transform(rf)
