@@ -1,8 +1,5 @@
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
-import sys
-#sys.path.insert(1,'E:\Documents\Doctorado\Clases_python')
-
 from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
@@ -10,22 +7,20 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
-from datetime import datetime
-import matplotlib.ticker as ticker
-from matplotlib.dates import DateFormatter
 from time import time
 from keras.layers import LSTM
 from keras.layers import Masking
 from keras.layers import RepeatVector
 from keras.layers import Dropout
 from keras.constraints import maxnorm
-from keras.layers import TimeDistributed
 import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
 import collections
-
+from pathlib import Path
+import random
+from datetime import datetime
 
 '''
 Conexion con GPUs
@@ -42,7 +37,25 @@ if gpus:
 
 class DL:
     def info(self):
-        print('Super class to built different deep learning models. This class has other more specific classes associated with it  ')
+        '''
+        data: dataframe with the data
+        horizont: how many steps are considered to the future
+        scalar x: scalar object empty to be fill with the trained scalar for x
+        scalar y: scalar object empty to be fill with the trained scalar for y
+        zero_problem: relation with the night and day schedule. Can be nothing, schedule or radiation
+        times: dates object
+        limits: threshold to evaluate the outputs: f.e. radiation > 0.001
+        pos_y: number of colunm or columns where the output data are
+        n_lags: time lags considered to train the model
+        mask: masking true or false
+        mask_value: if mask is true the value for masking
+        sup_limit:upper limit wihitn the output of the model must be
+        inf_limit: lower limit wihitn the output of the model must be
+        namnes: columns labels
+        :return:
+        '''
+
+        print('Super class to built different deep learning models. This class has other more specific classes associated with it ')
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names):
         self.data = data
@@ -121,14 +134,12 @@ class DL:
                 limit2 = limit[1]
                 hours = restriction.hour
                 ii = np.where(hours < limit1 | hours > limit2)[0]
-                #ii = ii[ii >= 0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
             try:
                 rad = np.array([restriction])
                 ii = np.where(rad <= limit)[0]
-                #ii = ii[ii >= 0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         else:
@@ -160,7 +171,6 @@ class DL:
                 s += 1
                 if i==D:
                     break
-
         return(Y)
 
 
@@ -219,7 +229,6 @@ class DL:
         Adjust the data or the variable to certain upper or lower limits
         '''
         if isinstance(self.pos_y, collections.abc.Sized):
-        #if len(self.pos_y) > 1:
             for t in range(len(self.pos_y)):
                 inf = np.where(self.data.iloc[:, self.pos_y[t]] < self.inf_limit[t])[0]
                 sup = np.where(self.data.iloc[:, self.pos_y[t]] > self.sup_limit[t])[0]
@@ -238,7 +247,7 @@ class DL:
     def adapt_horizont(self, onebyone):
         '''
         Move the data sample to connected the y with the x based on the future selected
-
+        onebyone: the movement is to match the future and past moving one step at a time (True) or considering certain lags (False)
         '''
         if self.n_steps == 0:
             self.data = self.data
@@ -278,8 +287,8 @@ class DL:
 
                 X = X.reset_index(drop=True)
 
-                print(X.shape)
-                print(y.shape)
+                print('X-shape in adapt_horizont', X.shape)
+                print('y-shape in adapt_horizont', y.shape)
 
                 X.index = index1
                 y.index = index1
@@ -332,16 +341,10 @@ class DL:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-            #if len(self.pos_y)>1:
             if isinstance(self.pos_y, collections.abc.Sized):
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
-
-           # if isinstance(self.pos_y, collections.abc.Sized):
-           #     self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-           # else:
-           #     self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
             self.scalar_y = scalar_y
             self.scalar_x = scalars
@@ -365,12 +368,12 @@ class DL:
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
             if isinstance(self.pos_y, collections.abc.Sized):
-            #if len(self.pos_y) > 1:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
             else:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
             self.scalar_y = scalar_y
+        print('Data scaled!!')
 
     def missing_values_remove(self):
         self.data = self.data.dropna()
@@ -536,7 +539,14 @@ class DL:
 class LSTM_model(DL):
     def info(self):
         print('Class to built LSTM models.')
-
+        '''
+        Subclass of DL 
+        repeat_vector:True or False (specific layer). Repeat the inputs n times (batch, 12) -- (batch, n, 12). n would be the timesteps considered as inertia
+        dropout: between 0 and 1. regularization technique where randomly selected neurons are ignored during training. They are “dropped out” 
+        randomly. This means that their contribution to the activation of downstream neurons is temporally removed.
+        type: regression or classification
+        weights: weights for the outputs. mainly for multivriate output
+        '''
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names, repeat_vector,dropout,weights, type):
         super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names)
@@ -544,8 +554,6 @@ class LSTM_model(DL):
         self.dropout = dropout
         self.type = type
         self.weights=weights
-
-
 
 
     @staticmethod
@@ -587,6 +595,7 @@ class LSTM_model(DL):
        index_test = index[range(cut1, cut2)]
 
        ###################################################################################
+       #Evalaute that the datasets match with a number of timesteps sets
        rest1 = train.shape[0] % n_inputs
        ind_out1 = 0
        while rest1 != 0:
@@ -617,7 +626,9 @@ class LSTM_model(DL):
         '''
         Relate x and y based on lags and future horizont
 
-        :param horizont: horizont to the future selected
+        :param
+        train: dataset for transforming
+        horizont: horizont to the future selected
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
@@ -629,10 +640,8 @@ class LSTM_model(DL):
         in_start = 0
         # step over the entire history one time step at a time
         if onebyone[0]==True:
-            #timesF.append(np.array([0]))
             for _ in range(len(data)-(n_lags + horizont)+1):
                 timesF.append(data.index[_ + n_lags-1+horizont])
-            #for _ in range(int((len(data)-n_lags)/horizont)):
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 if horizont ==0:
@@ -645,10 +654,7 @@ class LSTM_model(DL):
                 # ensure we have enough data for this instance
                 if out_end <= len(data):
                     x_input = xx.iloc[in_start:in_end,:]
-                    # x_input = x_input.reshape((len(x_input), 1))
                     X.append(x_input)
-                    #yy = data[:,pos_y].reshape(-1,len(pos_y))
-
                     if horizont==0:
                         y.append(yy.iloc[out_end-1])
                     else:
@@ -670,12 +676,12 @@ class LSTM_model(DL):
             limitx = int(np.floor(len(data)/n_lags)*n_lags)-horizont
             limity =limitx+horizont
 
-            print(limitx)
+            print('X limit to cut the dataset in supervised',limitx)
 
             xx = data.drop(data.columns[pos_y], axis=1)
             yy= data.iloc[:,pos_y]
 
-            print(xx.shape[0])
+            print('X shape in suepvised',xx.shape[0])
             xx = xx.iloc[range(limitx)]
             yy = yy.iloc[range(limity)]
             L=list()
@@ -698,7 +704,8 @@ class LSTM_model(DL):
            #     seq =# list(range(n_lags+horizont-1,limity+horizont, n_lags))
            #     y =yy.iloc[seq]
            #     timesF= yy.index[seq]
-            seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
+            #seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
+            seq = list(range(n_lags+horizont-1,limity+1, n_lags))
             print('########################################################'
                   '#######################################################'
                   'sequencia Y', seq,'###################################')
@@ -776,8 +783,13 @@ class LSTM_model(DL):
     @staticmethod
     def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense, mask,mask_value, repeat_vector,dropout):
         '''
-        :param mask: True or False
-        :param repeat_vector: True or False
+        :param
+        trains: datasets
+        neurons_lstm: array with the LSTM neurons that define the LSTM layers
+        neurons_dense: array with the dense neurons that define the dense layers
+        mask: True or False
+        repeat_vector: True or False
+        dropout: between 0 and 1
         :return: the model architecture built to be trained
 
         CAREFUL: with masking at least two lstm layers are required
@@ -790,11 +802,9 @@ class LSTM_model(DL):
 
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
-
         n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
 
         model = Sequential()
-
 
         if layers_lstm<2:
             if mask == True:
@@ -849,17 +859,19 @@ class LSTM_model(DL):
 
     @staticmethod
     def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch):
-        from pathlib import Path
-        import random
-
         '''
-        :param model: model architecture built
+        :param
+        train: train data set
+        test: test data set
+        pacience: stopping criterion
+        bath: batchsize
+        model: model architecture built
         :return: model trained based on pacience
         '''
-        print('TRAIN:', train_x1.shape)
-        print('TRAIN_Y:',train_y1.shape)
-        print('TEST:', test_x1.shape)
-        print('TEST_Y:', test_y1.shape)
+        print('SHAPE TRAIN:', train_x1.shape)
+        print('SHAPE TRAIN_Y:',train_y1.shape)
+        print('SHAPE TEST:', test_x1.shape)
+        print('SHAPE TEST_Y:', test_y1.shape)
 
         h_path = Path('./best_models')
         h_path.mkdir(exist_ok=True)
@@ -882,6 +894,7 @@ class LSTM_model(DL):
         :param n_lags: lags to built lstm block
         :param n_outputs: how many variables want to estimate
         :return: predictions in the validation sample, considering the selected moving window
+        CAREFUL: the predictions here taking into account movements by n_lags
         '''
 
         data = np.array(x_val)
@@ -1049,14 +1062,16 @@ class LSTM_model(DL):
 
     def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,values,plot, q=[], model=[]):
         '''
-        :param values specific values to divide the sample
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param values specific values to divide the sample
+        :param plot: True plots
         :param q: queue that inform us if paralyse or not
         :param model if model we have a pretrained model
-        :param plot: True plots
+
         if mean_y is size 0 the evaluation will be with variation rates
+
         :return: Considering what zero_problem is mentioned, return thre predictions, real values, errors and computational times needed to train the models
         '''
 
@@ -1076,13 +1091,13 @@ class LSTM_model(DL):
 
         times_val = res['time_val']
 
-        print(times_val[0].shape)
-        print(y_val[0].shape)
+        print('Shape dates at beginning of cv_analysis',times_val[0].shape)
+        print('Shape y at beginning of cv_analysis', y_val[0].shape)
 
         if self.type=='regression':
             if isinstance(model, list):
                 if len(y_train[0].shape)>1:
-                    ytrain=y_train[0]
+                    y_train=y_train[0]
                 else:
                     y_train=y_train[0].reshape(-1, 1)
 
@@ -1138,8 +1153,6 @@ class LSTM_model(DL):
                             plt.plot(y_predP, color='blue', label='Prediction')
                             plt.legend()
                             plt.title("Subsample {} ".format(z))
-                            a = 'Subsample-'
-                            b = str(z) + '.png'
                             plt.show()
                         else:
                             y_realP = pd.DataFrame(y_real)
@@ -1155,8 +1168,6 @@ class LSTM_model(DL):
                             plt.plot(y_predP, color='blue', label='Prediction')
                             plt.legend()
                             plt.title("Subsample {} ".format(z))
-                            a = 'Subsample-'
-                            b = str(z) + '.png'
                             plt.show()
 
                     y_predF = y_pred.copy()
@@ -1196,6 +1207,11 @@ class LSTM_model(DL):
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
                                 times = np.delete(times, o, 0)
+
+                        #After  checking we have data to evaluate:
+                        # if the mean_y is empty we use variation rate with or witout weights
+                        # on the other hand, we compute the classic error metrics
+
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
                                 if mean_y.size == 0:
@@ -1264,6 +1280,10 @@ class LSTM_model(DL):
                                 y_real1 = np.delete(y_real1, o, 0)
                                 times = np.delete(times, o, 0)
 
+                        #After  checking we have data to evaluate:
+                        # if the mean_y is empty we use variation rate with or witout weights
+                        # on the other hand, we compute the classic error metrics
+
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
                                 if mean_y.size == 0:
@@ -1311,6 +1331,10 @@ class LSTM_model(DL):
                                 y_pred2 = y_pred
                                 y_real2 = y_real
 
+                        #After  checking we have data to evaluate:
+                        # if the mean_y is empty we use variation rate with or witout weights
+                        # on the other hand, we compute the classic error metrics
+
                         if len(y_pred) > 0:
                             if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0 and len(y_pred2)>0 and len(y_real2)>0:
                                 if mean_y.size == 0:
@@ -1348,13 +1372,9 @@ class LSTM_model(DL):
                  'nmbe':nmbe, 'rmse':rmse,
                  'times_comp':times}
 
-
-            print(("The model with", layers_lstm, " layers lstm,",layers_neurons,'layers dense', neurons_dense, "neurons denses,", neurons_lstm,"neurons_lstm and a pacience of", pacience, "has: \n"
-                                                                                                        "The average CV(RMSE) is",
-                   np.nanmean(cv), " \n"
-                                "The average NMBE is", np.nanmean(nmbe), "\n"
-                                                                      "The average RMSE is", np.nanmean(rmse), "\n"
-                                                                      "The average time to train is", np.mean(times)))
+            print('The model with {} LSTM layers, {} Dense layers, {} LSTM neurons, {} Dense neurons and a patience of {} \n'
+                  'has an Average CV(RMSE): {}, has an Average NMBE: {} \n, an Average RMSE: {} and the average time training is {} s'.format(layers_lstm,layers_neurons,neurons_lstm,neurons_dense,
+            pacience, np.nanmean(cv),np.nanmean(nmbe),np.nanmean(rmse),np.mean(times)))
 
             z = Queue()
             if type(q) == type(z):
@@ -1369,12 +1389,11 @@ class LSTM_model(DL):
 
     def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[]):
         '''
-        :return: the trained model and the time required to be trained
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         if model we have a pretrained model
         Instance to train model outside these classes
+        :return: the trained model and the time required to be trained
         '''
-        from datetime import datetime
 
         now = str(datetime.now().microsecond)
 
@@ -1390,9 +1409,9 @@ class LSTM_model(DL):
         x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags, self.horizont,
                                                                         onebyone)
 
-        print(x_train.shape)
-        print(x_test.shape)
-        print('Y',y_train.shape)
+        print('X_train SHAPE in training', x_train.shape)
+        print('X_test SHAPE in training', x_test.shape)
+        print('Y SHAPE in training',y_train.shape)
         y_train=pd.DataFrame(y_train)
         if isinstance(model, list):
             if self.type=='regression':
