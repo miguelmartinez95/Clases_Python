@@ -21,6 +21,12 @@ import collections
 from pathlib import Path
 import random
 from datetime import datetime
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.factory import get_problem, get_visualization, get_decomposition
+from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+from pymoo.optimize import minimize
+from pymoo.core.problem import starmap_parallelized_eval
 
 '''
 Conexion con GPUs
@@ -1065,7 +1071,7 @@ class LSTM_model(DL):
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
         :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param values specific values to divide the sample
+        :param values specific values to divide the sample. specific values of a variable to search division
         :param plot: True plots
         :param q: queue that inform us if paralyse or not
         :param model if model we have a pretrained model
@@ -1467,8 +1473,8 @@ class LSTM_model(DL):
 
         print('Diferencia entre time and y:',dif)
 
-        print(x_val.shape)
-        print(y_val.shape)
+        print('X_val SHAPE in predicting',x_val.shape)
+        print('Y_val SHAPE',y_val.shape)
 
         if isinstance(self.pos_y, collections.abc.Sized):
             outputs = len(self.pos_y)
@@ -1478,7 +1484,7 @@ class LSTM_model(DL):
         res = self.__class__.predict_model(model, self.n_lags,  x_val,batch, outputs)
 
         y_pred = res['y_pred']
-        print(y_pred.shape)
+        print('SHAPE of y_pred in predicting',y_pred.shape)
 
         if scalated[0]==True:
             y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
@@ -1498,7 +1504,7 @@ class LSTM_model(DL):
             y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
             y_real = y_val.reshape((len(y_val), 1))
 
-        print(y_pred)
+        print('PREDICTION:', y_pred)
 
         y_predF = y_pred.copy()
         y_predF = pd.DataFrame(y_predF)
@@ -1597,7 +1603,7 @@ class LSTM_model(DL):
             index_rad = res['indexes_out']
             index_rad2 = np.where(y_real <= self.inf_limit)[0]
             index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
-#
+
             if len(y_pred) <= 1:
                 y_pred1 = np.nan
                 y_real1 = y_real
@@ -1799,7 +1805,7 @@ class LSTM_model(DL):
                         options['pacience'].append(paciences[i])
                         if z < parallel and w<contador:
                             p = Process(target=self.cv_analysis,
-                                        args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
+                                        args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False, q))
                             p.start()
 
                             processes.append(p)
@@ -1816,7 +1822,7 @@ class LSTM_model(DL):
                             processes=[]
                             q = Queue()
                             p = Process(target=self.cv_analysis,
-                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
+                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False, q))
                             p.start()
 
                             processes.append(p)
@@ -1824,7 +1830,7 @@ class LSTM_model(DL):
 
                         elif w==contador:
                             p = Process(target=self.cv_analysis,
-                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,False, q))
+                                        args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False, q))
                             p.start()
 
                             processes.append(p)
@@ -1845,7 +1851,7 @@ class LSTM_model(DL):
 
         r1 = results.copy()
         d1 = deviations.copy()
-        print(r1)
+        print('Resultados search', r1)
         top_results = {'error': [], 'std': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
 
         for i in range(top):
@@ -1868,14 +1874,14 @@ class LSTM_model(DL):
             options['neurons_lstm'].pop(zz)
             options['pacience'].pop(zz)
 
-        print(top_results)
+        print('The best results: ', top_results)
 
         print('Process finished!!!')
         res = {'errors': results, 'options': options, 'best': top_results}
-        print(res['best'])
+
         return res
 
-    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
+    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -1891,13 +1897,6 @@ class LSTM_model(DL):
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
         '''
 
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.factory import get_problem, get_visualization, get_decomposition
-        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
-        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
-        from pymoo.optimize import minimize
-        from pymoo.core.problem import starmap_parallelized_eval
-
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
@@ -1910,14 +1909,11 @@ class LSTM_model(DL):
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
-                          # sampling =g,
-                          # crossover=0.9,
-                          # mutation=0.1)
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1))
 
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
-                                                              n_last=int(pop_size/2), nth_gen=5, n_max_gen=None,
+                                                              n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
                                                               n_max_evals=6000)
         '''
         Termination can be with tolerance or with generations limit
@@ -1965,7 +1961,7 @@ class LSTM_model(DL):
 
         return (obj, struct,obj_T, struct_T,  res)
 
-    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values):
+    def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, n_last=5, nth_gen=5):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
@@ -1976,6 +1972,8 @@ class LSTM_model(DL):
         pacience (range of number multiplied by 10)
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
         :param parallel: how many processes are parallelise
+        n_last: more robust, we consider the last n generations and take the maximum
+        nth_gen: whenever the termination criterion is calculated
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
 
@@ -1983,8 +1981,8 @@ class LSTM_model(DL):
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
-        print('start!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, xlimit_inf, xlimit_sup,dictionary, onebyone,values, self.weights)
+        print('start optimisation!!!')
+        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, self.weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -1992,13 +1990,18 @@ class LSTM_model(DL):
         np.savetxt('x.txt', x_obj_total)
 
         print('Process finished!!!')
-        print('The selection is', x_obj, 'with a result of', obj)
+        print('The selection is \n', x_obj, 'with a result of \n', obj)
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
         return res
 
 from pymoo.core.repair import Repair
 class MyRepair(Repair):
     def info(self):
+        '''
+        l_lstm: number of LSTM layers
+        l_dense: number of Dense layers
+        :return:
+        '''
         print('Class defining a function to repair the possible error of the genetic algorithm. If a layer is zero the next layer cannot have positive neurons')
 
     def __init__(self,l_lstm, l_dense):
@@ -2006,14 +2009,13 @@ class MyRepair(Repair):
         self.l_dense = l_dense
 
     def _do(self, problem, pop, **kwargs):
-        print('fixing x')
+        print('FIXING X')
         for k in range(len(pop)):
             x = pop[k].X
             xx = x[range(self.l_lstm + self.l_dense)]
             x1 = xx[range(self.l_lstm)]
             x2 = xx[range(self.l_lstm, self.l_lstm + self.l_dense)]
             r_lstm, r_dense = MyProblem.bool4(xx, self.l_lstm, self.l_dense)
-
 
             if len(r_lstm) == 1:
                 if r_lstm == 0:
@@ -2032,7 +2034,8 @@ class MyRepair(Repair):
                 x2[r_dense] = 0
             x = np.concatenate((x1, x2, np.array([x[len(x) - 1]])))
             pop[k].X = x
-        print('x fixed')
+
+        print('X FIXED')
         return pop
 
 
@@ -2040,7 +2043,8 @@ from pymoo.core.problem import ElementwiseProblem
 class MyProblem(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
-#
+
+
     def __init__(self,names, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
@@ -2094,7 +2098,6 @@ class MyProblem(ElementwiseProblem):
             neurons_lstm = neurons_lstm[neurons_lstm > 0]
         if any(neurons_dense == 0):
             neurons_dense = neurons_dense[neurons_dense > 0]
-
 
         u = len(neurons_lstm) + len(neurons_dense)
 
@@ -2159,7 +2162,7 @@ class MyProblem(ElementwiseProblem):
                                                           self.dropout)
                 model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                    batch)
-
+                print('Teh training spent ',time()-time_start)
                 if isinstance(self.pos_y, collections.abc.Sized):
                     outputs=len(self.pos_y)
                 else:
@@ -2168,8 +2171,8 @@ class MyProblem(ElementwiseProblem):
 
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
-                print(y_val[z].shape)
-                print(x_val[z].shape)
+                print('Y_val SHAPE in CV_NSGA', yval[z].shape)
+                print('X_val SHAPE in CV_NSGA', x_val[z].shape)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(yval))
 
@@ -2183,15 +2186,8 @@ class MyProblem(ElementwiseProblem):
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                     y_real = y_real.reshape(-1, 1)
 
-                #if len(y_val[z].shape)>1:
-                #    y_real=y_val[z]
-                #else:
-                #    y_real = y_val[z].reshape(-1, 1)
-
-                #y_real=y_val
-                print(y_pred.shape)
-                print(y_real.shape)
-                print(times_val[z].shape)
+                print('Y_pred SHAPE in CV_NSGA ',y_pred.shape)
+                print('Dates SHAPE this piece', times_val[z].shape)
 
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
@@ -2328,8 +2324,8 @@ class MyProblem(ElementwiseProblem):
 #
         x1 = x[range(l_lstm)]
         x2 = x[range(l_lstm, l_lstm+l_dense)]
-        print(x1)
-        print(x2)
+        print('LSTM neurons', x1)
+        print('Dense neurons', x2)
 #
 
         if len(x2) == 2:
@@ -2398,7 +2394,7 @@ class MyProblem(ElementwiseProblem):
         g1 = MyProblem.bool4(np.delete(x, len(x)-1), self.l_lstm, self.l_dense)
         out["G"] = g1
 #
-        print('##########################################',x,'##########################################')
+        print('##########################################  X=',x,'##########################################')
 #
         n_lstm = x[range(self.l_lstm)]*20
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
@@ -2406,8 +2402,8 @@ class MyProblem(ElementwiseProblem):
 
         f1, f2 = self.cv_nsga(self.data,4,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
-            '\n ############################################## \n ############################# \n ########################## Evaluacion ',
-            self.contador, '\n #########################')
+            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
+            self.contador, '\n ######################### \n #####################################')
 
         self.contador[0] += 1
 
