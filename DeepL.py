@@ -385,7 +385,6 @@ class DL:
         self.data = self.data.dropna()
         self.times = self.data.index
 
-
     def missing_values_masking_onehot(self):
         places=np.where(self.data.isnull().any(axis = 1))[0][0]
         binary_var= [1 for x in range(self.data.shape[0])]
