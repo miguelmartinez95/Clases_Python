@@ -390,8 +390,6 @@ class DL:
         binary_var= [1 for x in range(self.data.shape[0])]
         binary_var[places]=0
         binary_var=pd.Series(binary_var,name='onehot')
-
-        names=self.data.columns
         self.data = pd.concat([self.data, binary_var], axis=1)
 
         print('Onehot Encoder applied to missing values')
