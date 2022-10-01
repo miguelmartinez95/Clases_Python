@@ -385,6 +385,18 @@ class DL:
         self.data = self.data.dropna()
         self.times = self.data.index
 
+
+    def missing_values_masking_onehot(self):
+        places=np.where(self.data.isnull().any(axis = 1))[0][0]
+        binary_var= [1 for x in range(self.data.shape[0])]
+        binary_var[places]=0
+        binary_var=pd.Series(binary_var,name='onehot')
+
+        names=self.data.columns
+        self.data = pd.concat([self.data, binary_var], axis=1)
+
+        print('Onehot Encoder applied to missing values')
+
     def missing_values_masking(self):
         self.data = self.data.replace(np.nan, self.mask_value)
 
