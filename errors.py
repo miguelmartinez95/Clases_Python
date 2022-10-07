@@ -122,7 +122,8 @@ class Eval_metrics:
             if self.real.shape[1] >= 2:
                 r2_score = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
-                    r2_score[i]=metrics.r2_score(self.real.iloc[:,i], self.predict.iloc[:,i])
+                    #r2_score[i]=metrics.r2_score(self.real.iloc[:,i], self.predict.iloc[:,i])
+                    r2_score[i]=metrics.r2_score(self.real[:,i], self.predict[:,i])
 
             else:
                 r2_score = metrics.r2_score(self.real, self.predict)
