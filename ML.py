@@ -385,8 +385,8 @@ class ML:
         places=np.where(self.data.isnull().any(axis = 1))[0][0]
         binary_var= np.array([1 for x in range(self.data.shape[0])])
         binary_var[places]=0
-        binary_var=pd.Series(binary_var,name='onehot')
-        self.data = pd.concat([self.data, binary_var], axis=1)
+        binary_var=pd.DataFrame(binary_var,columns=['onehot'])
+        self.data = pd.concat([self.data, binary_var.set_index(self.data.index)], axis=1)
 
         print('Onehot Encoder applied to missing values')
     def missing_values_masking(self):
