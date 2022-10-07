@@ -382,13 +382,17 @@ class ML:
     def missing_values_remove(self):
         self.data = self.data.dropna()
     def missing_values_masking_onehot(self):
-        places=np.where(self.data.isnull().any(axis = 1))[0][0]
-        binary_var= np.array([1 for x in range(self.data.shape[0])])
-        binary_var[places]=0
-        binary_var=pd.DataFrame(binary_var,columns=['onehot'])
-        self.data = pd.concat([self.data, binary_var.set_index(self.data.index)], axis=1)
+        places=np.where(self.data.isnull().any(axis = 1))[0]
+        if len(places)<1:
+            print('No rows with missing values')
+        else:
+            binary_var= np.array([1 for x in range(self.data.shape[0])])
+            binary_var[places]=0
+            binary_var=pd.DataFrame(binary_var,columns=['onehot'])
+            self.data = pd.concat([self.data, binary_var.set_index(self.data.index)], axis=1)
 
-        print('Onehot Encoder applied to missing values')
+            print('Onehot Encoder applied to missing values')
+
     def missing_values_masking(self):
         self.data = self.data.replace(np.nan, self.mask_value)
     def missing_values_interpolate(self, delete_end, delete_start, mode, limit, order=2):
