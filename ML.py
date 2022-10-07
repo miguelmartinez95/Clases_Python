@@ -383,7 +383,7 @@ class ML:
         self.data = self.data.dropna()
     def missing_values_masking_onehot(self):
         places=np.where(self.data.isnull().any(axis = 1))[0][0]
-        binary_var= [1 for x in range(self.data.shape[0])]
+        binary_var= np.array([1 for x in range(self.data.shape[0])])
         binary_var[places]=0
         binary_var=pd.Series(binary_var,name='onehot')
         self.data = pd.concat([self.data, binary_var], axis=1)
