@@ -592,6 +592,7 @@ class LSTM_model(DL):
         # restructure into windows of  data
         data_new = np.array(np.split(data_new, len(data_new) / n_inputs))
         res={'data':data_new, 'ind_out':ind_out}
+        print('Eliminados en three deimensions', ind_out, 'values at the beginning of the sample')
         return res
 
     @staticmethod
