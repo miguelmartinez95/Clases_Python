@@ -566,12 +566,13 @@ class LSTM_model(DL):
         weights: weights for the outputs. mainly for multivriate output
         '''
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names, repeat_vector,dropout,weights, type):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names, repeat_vector,dropout,weights, type):
         super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
         self.type = type
         self.weights=weights
+        self.n_steps=n_steps
 
 
     @staticmethod
@@ -641,7 +642,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def to_supervised(train,pos_y, n_lags, horizont, onebyone):
+    def to_supervised(train,pos_y, n_lags,n_steps, horizont, onebyone):
         '''
         Relate x and y based on lags and future horizont
 
@@ -659,29 +660,36 @@ class LSTM_model(DL):
         in_start = 0
         # step over the entire history one time step at a time
         if onebyone[0]==True:
-            for _ in range(len(data)-(n_lags + horizont)+1):
-                timesF.append(data.index[_ + n_lags-1+horizont])
-                # define the end of the input sequence
-                in_end = in_start + n_lags
-                if horizont ==0:
-                    out_end = in_end
-                else:
-                    out_end = in_end+horizont
+            if n_steps==1:
+                for _ in range(len(data)-(n_lags + horizont)+1):
+                    #timesF.append(data.index[_ + n_lags-1+horizont])
 
-                xx = data.drop(data.columns[pos_y], axis=1)
-                yy = data.iloc[:,pos_y]
-                # ensure we have enough data for this instance
-                if out_end <= len(data):
-                    x_input = xx.iloc[in_start:in_end,:]
-                    X.append(x_input)
-                    if horizont==0:
-                        y.append(yy.iloc[out_end-1])
-                    else:
-                        y.append(yy.iloc[in_end:out_end])
-                    #se selecciona uno
-                # move along one time step
-                in_start += 1
-            dd=len(data)-len(data)-(n_lags + horizont)+1
+                    timesF.append(data.index[_ + n_lags+horizont])
+                    # define the end of the input sequence
+                    in_end = in_start + n_lags
+                    out_end=in_end+horizont
+                    #if horizont ==0:
+                    #    out_end = in_end
+                    #else:
+                    #    out_end = in_end+horizont
+
+                    xx = data.drop(data.columns[pos_y], axis=1)
+                    yy = data.iloc[:,pos_y]
+                    # ensure we have enough data for this instance
+                    if out_end <= len(data):
+                        x_input = xx.iloc[in_start:in_end,:]
+                        X.append(x_input)
+                        if horizont==0:
+                            y.append(yy.iloc[out_end-1])
+                        else:
+                            y.append(yy.iloc[in_end:out_end])
+                        #se selecciona uno
+                    # move along one time step
+                    in_start += 1
+                dd=len(data)-len(data)-(n_lags + horizont)+1
+            else:
+                print('With n_steps > 1 it is not feasible go 1 by 1')
+                raise NameError('Problems with n_steps and onebyone')
 
         else:
             #if horizont==0 and onebyone[1]==True:
@@ -692,47 +700,104 @@ class LSTM_model(DL):
             #    #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
             #    limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
 
-            limitx = int(np.floor(len(data)/n_lags)*n_lags)-horizont
-            limity =limitx+horizont
+            if onebyone[1]==True:
+            #    limitx = int(np.floor(len(data)/n_lags)*n_lags)-(horizont+(n_steps-1))
+            #    limity =limitx+horizont+(n_steps-1)
+#
+            #    print('X limit to cut the dataset in supervised',limitx)
+#
+            #    xx = data.drop(data.columns[pos_y], axis=1)
+            #    yy= data.iloc[:,pos_y]
+#
+            #    print('X shape in supervised',xx.shape[0])
+            #    xx = xx.iloc[range(limitx)]
+            #    yy = yy.iloc[range(limity)]
+            #    L=list()
+#
+            #    ''''
+            #    Dividimos en cachitos en función de los lags
+            #    '''
+            #    while xx.shape[0]%n_lags !=0:
+            #        xx=xx.drop(xx.index[xx.shape[0]-1])
+#
+            #    for i in range(xx.shape[1]):
+            #        L.append(np.split(np.array(xx.iloc[:,i]), int(np.floor(len(xx)/n_lags))))
+            #    X=np.dstack(L)
+            #     if horizont==0:
+            #         seq = list(range(n_lags-1,limity, n_lags))
+            #         y =yy.iloc[seq]
+            #         timesF = yy.index[seq]
+            #     else:
+            #         seq =# list(range(n_lags+horizont-1,limity+horizont, n_lags))
+            #         y =yy.iloc[seq]
+            #         timesF= yy.index[seq]
+            # seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
+            #seq = list(range(n_lags + horizont - 1, limity + 1, n_lags))
+            ## print('########################################################'
+            ##       '#######################################################'
+            ##       'sequencia Y', seq,'###################################')
+            #y = yy.iloc[seq]
+            #timesF = yy.index[seq]
+#
+            #dd = len(data) - limitx
 
-            print('X limit to cut the dataset in supervised',limitx)
 
-            xx = data.drop(data.columns[pos_y], axis=1)
-            yy= data.iloc[:,pos_y]
+            # for _ in range(len(data)-(n_lags + horizont)+1):
+            # count=n_lags+horizont
+                while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
+                    if n_steps == 1:
+                        timesF.append(data.index[in_start + n_lags + horizont])
+                    else:
+                        timesF.append(data.index[(in_start + n_lags + horizont):(in_start + n_lags + horizont + (n_steps - 1))])
+                    # define the end of the input sequence
+                    in_end = in_start + n_lags
+                    out_end = in_end + horizont + (n_steps - 1)
 
-            print('X shape in suepvised',xx.shape[0])
-            xx = xx.iloc[range(limitx)]
-            yy = yy.iloc[range(limity)]
-            L=list()
+                    xx = data.drop(data.columns[pos_y], axis=1)
+                    yy = data.iloc[:, pos_y]
+                    # ensure we have enough data for this instance
+                    if out_end <= len(data):
+                        x_input = xx.iloc[in_start:in_end, :]
+                        X.append(x_input)
+                        if horizont == 0 and n_steps == 1:
+                            y.append(yy.iloc[out_end - 1])
+                        elif horizont == 0 and n_steps > 1:
+                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
+                        else:
+                            y.append(yy.iloc[in_end:out_end])
+                    # se selecciona uno
+                    # move along one time step
+                    in_start += n_lags
+                    dd = len(data) - len(data) - (n_lags + horizont) + 1
 
-            ''''
-            Dividimos en cachitos en función de los lags
-            '''
-            while xx.shape[0]%n_lags !=0:
-                xx=xx.drop(xx.index[xx.shape[0]-1])
+            else:
+                while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
+                    if n_steps == 1:
+                        timesF.append(data.index[in_start + n_lags + horizont])
+                    else:
+                        timesF.append(
+                            data.index[(in_start + n_lags + horizont):(in_start + n_lags + horizont + (n_steps - 1))])
+                    # define the end of the input sequence
+                    in_end = in_start + n_lags
+                    out_end = in_end + horizont + (n_steps - 1)
 
-            for i in range(xx.shape[1]):
-                L.append(np.split(np.array(xx.iloc[:,i]), int(np.floor(len(xx)/n_lags))))
-            X=np.dstack(L)
-
-           # if horizont==0:
-           #     seq = list(range(n_lags-1,limity, n_lags))
-           #     y =yy.iloc[seq]
-           #     timesF = yy.index[seq]
-           # else:
-           #     seq =# list(range(n_lags+horizont-1,limity+horizont, n_lags))
-           #     y =yy.iloc[seq]
-           #     timesF= yy.index[seq]
-            #seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
-            seq = list(range(n_lags+horizont-1,limity+1, n_lags))
-            print('########################################################'
-                  '#######################################################'
-                  'sequencia Y', seq,'###################################')
-            y =yy.iloc[seq]
-            timesF= yy.index[seq]
-
-            dd= len(data) - limitx
-        print('Data supervised')
+                    xx = data.drop(data.columns[pos_y], axis=1)
+                    yy = data.iloc[:, pos_y]
+                    # ensure we have enough data for this instance
+                    if out_end <= len(data):
+                        x_input = xx.iloc[in_start:in_end, :]
+                        X.append(x_input)
+                        if horizont == 0 and n_steps == 1:
+                            y.append(yy.iloc[out_end - 1])
+                        elif horizont == 0 and n_steps > 1:
+                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
+                        else:
+                            y.append(yy.iloc[in_end:out_end])
+                    # se selecciona uno
+                    # move along one time step
+                    in_start += n_steps
+                    dd = len(data) - len(data) - (n_lags + horizont) + 1
+                print('Data supervised')
 
         return(np.array(X), np.array(y),timesF, dd)
 
@@ -946,7 +1011,7 @@ class LSTM_model(DL):
         return res
 
     @staticmethod
-    def cv_division_lstm(data, horizont, fold, pos_y,n_lags, onebyone, values):
+    def cv_division_lstm(data, horizont, fold, pos_y,n_lags,n_steps, onebyone, values):
         '''
             MODIFICATION TO DIVIDE INTO MORE PIECES????
 
@@ -989,9 +1054,9 @@ class LSTM_model(DL):
                 test= train[range(train.shape[0]-st, train.shape[0]),:,:]
                 train=np.delete(train, list(range(train.shape[0]-st, train.shape[0])), 0)
 
-                x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, pos_y, n_lags, horizont, onebyone)
-                x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, pos_y, n_lags, horizont, onebyone)
-                x_val, y_val, ind_val, dif = LSTM_model.to_supervised(val, pos_y, n_lags, horizont, onebyone)
+                x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, pos_y, n_lags,n_steps, horizont, onebyone)
+                x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, pos_y, n_lags,n_steps, horizont, onebyone)
+                x_val, y_val, ind_val, dif = LSTM_model.to_supervised(val, pos_y, n_lags,n_steps, horizont, onebyone)
 
                 if onebyone[0] == True:
                     if horizont == 0:
@@ -1045,9 +1110,9 @@ class LSTM_model(DL):
                     print(val.shape)
                     index_val= index_val.reshape(index_val.shape[0]*index_val.shape[1],1)
 
-                    x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,horizont, onebyone)
-                    x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,horizont,onebyone)
-                    x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,horizont, onebyone)
+                    x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,n_steps,horizont, onebyone)
+                    x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,n_steps,horizont,onebyone)
+                    x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,n_steps,horizont, onebyone)
 
 
                     if onebyone[0]==True:
@@ -1099,7 +1164,7 @@ class LSTM_model(DL):
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
 
-        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags, onebyone,values)
+        res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags,self.n_steps, onebyone,values)
 
         x_test =np.array(res['x_test'])
         x_train=np.array(res['x_train'])
@@ -1423,9 +1488,9 @@ class LSTM_model(DL):
 
         print('Data in three dimensions')
 
-        x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags, self.horizont,
+        x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags,self.n_steps, self.horizont,
                                                                      onebyone)
-        x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags, self.horizont,
+        x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags,self.n_steps, self.horizont,
                                                                         onebyone)
 
         print('X_train SHAPE in training', x_train.shape)
@@ -1482,7 +1547,7 @@ class LSTM_model(DL):
         else:
             times = np.delete(times, range(self.n_lags), 0)
 
-        x_val, y_val,ind_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags, self.horizont, onebyone)
+        x_val, y_val,ind_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags,self.n_steps, self.horizont, onebyone)
 
         print('Diferencia entre time and y:',dif)
 
@@ -2139,7 +2204,7 @@ class MyProblem(ElementwiseProblem):
 
         names = self.names
         names = np.delete(names, self.pos_y)
-        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.onebyone,self.values)
+        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags,self.n_steps, self.onebyone,self.values)
 
         x_test = np.array(res['x_test'])
         x_train = np.array(res['x_train'])
