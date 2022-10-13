@@ -2102,9 +2102,9 @@ class LSTM_model(DL):
                                 self.scalar_x, self.dropout,weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
 
-        ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
+        ref_dirs = get_reference_directions("das-dennis", 2, n_partitions=12)
 
-        algorithm = RVEA(ref_dirs, pop_size=pop_size,                          sampling=get_sampling("int_random"),
+        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1))
 
