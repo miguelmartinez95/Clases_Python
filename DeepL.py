@@ -2147,7 +2147,7 @@ class LSTM_model(DL):
 
 
 
-    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, n_last=5, nth_gen=5):
+    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
@@ -2168,7 +2168,7 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen, n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, self.weights)
+        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, self.weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
