@@ -2591,7 +2591,7 @@ class MyProblem(ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]*20
 
-        f1, f2 = self.cv_opt(self.data,8,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_opt(self.data,3,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
             self.contador, '\n ######################### \n #####################################')
