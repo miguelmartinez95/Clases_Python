@@ -2104,7 +2104,9 @@ class LSTM_model(DL):
 
         ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
 
-        algorithm = RVEA(ref_dirs, pop_size=pop_size)
+        algorithm = RVEA(ref_dirs, pop_size=pop_size,                          sampling=get_sampling("int_random"),
+                          crossover=get_crossover("int_sbx"),
+                          mutation=get_mutation("int_pm", prob=0.1))
 
         res = minimize(problem,
                        algorithm,
@@ -2233,7 +2235,7 @@ class MyProblem(ElementwiseProblem):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 
 
-    def __init__(self,names, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
+    def __init__(self,names, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
@@ -2256,6 +2258,7 @@ class MyProblem(ElementwiseProblem):
         self.mask = mask
         self.mask_value = mask_value
         self.n_lags=n_lags
+        self.n_steps=n_steps
         self.inf_limit = inf_limit
         self.sup_limit = sup_limit
         self.repeat_vector = repeat_vector
