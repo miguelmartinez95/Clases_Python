@@ -2293,7 +2293,7 @@ class MyProblem(ElementwiseProblem):
 
         return F
 
-    def cv_nsga(self,data,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
+    def cv_opt(self,data,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param rep:repetition of the estimation in each subsample
@@ -2359,8 +2359,8 @@ class MyProblem(ElementwiseProblem):
 
                 res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
                 y_pred = res['y_pred']
-                print('Y_val SHAPE in CV_NSGA', yval[z].shape)
-                print('X_val SHAPE in CV_NSGA', x_val[z].shape)
+                print('Y_val SHAPE in CV_OPT', yval[z].shape)
+                print('X_val SHAPE in CV_OPT', x_val[z].shape)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(yval))
 
@@ -2374,7 +2374,7 @@ class MyProblem(ElementwiseProblem):
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                     y_real = y_real.reshape(-1, 1)
 
-                print('Y_pred SHAPE in CV_NSGA ',y_pred.shape)
+                print('Y_pred SHAPE in CV_OPT ',y_pred.shape)
                 print('Dates SHAPE this piece', times_val[z].shape)
 
                 y_predF = y_pred.copy()
@@ -2588,7 +2588,7 @@ class MyProblem(ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]*20
 
-        f1, f2 = self.cv_nsga(self.data,4,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2 = self.cv_opt(self.data,8,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
             self.contador, '\n ######################### \n #####################################')
