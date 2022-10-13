@@ -1118,10 +1118,10 @@ class LSTM_model(DL):
 
 
                     if onebyone[0]==True:
-                        if horizont==0:
-                            index_val = np.delete(index_val, range(n_lags-1), axis=0)
-                        else:
-                            index_val = np.delete(index_val, range(n_lags), axis=0)
+                        #if horizont==0:
+                        #    index_val = np.delete(index_val, range(n_lags), axis=0)
+                        #else:
+                        index_val = np.delete(index_val, range(n_lags+horizont), axis=0)
                     else:
                         if isinstance(ind_val, list):
                             index_val = index_val[np.concatenate(ind_val)]
