@@ -2147,7 +2147,7 @@ class LSTM_model(DL):
 
 
 
-    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values):
+    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, n_last=5, nth_gen=5):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
