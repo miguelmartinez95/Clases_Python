@@ -1421,23 +1421,29 @@ class MLP(ML):
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
-            weights = np.array([0.75, 0.25])
+            weights = np.array([0.5, 0.5])
+            scal_cv = MinMaxScaler(feature_range=(0, 1))
+            scal_com = MinMaxScaler(feature_range=(0, 1))
 
-            r_final = pd.DataFrame(rf)
-            scal = MinMaxScaler(feature_range=(0, 1))
-            rf = scal.fit_transform(r_final)
+            cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
+            com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            I = get_decomposition("pbi").do(np.array(rf), weights).argmin()
-            rf = scal.inverse_transform(rf)
-            obj_T = rf
+            r_final = np.array([cv[:,0], com[:,0]])
+
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+            obj_T = r_final
             struct_T = rx
-            obj = rf[I, :]
+            obj = r_final[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
 
-            #obj = rf[:,I]
-            #struct = rx[:,I]
+            plt.scatter(r_final[:,0], r_final[:,1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.legend()
         else:
             obj_T = res.F
             struct_T = res.X
@@ -1528,25 +1534,32 @@ class MLP(ML):
                        verbose=True,
                        seed=7)
         if res.F.shape[0] > 1:
-            rf=res.F
-            rx=res.X
-            weights = np.array([0.75, 0.25])
+            rf = res.F
+            rx = res.X
+            weights = np.array([0.5, 0.5])
+            scal_cv = MinMaxScaler(feature_range=(0, 1))
+            scal_com = MinMaxScaler(feature_range=(0, 1))
 
-            r_final = pd.DataFrame(rf)
-            scal = MinMaxScaler(feature_range=(0, 1))
-            rf = scal.fit_transform(r_final)
+            cv = scal_cv.transform(res.F[:, 0].reshape(-1, 1))
+            com = scal_com.transform(res.F[:, 1].reshape(-1, 1))
 
-            I = get_decomposition("pbi").do(np.array(rf), weights).argmin()
-            rf = scal.inverse_transform(rf)
-            obj_T = rf
+            r_final = np.array([cv[:, 0], com[:, 0]])
+
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+            obj_T = r_final
             struct_T = rx
-            obj = rf[I, :]
+            obj = r_final[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
 
-            #obj = rf[:,I]
-            #struct = rx[:,I]
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+                        label='Optimum')
+            plt.legend()
         else:
             obj_T = res.F
             struct_T = res.X
