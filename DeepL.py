@@ -2083,7 +2083,7 @@ class LSTM_model(DL):
         :param l_lstm:maximun number of layers lstm
         :param l_dense:maximun number of layers dense
         :param batch: batch size
-        :param pop_size: population size selected for NSGA2
+        :param pop_size: population size selected for RVEA
         :param tol: tolearance selected to terminate the process
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
@@ -2154,7 +2154,7 @@ class LSTM_model(DL):
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
         :param batch: batch size
-        :param pop_size: population size for NSGA2
+        :param pop_size: population size for RVEA
         :param tol: tolerance to built the pareto front
         :param xlimit_inf: array with lower limits for neurons lstm (range of number multiplied by 10), dense (range of number multiplied by 10) and
         pacience (range of number multiplied by 10)
@@ -2497,7 +2497,7 @@ class MyProblem(ElementwiseProblem):
 
                 zz += 1
 #
-            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 1000, 8)
+            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 2000, 12)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
