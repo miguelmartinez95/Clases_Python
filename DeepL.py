@@ -663,7 +663,7 @@ class LSTM_model(DL):
         # step over the entire history one time step at a time
         if onebyone[0]==True:
             if n_steps==1:
-                for _ in range(len(data)-(n_lags + horizont)+1):
+                for _ in range(len(data)-(n_lags + horizont)):
                     #timesF.append(data.index[_ + n_lags-1+horizont])
 
                     timesF.append(data.index[_ + n_lags+horizont])
