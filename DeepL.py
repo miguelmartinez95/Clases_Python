@@ -2204,6 +2204,7 @@ class LSTM_model(DL):
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
         return res
 
+
     def rvea_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
         '''
         :param med:
