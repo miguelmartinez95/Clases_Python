@@ -2602,8 +2602,8 @@ class MyProblem(ElementwiseProblem):
         return a_lstm, a_dense
 
     def _evaluate(self, x, out, *args, **kwargs):
-        g1 = MyProblem.bool4(np.delete(x, len(x)-1), self.l_lstm, self.l_dense)
-        out["G"] = g1
+        g1,g2 = MyProblem.bool4(np.delete(x, len(x)-1), self.l_lstm, self.l_dense)
+        out["G"] =np.column_stack([g1, g2])
 #
         print('##########################################  X=',x,'##########################################')
 #
@@ -2617,5 +2617,8 @@ class MyProblem(ElementwiseProblem):
             self.contador, '\n ######################### \n #####################################')
 
         self.contador[0] += 1
+
+        print('F1:',f1)
+        print('F2:',f2)
 
         out["F"] = np.column_stack([f1, f2])
