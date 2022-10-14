@@ -22,8 +22,7 @@ from pathlib import Path
 import random
 from datetime import datetime
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.factory import get_reference_directions
-from pymoo.algorithms.moo.rvea import RVEA
+from pymoo.algorithms.moo.rnsga2 import RNSGA2
 from pymoo.factory import get_problem, get_visualization, get_decomposition
 from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
@@ -2079,7 +2078,7 @@ class LSTM_model(DL):
         return res
 
 
-    def rvea_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
+    def rnsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights,epsilon):
         '''
         :param med:
         :param contador: a operator to count the attempts
@@ -2087,6 +2086,7 @@ class LSTM_model(DL):
         :param l_lstm:maximun number of layers lstm
         :param l_dense:maximun number of layers dense
         :param batch: batch size
+        :param epsilon: smaller generates solutions tighter
         :param pop_size: population size selected for RVEA
         :param tol: tolearance selected to terminate the process
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
@@ -2106,15 +2106,22 @@ class LSTM_model(DL):
                                 self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
 
-        ref_dirs = get_reference_directions("das-dennis", 2, n_partitions=12)
+        ref_points = np.array([[0.4, 0.2], [0.1, 0.4]])
 
-        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
+        algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx"),
-                          mutation=get_mutation("int_pm", prob=0.1))
+                          mutation=get_mutation("int_pm", prob=0.1),
+                           normalization='front',
+                           extreme_points_as_reference_points=False,
+                           weights=weights,
+                           epsilon=epsilon)
 
+        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+                                                              n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
+                                                              n_max_evals=6000)
         res = minimize(problem,
                        algorithm,
-                       ("n_gen", N_gen),
+                       termination,
                        pf=True,
                        verbose=True,
                        seed=7)
@@ -2161,13 +2168,14 @@ class LSTM_model(DL):
 
 
 
-    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights):
+    def optimal_search_rnsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights, epsilon=0.01,n_last=5, nth_gen=5):
         '''
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
         :param batch: batch size
         :param pop_size: population size for RVEA
         :param tol: tolerance to built the pareto front
+        :param epsilon: smaller generates solutions tighter
         :param xlimit_inf: array with lower limits for neurons lstm (range of number multiplied by 10), dense (range of number multiplied by 10) and
         pacience (range of number multiplied by 10)
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
@@ -2182,7 +2190,7 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
+        obj, x_obj, obj_total, x_obj_total,res = self.rnsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
