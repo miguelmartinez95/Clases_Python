@@ -28,6 +28,8 @@ from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampli
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
+from pymoo.factory import get_reference_directions
+from pymoo.algorithms.moo.rvea import RVEA
 
 '''
 Conexion con GPUs
@@ -2202,6 +2204,124 @@ class LSTM_model(DL):
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
         return res
 
+    def rvea_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
+        '''
+        :param med:
+        :param contador: a operator to count the attempts
+        :param n_processes: how many processes are parallelise
+        :param l_lstm:maximun number of layers lstm
+        :param l_dense:maximun number of layers dense
+        :param batch: batch size
+        :param epsilon: smaller generates solutions tighter
+        :param pop_size: population size selected for RVEA
+        :param tol: tolearance selected to terminate the process
+        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
+        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
+        :param dictionary: dictionary to stored the options tested
+        :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
+        '''
+
+        if n_processes>1:
+            pool = multiprocessing.Pool(n_processes)
+            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+                                self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
+                                self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+        else:
+            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+                                self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
+                                self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
+
+
+        ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
+
+        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
+                         crossover=get_crossover("int_sbx"),
+                         mutation=get_mutation("int_pm", prob=0.1))
+
+
+        res = minimize(problem,
+                       algorithm,
+                       ("n_gen", N_gen),
+                       # ("n_gen", 20),
+                       pf=True,
+                       verbose=True,
+                       seed=7)
+
+        if res.F.shape[0] > 1:
+            rf=res.F
+            rx=res.X
+            scal_cv = MinMaxScaler(feature_range=(0, 1))
+            scal_com = MinMaxScaler(feature_range=(0, 1))
+
+            cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
+            com=scal_com.transform(res.F[:,1].reshape(-1,1))
+
+            r_final = np.array([cv[:,0], com[:,0]])
+
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+            obj_T = r_final
+            struct_T = rx
+            obj = r_final[I, :]
+            struct = rx[I, :]
+            print(rf.shape)
+            print(rx.shape)
+
+            plt.scatter(r_final[:,0], r_final[:,1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.legend()
+
+        else:
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F
+            struct = res.X
+
+        print('The number of evaluations were:', contador)
+        if n_processes>1:
+            pool.close()
+        else:
+            pass
+
+        return (obj, struct,obj_T, struct_T,  res)
+
+
+
+    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights):
+        '''
+        :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
+        :param l_dense: maximun layers dense
+        :param batch: batch size
+        :param pop_size: population size for RVEA
+        :param tol: tolerance to built the pareto front
+        :param epsilon: smaller generates solutions tighter
+        :param xlimit_inf: array with lower limits for neurons lstm (range of number multiplied by 10), dense (range of number multiplied by 10) and
+        pacience (range of number multiplied by 10)
+        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param parallel: how many processes are parallelise
+        n_last: more robust, we consider the last n generations and take the maximum
+        nth_gen: whenever the termination criterion is calculated
+        :return: the options selected for the pareto front, the optimal selection and the total results
+        '''
+
+        manager = multiprocessing.Manager()
+        dictionary = manager.dict()
+        contador = manager.list()
+        contador.append(0)
+        print('start optimisation!!!')
+        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
+
+        np.savetxt('objectives_selected.txt', obj)
+        np.savetxt('x_selected.txt', x_obj)
+        np.savetxt('objectives.txt', obj_total)
+        np.savetxt('x.txt', x_obj_total)
+
+        print('Process finished!!!')
+        print('The selection is \n', x_obj, 'with a result of \n', obj)
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
+        return res
 
 from pymoo.core.repair import Repair
 class MyRepair(Repair):
@@ -2259,7 +2379,7 @@ class MyProblem(ElementwiseProblem):
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
-                         n_constr=1,
+                         n_constr=2,
                          xl=xlimit_inf,
                          xu=xlimit_sup,
                          type_var=np.int,
