@@ -2312,7 +2312,7 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
+        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
