@@ -280,52 +280,41 @@ class ML:
             X = X.drop(X.index[range(X.shape[0] - self.horizont, X.shape[0])], axis=0)
             self.data = pd.concat([y, X], axis=1)
 
-        if self.n_steps==0:
-            self.data = self.data
-        else:
-            if self.type=='series':
-                index1 = X.index
 
-                if onebyone==True:
-                    y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
-                    y=pd.DataFrame(y.transpose())
-                    if gap > 0:
-                        X = X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
-                        index1 = np.delete(index1, range(X.shape[0] - gap, X.shape[0]))
-
-                    X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
-                    index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
-
-                else:
-                    y,gap = self.cortes(y, len(y), self.n_steps)
-                    y=pd.DataFrame(y.transpose())
-
-                    seq = np.arange(0, X.shape[0] - self.n_steps+1, self.n_steps)
-                    X = X.iloc[seq]
-                    index1 =index1[seq]
-
-                    if gap > 0:
-                        fuera = 1 + gap + self.n_steps + self.n_lags
-                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
-                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
-
-                    else:
-                        fuera= 1+self.n_lags
-                    print('El total a quitar de time_val es:', fuera)
-
-                X = X.reset_index(drop=True)
-                print(X.shape)
-                print(y.shape)
-
-                X.index = index1
-                y.index = index1
-
-                if any(self.pos_y == 0):
-                    self.data = pd.concat([y, X], axis=1)
-                else:
-                    self.data = pd.concat([X, y], axis=1)
+        if self.type=='series':
+            index1 = X.index
+            if onebyone==True:
+                y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
+                y=pd.DataFrame(y.transpose())
+                if gap > 0:
+                    X = X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
+                    index1 = np.delete(index1, range(X.shape[0] - gap, X.shape[0]))
+                X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
+                index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
             else:
-                print('Not series, nothign to do')
+                y,gap = self.cortes(y, len(y), self.n_steps)
+                y=pd.DataFrame(y.transpose())
+                seq = np.arange(0, X.shape[0] - self.n_steps+1, self.n_steps)
+                X = X.iloc[seq]
+                index1 =index1[seq]
+                if gap > 0:
+                    fuera = 1 + gap + self.n_steps + self.n_lags
+                    X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
+                    index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
+                else:
+                    fuera= 1+self.n_lags
+                print('El total a quitar de time_val es:', fuera)
+            X = X.reset_index(drop=True)
+            print(X.shape)
+            print(y.shape)
+            X.index = index1
+            y.index = index1
+            if any(self.pos_y == 0):
+                self.data = pd.concat([y, X], axis=1)
+            else:
+                self.data = pd.concat([X, y], axis=1)
+        else:
+            print('Not series, nothign to do with n_steps')
 
         print('Horizont adjusted!')
 
@@ -536,7 +525,7 @@ class MLP(ML):
         self.type = type
         self.weights = weights
         '''
-        n_steps= distance of the time predicted (4)
+        horizont: distance to the present
         I want to predict the moment four steps in future
         '''
     @staticmethod
@@ -609,6 +598,7 @@ class MLP(ML):
     def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout,n_steps):
         '''
         The main diference is the n_steps. Focused on estimate one variable to several steps in future
+        n_steps:amount of time steps estimated
         :param inputs:amount of inputs
         :param mask:True or false
         :return: the MLP architecture
@@ -834,12 +824,12 @@ class MLP(ML):
                     index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
 
                     index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
-                    if len(index_rad) > 0 and self.n_steps == 0:
+                    if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
                     elif len(index_rad) > 0 and self.horizont > 0:
-                        y_pred1 = np.delete(y_pred, np.array(index_rad) - self.n_steps, 0)
-                        y_real1 = np.delete(y_real, np.array(index_rad) - self.n_steps, 0)
+                        y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                        y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
@@ -1255,12 +1245,12 @@ class MLP(ML):
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
-                if len(index_rad) > 0 and self.n_steps == 0:
+                if len(index_rad) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
-                elif len(index_rad) > 0 and self.n_steps > 0:
-                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.n_steps, 0)
-                    y_real1 = np.delete(y_real, np.array(index_rad) - self.n_steps, 0)
+                elif len(index_rad) > 0 and self.horizont > 0:
+                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                    y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
@@ -2083,12 +2073,11 @@ class MyProblem_mlp(ElementwiseProblem):
 class SVM(ML):
     def info(self):
         print(('Class to built SVM models. \n'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
-        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit)
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit,weights, type):
+        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
         self.weights = weights
         '''
-        n_steps= distance of the time predicted (4)
         I want to predict the moment four steps in future
         '''
 
@@ -2178,17 +2167,11 @@ class SVM(ML):
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
-        elif self.n_steps>1:
-            for t in self.n_steps:
-                y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit
-                y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit
-            y_predF = pd.DataFrame(np.concatenate(y_pred.copy()))
-            y_realF = pd.DataFrame(np.concatenate(y_real).copy())
-        else:
-            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-            y_predF = pd.DataFrame(y_pred.copy())
-            y_realF = pd.DataFrame(y_real).copy()
+
+        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+        y_predF = pd.DataFrame(y_pred.copy())
+        y_realF = pd.DataFrame(y_real).copy()
 
 
         print(y_pred)
@@ -2276,12 +2259,12 @@ class SVM(ML):
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
-                if len(index_rad) > 0 and self.n_steps == 0:
+                if len(index_rad) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
-                elif len(index_rad) > 0 and self.n_steps > 0:
-                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.n_steps, 0)
-                    y_real1 = np.delete(y_real, np.array(index_rad) - self.n_steps, 0)
+                elif len(index_rad) > 0 and self.horizont > 0:
+                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                    y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
@@ -2639,7 +2622,7 @@ from pymoo.core.problem import ElementwiseProblem
 class MyProblem_svm(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps,
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,
                  mask, mask_value, inf_limit,sup_limit, type,med, contador,
         n_var, C_max, epsilon_max, xlimit_inf, xlimit_sup, dictionary, weights, **kwargs):
         super().__init__(n_var=n_var,
