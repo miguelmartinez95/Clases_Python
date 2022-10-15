@@ -18,7 +18,14 @@ from multiprocessing import Process,Manager,Queue
 import matplotlib.pyplot as plt
 from pymoo.factory import get_reference_directions
 from pymoo.algorithms.moo.rvea import RVEA
-
+from pymoo.algorithms.moo.rnsga2 import RNSGA2
+from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+from sklearn import svm
+from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+from pymoo.optimize import minimize
+from pymoo.core.problem import starmap_parallelized_eval
+from pymoo.factory import get_reference_directions
+from pymoo.factory import get_problem, get_visualization, get_decomposition
 import tensorflow as tf
 
 '''
@@ -1455,6 +1462,7 @@ class MLP(ML):
         else:
             pass
         return (obj, struct, obj_T, struct_T, res)
+
     def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
         '''
         :param l_dense: maximun layers dense
@@ -1485,120 +1493,117 @@ class MLP(ML):
         return res
 
 
-    def rvea_individual(self, med, contador, n_processes, l_dense, batch, pop_size, N_gen, xlimit_inf,
-                         xlimit_sup,dropout, dictionary, weights):
-        '''
-        :param med:
-        :param contador: a operator to count the attempts
-        :param n_processes: how many processes are parallelise
-        :param l_dense:maximun number of layers dense
-        :param batch: batch size
-        :param pop_size: population size selected for RVEA
-        :param tol: tolearance selected to terminate the process
-        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
-        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
-        :param dictionary: dictionary to stored the options tested
-        :return: options in Pareto front, the optimal selection and the total results
-        '''
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.factory import get_problem, get_visualization, get_decomposition
-        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
-        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
-        from pymoo.optimize import minimize
-        from pymoo.core.problem import starmap_parallelized_eval
-        print('DATA is', type(self.data))
-        if n_processes > 1:
-            pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
-                                self.mask,
-                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-                                self.type, self.data,self.scalar_x,
-                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
-        else:
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
-                                self.mask,
-                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-                                self.type, self.data,self.scalar_x,
-                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, weights)
-        ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
-
-        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
-                         crossover=get_crossover("int_sbx"),
-                         mutation=get_mutation("int_pm", prob=0.1))
-
-        res = minimize(problem,
-                       algorithm,
-                       ("n_gen", N_gen),
-                       # ("n_gen", 20),
-                       pf=True,
-                       verbose=True,
-                       seed=7)
-        if res.F.shape[0] > 1:
-            rf = res.F
-            rx = res.X
-            weights = np.array([0.5, 0.5])
-            scal_cv = MinMaxScaler(feature_range=(0, 1))
-            scal_com = MinMaxScaler(feature_range=(0, 1))
-
-            cv = scal_cv.transform(res.F[:, 0].reshape(-1, 1))
-            com = scal_com.transform(res.F[:, 1].reshape(-1, 1))
-
-            r_final = np.array([cv[:, 0], com[:, 0]])
-
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
-
-            obj_T = r_final
-            struct_T = rx
-            obj = r_final[I, :]
-            struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
-
-            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
-                        label='Optimum')
-            plt.legend()
-        else:
-            obj_T = res.F
-            struct_T = res.X
-            obj = res.F
-            struct = res.X
-        print('The number of evaluations were:', contador)
-        if n_processes > 1:
-            pool.close()
-        else:
-            pass
-        return (obj, struct, obj_T, struct_T, res)
-    def optimal_search_rvea(self, l_dense, batch, pop_size, N_gen, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
-        '''
-        :param l_dense: maximun layers dense
-        :param batch: batch size
-        :param pop_size: population size for NSGA2
-        :param tol: tolerance to built the pareto front
-        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
-        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
-        :param parallel: how many processes are parallelise
-        if mean_y is empty a variation rate will be applied
-        :return: the options selected for the pareto front, the optimal selection and the total results
-        '''
-        manager = multiprocessing.Manager()
-        dictionary = manager.dict()
-        contador = manager.list()
-        contador.append(0)
-        print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res = self.rvea_individual(mean_y, contador, parallel, l_dense,
-                                                                            batch, pop_size, N_gen, xlimit_inf,
-                                                                            xlimit_sup, dropout,dictionary, self.weights)
-        np.savetxt('objectives_selected.txt', obj)
-        np.savetxt('x_selected.txt', x_obj)
-        np.savetxt('objectives.txt', obj_total)
-        np.savetxt('x.txt', x_obj_total)
-        print('Process finished!!!')
-        print('The selection is', x_obj, 'with a result of', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
-        return res
+#    def rvea_individual(self, med, contador, n_processes, l_dense, batch, pop_size, N_gen, xlimit_inf,
+#                         xlimit_sup,dropout, dictionary, weights):
+#        '''
+#        :param med:
+#        :param contador: a operator to count the attempts
+#        :param n_processes: how many processes are parallelise
+#        :param l_dense:maximun number of layers dense
+#        :param batch: batch size
+#        :param pop_size: population size selected for RVEA
+#        :param tol: tolearance selected to terminate the process
+#        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
+#        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
+#        :param dictionary: dictionary to stored the options tested
+#        :return: options in Pareto front, the optimal selection and the total results
+#        '''
+#
+#        print('DATA is', type(self.data))
+#        if n_processes > 1:
+#            pool = multiprocessing.Pool(n_processes)
+#            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+#                                self.mask,
+#                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+#                                self.type, self.data,self.scalar_x,
+#                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+#        else:
+#            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+#                                self.mask,
+#                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+#                                self.type, self.data,self.scalar_x,
+#                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, weights)
+#        ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
+#
+#        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
+#                         crossover=get_crossover("int_sbx"),
+#                         mutation=get_mutation("int_pm", prob=0.1))
+#
+#        res = minimize(problem,
+#                       algorithm,
+#                       ("n_gen", N_gen),
+#                       # ("n_gen", 20),
+#                       pf=True,
+#                       verbose=True,
+#                       seed=7)
+#
+#        if res.F.shape[0] > 1:
+#            rf = res.F
+#            rx = res.X
+#            weights = np.array([0.5, 0.5])
+#            scal_cv = MinMaxScaler(feature_range=(0, 1))
+#            scal_com = MinMaxScaler(feature_range=(0, 1))
+#
+#            cv = scal_cv.transform(res.F[:, 0].reshape(-1, 1))
+#            com = scal_com.transform(res.F[:, 1].reshape(-1, 1))
+#
+#            r_final = np.array([cv[:, 0], com[:, 0]])
+#
+#            I = get_decomposition("pbi").do(r_final, weights).argmin()
+#
+#            obj_T = r_final
+#            struct_T = rx
+#            obj = r_final[I, :]
+#            struct = rx[I, :]
+#            print(rf.shape)
+#            print(rx.shape)
+#
+#            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+#            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+#            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+#            plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+#                        label='Optimum')
+#            plt.legend()
+#        else:
+#            obj_T = res.F
+#            struct_T = res.X
+#            obj = res.F
+#            struct = res.X
+#        print('The number of evaluations were:', contador)
+#        if n_processes > 1:
+#            pool.close()
+#        else:
+#            pass
+#        return (obj, struct, obj_T, struct_T, res)
+#
+#    def optimal_search_rvea(self, l_dense, batch, pop_size, N_gen, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
+#        '''
+#        :param l_dense: maximun layers dense
+#        :param batch: batch size
+#        :param pop_size: population size for NSGA2
+#        :param tol: tolerance to built the pareto front
+#        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
+#        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+#        :param parallel: how many processes are parallelise
+#        if mean_y is empty a variation rate will be applied
+#        :return: the options selected for the pareto front, the optimal selection and the total results
+#        '''
+#        manager = multiprocessing.Manager()
+#        dictionary = manager.dict()
+#        contador = manager.list()
+#        contador.append(0)
+#        print('Start the optimization!!!!!')
+#        obj, x_obj, obj_total, x_obj_total, res = self.rvea_individual(mean_y, contador, parallel, l_dense,
+#                                                                            batch, pop_size, N_gen, xlimit_inf,
+#                                                                            xlimit_sup, dropout,dictionary, self.weights)
+#        np.savetxt('objectives_selected.txt', obj)
+#        np.savetxt('x_selected.txt', x_obj)
+#        np.savetxt('objectives.txt', obj_total)
+#        np.savetxt('x.txt', x_obj_total)
+#        print('Process finished!!!')
+#        print('The selection is', x_obj, 'with a result of', obj)
+#        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+#        return res
 
 
 from pymoo.core.repair import Repair
@@ -1949,11 +1954,519 @@ class MyProblem_mlp(ElementwiseProblem):
 #        print(('Class to built XGB models. \n'))
 #    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
 #        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
-#class SVM(ML):
-#    def info(self):
-#        print(('Class to built SVM models. \n'))
-#    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
-#        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
+
+
+
+class SVM(ML):
+    def info(self):
+        print(('Class to built SVM models. \n'))
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
+        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit)
+        self.type = type
+        self.weights = weights
+        '''
+        n_steps= distance of the time predicted (4)
+        I want to predict the moment four steps in future
+        '''
+
+
+    def SVM_training(self,layers, neurons, inputs, outputs, mask, mask__value):
+        'WORK IN PROGRESS'
+
+
+    def SVM_training(self,data_train,C, epsilon, tol, save_model, model=[]):
+        now = str(datetime.now().microsecond)
+        data_train = pd.DataFrame(data_train)
+        x_train = data_train.drop(data_train.columns[self.pos_y], axis=1)
+        y_train = data_train.iloc[:,self.pos_y]
+
+        if isinstance(model, list):
+            model = svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
+        else:
+            model = model
+        history = model.fit(x_train, y_train)
+
+        if save_model==True:
+            name='mlp'+now+'.h5'
+            model.save(name, save_format='h5')
+        res = {'model':model,  'history':history}
+        return(res)
+
+    def predict(self, model,val,mean_y, times,plotting):
+        '''
+        :param model: trained model
+        :param x_val: x to predict
+        :param y_val: y to predict
+        if mean_y is empty a variation rate will be applied as cv in result. The others relative will be nan
+        :return: predictions with the errors depending of zero_problem
+        '''
+
+        y_val = val.iloc[:,self.pos_y]
+        x_val = val.drop(val.columns[self.pos_y], axis=1)
+
+        x_val=x_val.reset_index(drop=True)
+        y_val=y_val.reset_index(drop=True)
+        y_pred = model.predict(pd.DataFrame(x_val))
+        y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+        y_real = np.array(self.scalar_y.inverse_transform(y_val))
+
+        if len(self.pos_y)>1:
+            for t in range(len(self.pos_y)):
+                y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
+                y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0],t] = self.sup_limit[t]
+            y_predF = pd.DataFrame(y_pred.copy())
+            y_realF = pd.DataFrame(y_real).copy()
+
+        elif self.n_steps>1:
+            for t in self.n_steps:
+                y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit
+                y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit
+            y_predF = pd.DataFrame(np.concatenate(y_pred.copy()))
+            y_realF = pd.DataFrame(np.concatenate(y_real).copy())
+        else:
+            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+            y_predF = pd.DataFrame(y_pred.copy())
+            y_realF = pd.DataFrame(y_real).copy()
+
+
+        print(y_pred)
+        print(y_predF.shape)
+        y_predF.index = times
+        y_realF.index = y_predF.index
+
+        if self.zero_problem == 'schedule':
+            print('*****Night-schedule fixed******')
+            res = super().fix_values_0( self.times,  self.zero_problem, self.limits)
+            index_hour = res['indexes_out']
+
+            if len(y_pred)<=1:
+                y_pred1= np.nan
+                y_real1=y_real
+            else:
+                if len(index_hour) > 0 and self.horizont == 0:
+                    y_pred1 = np.delete(y_pred, index_hour, 0)
+                    y_real1 = np.delete(y_real, index_hour, 0)
+                elif len(index_hour) > 0 and self.horizont > 0:
+                    y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                    y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                else:
+                    y_pred1 = y_pred
+                    y_real1 = y_real
+
+                if self.type == 'series':
+                    y_pred1 = np.concatenate(y_pred1)
+                    y_real1 = np.concatenate(y_real1)
+
+                if self.mask == True and len(y_pred1)>0:
+                    o = np.where(y_real1 < self.inf_limit)[0]
+                    if len(o)>0:
+                        y_pred1 = np.delete(y_pred1, o, 0)
+                        y_real1 = np.delete(y_real1, o, 0)
+
+            if len(y_pred1)>1:
+                if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    if len(self.pos_y)>1:
+                        cv=[0 for x in range(len(self.pos_y))]
+                        rmse=[0 for x in range(len(self.pos_y))]
+                        nmbe=[0 for x in range(len(self.pos_y))]
+                        r2=[0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
+                                nmbe[t] = np.nan
+                            else:
+                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
+                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
+
+                            rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
+                            r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
+                    else:
+                        if mean_y.size == 0:
+                            cv = evals(y_pred1, y_real1).variation_rate()
+                            nmbe = np.nan
+                        else:
+                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
+
+                        rmse = evals(y_pred, y_real).rmse()
+                        r2 = evals(y_pred, y_real).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
+            else:
+                raise NameError('Empty prediction')
+        elif self.zero_problem == 'radiation':
+            print('*****Night-radiation fixed******')
+            place = np.where(x_val.columns == 'radiation')[0]
+            scalar_x = self.scalar_x
+            scalar_rad = scalar_x['radiation']
+            res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
+                                          self.zero_problem, self.limits)
+            index_rad = res['indexes_out']
+            index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+
+            index_rad= np.union1d(np.array(index_rad), np.array(index_rad2))
+
+            if len(y_pred)<=1:
+                y_pred1 = np.nan
+                y_real1 = y_real
+            else:
+                if len(index_rad) > 0 and self.n_steps == 0:
+                    y_pred1 = np.delete(y_pred, index_rad, 0)
+                    y_real1 = np.delete(y_real, index_rad, 0)
+                elif len(index_rad) > 0 and self.n_steps > 0:
+                    y_pred1 = np.delete(y_pred, np.array(index_rad) - self.n_steps, 0)
+                    y_real1 = np.delete(y_real, np.array(index_rad) - self.n_steps, 0)
+                else:
+                    y_pred1 = y_pred
+                    y_real1 = y_real
+
+                if self.type == 'series':
+                    y_pred1 = np.concatenate(y_pred1)
+                    y_real1 = np.concatenate(y_real1)
+
+                if self.mask == True and len(y_pred1)>0:
+                    o = np.where(y_real1 < self.inf_limit)[0]
+                    if len(o)>0:
+                        y_pred1 = np.delete(y_pred1, o, 0)
+                        y_real1 = np.delete(y_real1, o, 0)
+
+            if len(y_pred1)>1:
+                if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                    if len(self.pos_y) > 1:
+                        cv = [0 for x in range(len(self.pos_y))]
+                        rmse = [0 for x in range(len(self.pos_y))]
+                        nmbe = [0 for x in range(len(self.pos_y))]
+                        r2 = [0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred1[:, t], y_real[:, t]).variation_rate()
+                                nmbe[t] = np.nan
+                            else:
+                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
+                                cv[t] = evals(y_pred1[:, t], y_real1[:, t]).cv_rmse(mean_y[t])
+
+                            rmse[t] = evals(y_pred1[:, t], y_real1[:, t]).rmse()
+                            r2[t] = evals(y_pred1[:, t], y_real1[:, t]).r2()
+                    else:
+                        if mean_y.size == 0:
+                            cv = evals(y_pred1, y_real1).variation_rate()
+                            nmbe=np.nan
+                        else:
+                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
+
+                        rmse = evals(y_pred, y_real).rmse()
+                        r2 = evals(y_pred, y_real).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
+            else:
+                raise NameError('Empty prediction')
+        else:
+            if self.type == 'series':
+                y_pred = np.concatenate(y_pred)
+                y_real = np.concatenate(y_real)
+
+            if self.mask == True:
+                o = np.where(y_real < self.inf_limit)[0]
+                if len(o)>0:
+                    y_pred = np.delete(y_pred, o, 0)
+                    y_real = np.delete(y_real, o, 0)
+
+            if len(y_pred)>1:
+                if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
+                    if len(self.pos_y)>1:
+                        cv=[0 for x in range(len(self.pos_y))]
+                        rmse=[0 for x in range(len(self.pos_y))]
+                        nmbe=[0 for x in range(len(self.pos_y))]
+                        r2=[0 for x in range(len(self.pos_y))]
+                        for t in range(len(self.pos_y)):
+                            if mean_y.size == 0:
+                                cv[t] = evals(y_pred[:,t], y_real[:,t]).variation_rate()
+                                nmbe[t] = np.nan
+                            else:
+                                cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
+                                nmbe[t] = evals(y_pred[:, t], y_real[:, t]).nmbe(mean_y[t])
+
+                            rmse[t] = evals(y_pred[:,t], y_real[:,t]).rmse()
+                            r2[t] = evals(y_pred[:,t], y_real[:,t]).r2()
+                    else:
+                        if mean_y.size == 0:
+                            cv = evals(y_pred, y_real).variation_rate()
+                            nmbe = np.nan
+                        else:
+                            cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
+
+                        rmse = evals(y_pred, y_real).rmse()
+                        r2 = evals(y_pred, y_real).r2()
+                else:
+                    print('Missing values are detected when we are evaluating the predictions')
+                    cv = 9999
+                    nmbe = 9999
+                    rmse = 9999
+                    r2 = -9999
+            else:
+                raise NameError('Empty prediction')
+
+        res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
+
+        if plotting==True:
+            a = np.round(cv, 2)
+            up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
+            low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
+            plt.figure()
+            plt.ylim(low, up)
+            plt.plot(y_realF, color='black', label='Real')
+            plt.plot(y_predF, color='blue', label='Prediction')
+            plt.legend()
+            plt.title("CV(RMSE)={}".format(str(a)))
+            plt.savefig('plot1.png')
+        return res
+
+    def nsga2_individual(self, med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
+                         xlimit_sup, dictionary, weights):
+        '''
+        :param med:
+        :param contador: a operator to count the attempts
+        :param n_processes: how many processes are parallelise
+        :param l_dense:maximun number of layers dense
+        :param batch: batch size
+        :param pop_size: population size selected for NSGA2
+        :param tol: tolearance selected to terminate the process
+        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
+        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
+        :param dictionary: dictionary to stored the options tested
+        :return: options in Pareto front, the optimal selection and the total results
+        '''
+        from pymoo.algorithms.moo.nsga2 import NSGA2
+        from pymoo.factory import get_problem, get_visualization, get_decomposition
+        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+        from pymoo.optimize import minimize
+        from pymoo.core.problem import starmap_parallelized_eval
+        print('DATA is', type(self.data))
+        if n_processes > 1:
+            pool = multiprocessing.Pool(n_processes)
+            problem = MyProblem_svm(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+                                self.type, self.data,self.scalar_x,
+                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+        else:
+            problem = MyProblem_svm(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+                                self.type, self.data,self.scalar_x,
+                                med, contador, len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup, dictionary, weights)
+        algorithm = NSGA2(pop_size=pop_size, eliminate_duplicates=True,
+                          sampling=get_sampling("int_random"),
+                          crossover=get_crossover("int_sbx"),
+                          mutation=get_mutation("int_pm", prob=0.1))
+        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+                                                              n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
+                                                              n_max_gen=None,
+                                                              n_max_evals=5000)
+        res = minimize(problem,
+                       algorithm,
+                       termination,
+                       # ("n_gen", 20),
+                       pf=True,
+                       verbose=True,
+                       seed=7)
+        if res.F.shape[0] > 1:
+            rf=res.F
+            rx=res.X
+            weights = np.array([0.5, 0.5])
+            scal_cv = MinMaxScaler(feature_range=(0, 1))
+            scal_com = MinMaxScaler(feature_range=(0, 1))
+
+            cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
+            com=scal_com.transform(res.F[:,1].reshape(-1,1))
+
+            r_final = np.array([cv[:,0], com[:,0]])
+
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+            obj_T = r_final
+            struct_T = rx
+            obj = r_final[I, :]
+            struct = rx[I, :]
+            print(rf.shape)
+            print(rx.shape)
+
+            plt.scatter(r_final[:,0], r_final[:,1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.legend()
+        else:
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F
+            struct = res.X
+        print('The number of evaluations were:', contador)
+        if n_processes > 1:
+            pool.close()
+        else:
+            pass
+        return (obj, struct, obj_T, struct_T, res)
+
+    def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
+        '''
+        :param l_dense: maximun layers dense
+        :param batch: batch size
+        :param pop_size: population size for RVEA
+        :param tol: tolerance to built the pareto front
+        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
+        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param parallel: how many processes are parallelise
+        if mean_y is empty a variation rate will be applied
+        :return: the options selected for the pareto front, the optimal selection and the total results
+        '''
+        manager = multiprocessing.Manager()
+        dictionary = manager.dict()
+        contador = manager.list()
+        contador.append(0)
+        print('Start the optimization!!!!!')
+        obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, C_max,
+                                                                            epsilon_max, pop_size, tol, xlimit_inf,
+                                                                            xlimit_sup, dictionary, self.weights)
+        np.savetxt('objectives_selected.txt', obj)
+        np.savetxt('x_selected.txt', x_obj)
+        np.savetxt('objectives.txt', obj_total)
+        np.savetxt('x.txt', x_obj_total)
+        print('Process finished!!!')
+        print('The selection is', x_obj, 'with a result of', obj)
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        return res
+
+    def rnsga2_individual(self, med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
+                         xlimit_sup, dictionary, weights, epsilon_r):
+        '''
+        :param med:
+        :param contador: a operator to count the attempts
+        :param n_processes: how many processes are parallelise
+        :param l_dense:maximun number of layers dense
+        :param batch: batch size
+        :param pop_size: population size selected for NSGA2
+        :param tol: tolearance selected to terminate the process
+        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
+        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
+        :param dictionary: dictionary to stored the options tested
+        :return: options in Pareto front, the optimal selection and the total results
+        '''
+
+        if n_processes > 1:
+            pool = multiprocessing.Pool(n_processes)
+            problem = MyProblem_svm(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+                                self.type, self.data,self.scalar_x,
+                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+        else:
+            problem = MyProblem_svm(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+                                self.mask,
+                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
+                                self.type, self.data,self.scalar_x,
+                                med, contador, len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup, dictionary, weights)
+
+        ref_points = np.array([[0.4, 0.2], [0.1, 0.4]])
+
+        algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
+                          crossover=get_crossover("int_sbx"),
+                          mutation=get_mutation("int_pm", prob=0.1),
+                           normalization='front',
+                           extreme_points_as_reference_points=False,
+                           weights=weights,
+                           epsilon=epsilon)
+        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+                                                              n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
+                                                              n_max_gen=None,
+                                                              n_max_evals=5000)
+        res = minimize(problem,
+                       algorithm,
+                       termination,
+                       # ("n_gen", 20),
+                       pf=True,
+                       verbose=True,
+                       seed=7)
+        if res.F.shape[0] > 1:
+            rf=res.F
+            rx=res.X
+            weights = np.array([0.5, 0.5])
+            scal_cv = MinMaxScaler(feature_range=(0, 1))
+            scal_com = MinMaxScaler(feature_range=(0, 1))
+
+            cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
+            com=scal_com.transform(res.F[:,1].reshape(-1,1))
+
+            r_final = np.array([cv[:,0], com[:,0]])
+
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+            obj_T = r_final
+            struct_T = rx
+            obj = r_final[I, :]
+            struct = rx[I, :]
+            print(rf.shape)
+            print(rx.shape)
+
+            plt.scatter(r_final[:,0], r_final[:,1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.legend()
+        else:
+            obj_T = res.F
+            struct_T = res.X
+            obj = res.F
+            struct = res.X
+        print('The number of evaluations were:', contador)
+        if n_processes > 1:
+            pool.close()
+        else:
+            pass
+        return (obj, struct, obj_T, struct_T, res)
+
+    def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
+        '''
+        :param l_dense: maximun layers dense
+        :param batch: batch size
+        :param pop_size: population size for RVEA
+        :param tol: tolerance to built the pareto front
+        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
+        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param parallel: how many processes are parallelise
+        if mean_y is empty a variation rate will be applied
+        :return: the options selected for the pareto front, the optimal selection and the total results
+        '''
+        manager = multiprocessing.Manager()
+        dictionary = manager.dict()
+        contador = manager.list()
+        contador.append(0)
+        print('Start the optimization!!!!!')
+        obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, C_max,
+                                                                            epsilon_max, pop_size, tol, xlimit_inf,
+                                                                            xlimit_sup, dictionary, self.weights)
+        np.savetxt('objectives_selected.txt', obj)
+        np.savetxt('x_selected.txt', x_obj)
+        np.savetxt('objectives.txt', obj_total)
+        np.savetxt('x.txt', x_obj_total)
+        print('Process finished!!!')
+        print('The selection is', x_obj, 'with a result of', obj)
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        return res
+
+
 #class RF(ML):
 #    def info(self):
 #        print(('Class to built RF models. \n'))
