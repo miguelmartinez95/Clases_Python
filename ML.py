@@ -2685,7 +2685,7 @@ class MyProblem_svm(ElementwiseProblem):
         F = 0.75 * (C_svm / max_C) + 0.25 * (epsilon_svm/max_epsilon)
         return F
 
-    def cv_opt(self,data, fold, C_svm,epsilon_svm, mean_y, dictionary):
+    def cv_opt(self,data, fold, C_svm,epsilon_svm,tol, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param dictionary: dictionary to fill with the options tested
@@ -2885,13 +2885,30 @@ class MyProblem_svm(ElementwiseProblem):
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             return res_final['cvs'], res_final['complexity']
 
-     def _evaluate(self, x, out, *args, **kwargs):
-        g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1),self.l_dense)
+    @staticmethod
+    def bool(C_svm,epsilon_svm):
+        '''
+        :x: neurons options
+        l_dense: number of values that represent dense neurons
+        :return: 0 if the constraint is fulfilled
+        '''
+
+        #
+        if C_svm > epsilon_svm:
+           ret=0
+        else:
+            ret=epsilon_svm-C_svm
+
+        return ret
+    #
+    def _evaluate(self, x, out, *args, **kwargs):
+        g1 = MyProblem_svm.bool(x[0],x[1])
         out["G"] = g1
         print(x)
-        n_dense = x[range(self.l_dense)]*20
-        n_pacience = x[len(x) - 1]*20
-        f1, f2 = self.cv_opt(self.data, 5, n_dense, n_pacience, self.batch, self.med, self.dictionary)
+        C_F= x[0]*10
+        epsilon_F =x[1]*0.1
+        tol_F = x[2]*0.01
+        f1, f2 = self.cv_opt(self.data, 3, C_F, epsilon_F,tol_F,  self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
             self.contador, '\n #########################')
