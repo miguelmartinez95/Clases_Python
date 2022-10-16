@@ -2411,7 +2411,7 @@ class SVM(ML):
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
                                 med, contador, len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup, dictionary, weights)
-        algorithm = NSGA2(pop_size=pop_size, eliminate_duplicates=True,
+        algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_svm(),eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1))
@@ -2617,6 +2617,26 @@ class SVM(ML):
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
         return res
 
+
+from pymoo.core.repair import Repair
+class MyRepair_svm(Repair):
+    def info(self):
+        print('Class defining a function to repair the possible error of the genetic algorithm. If a layer is zero the next layer cannot have positive neurons')
+    def __init__(self):
+        pass
+
+    def _do(self, problem, pop, **kwargs):
+        for k in range(len(pop)):
+            x = pop[k].X
+            #x2 = x[range(self.l_dense)]
+            r_dense = MyProblem_svm.bool(x)
+            if r_dense == 0:
+                pass
+            elif r_dense != 0:
+                x[1] = x[0]-0.1
+
+            pop[k].X = x
+        return pop
 
 from pymoo.core.problem import ElementwiseProblem
 class MyProblem_svm(ElementwiseProblem):
@@ -2869,13 +2889,14 @@ class MyProblem_svm(ElementwiseProblem):
             return res_final['cvs'], res_final['complexity']
 
     @staticmethod
-    def bool(C_svm,epsilon_svm):
+    def bool(x):
         '''
         :x: neurons options
         l_dense: number of values that represent dense neurons
         :return: 0 if the constraint is fulfilled
         '''
-
+        C_svm= x[0]
+        epsilon_svm=x[1]
         #
         if C_svm > epsilon_svm:
            ret=0
