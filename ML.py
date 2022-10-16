@@ -2167,11 +2167,11 @@ class SVM(ML):
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
-
-        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-        y_predF = pd.DataFrame(y_pred.copy())
-        y_realF = pd.DataFrame(y_real).copy()
+        else:
+            y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+            y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+            y_predF = pd.DataFrame(y_pred.copy())
+            y_realF = pd.DataFrame(y_real).copy()
 
 
         print(y_pred)
@@ -2668,7 +2668,7 @@ class MyProblem_svm(ElementwiseProblem):
         F = 0.75 * (C_svm / max_C) + 0.25 * (epsilon_svm/max_epsilon)
         return F
 
-    def cv_opt(self,data, fold, C_svm,epsilon_svm,tol, mean_y, dictionary):
+    def cv_opt(self,data, fold, C_svm,epsilon_svm,tol_svm, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param dictionary: dictionary to fill with the options tested
@@ -2729,7 +2729,7 @@ class MyProblem_svm(ElementwiseProblem):
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
-                model = SVM.SVR_training(pd.concat([y_train[z], x_train[z]], axis=1), C_svm, epsilon_svm,tol,False)
+                model = SVM.SVR_training(pd.concat([y_train[z], x_train[z]], axis=1), C_svm, epsilon_svm,tol_svm,False)
 
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
                 y_pred = model.predict(test_x)
