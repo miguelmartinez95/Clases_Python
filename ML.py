@@ -2376,6 +2376,406 @@ class SVM(ML):
             plt.savefig('plot1.png')
         return res
 
+    def cv_analysis(self, fold,C,epsilon,tol, mean_y, plot, q=[], model=[]):
+        '''
+        :param fold: divisions in cv analysis
+        :param q: a Queue to paralelyse or empty list to do not paralyse
+        :param plot: True plots
+        :return: predictions, real values, errors and the times needed to train
+        '''
+        from pathlib import Path
+        import random
+        names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
+        print('##########################'
+              '################################'
+              'CROSS-VALIDATION'
+              '#################################'
+              '################################')
+        x = pd.DataFrame(self.data.drop(self.data.columns[self.pos_y], axis=1))
+        y = pd.DataFrame(self.data.iloc[:, self.pos_y])
+        x = x.reset_index(drop=True)
+        y = y.reset_index(drop=True)
+        res = self.svm_cv_division(x, y, fold)
+        x_test = res['x_test']
+        x_train = res['x_train']
+        y_test = res['y_test']
+        y_train = res['y_train']
+        indexes = res['indexes']
+        times_test = []
+        tt = self.times
+        for t in range(len(indexes)):
+            times_test.append(tt[indexes[t][0]:indexes[t][1]])
+        if self.type == 'classification':
+            #data2 = self.data
+            #yy = data2.iloc[:, self.pos_y]
+            #yy = pd.Series(yy, dtype='category')
+            #n_classes = len(yy.cat.categories.to_list())
+            #model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask,
+            #                                          self.mask_value)
+            #####################################################################
+            # EN PROCESOO ALGÚN DíA !!!!!!!
+            ##########################################################################
+        else:
+            # Train the model
+            times = [0 for x in range(fold)]
+            cv = [0 for x in range(fold)]
+            rmse = [0 for x in range(fold)]
+            nmbe = [0 for x in range(fold)]
+            predictions = []
+            reales = []
+            for z in range(fold):
+                h_path = Path('./best_models')
+                h_path.mkdir(exist_ok=True)
+                h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
+                if isinstance(model, list):
+                    res = self.__class__.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C,epsilon,tol,False)
+                    modelF=res['model']
+                else:
+                    model1 = model
+                    res = self.__class__.SVR_trainipd.DataFrame(y_train[z]).reset_index(drop=True)ng(pd.concat([y_train[z], x_train[z]], axis=1), C, epsilon, tol,
+                                                      False,model1)
+                    modelF=res['model']
+
+                print('Fold number', z)
+                test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
+                test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
+                time_start = time()
+                times[z] = round(time() - time_start, 3)
+                y_pred = modelF.predict(test_x)
+
+                y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+                y_real = np.array(self.scalar_y.inverse_transform(test_y))
+                for t in range(y_pred.shape[1]):
+                    y_pred[np.where(y_pred < self.inf_limit)[0], t] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0], t] = self.sup_limit
+                y_predF = y_pred.copy()
+                y_predF = pd.DataFrame(y_predF)
+                y_predF.index = times_test[z]
+                y_realF = y_real.copy()
+                y_realF = pd.DataFrame(y_realF)
+                y_realF.index = times_test[z]
+                predictions.append(y_predF)
+                reales.append(y_realF)
+                predictions.append(y_predF)
+                reales.append(y_realF)
+                if self.zero_problem == 'schedule':
+                    print('*****Night-schedule fixed******')
+                    res = super().fix_values_0(times_test[z],
+                                               self.zero_problem, self.limits)
+                    index_hour = res['indexes_out']
+                    if len(index_hour) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_hour, 0)
+                        y_real1 = np.delete(y_real, index_hour, 0)
+                    elif len(index_hour) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                        y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+                    if self.type == 'series':
+                        y_pred1 = np.concatenate(y_pred1)
+                        y_real1 = np.concatenate(y_real1)
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
+                    if len(y_pred1) > 0:
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred1, y_real1).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e)
+                                else:
+                                    print(e)
+                                    print(self.weights)
+                                    cv[z] = np.sum(e * self.weights)
+                                rmse[z] = np.nan
+                                nmbe[z] = np.nan
+                            else:
+                                e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                e_r = evals(y_pred1, y_real1).rmse()
+                                e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e_cv)
+                                    rmse[z] = np.sum(e_r)
+                                    nmbe[z] = np.sum(e_n)
+                                else:
+                                    cv[z] = np.sum(e_cv * self.weights)
+                                    rmse[z] = np.sum(e_r * self.weights)
+                                    nmbe[z] = np.sum(e_n * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[z] = 9999
+                            rmse[z] = 9999
+                            nmbe[z] = 9999
+                    else:
+                        raise NameError('Empty prediction')
+                elif self.zero_problem == 'radiation':
+                    print('*****Night-radiation fixed******')
+                    place = np.where(names == 'radiation')[0]
+                    scalar_rad = self.scalar_x['radiation']
+                    res = super().fix_values_0(scalar_rad.inverse_transform(x_test[z].iloc[:, place]),
+                                               self.zero_problem, self.limits)
+                    index_rad = res['indexes_out']
+                    index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+                    if len(index_rad) > 0 and self.horizont == 0:
+                        y_pred1 = np.delete(y_pred, index_rad, 0)
+                        y_real1 = np.delete(y_real, index_rad, 0)
+                    elif len(index_rad) > 0 and self.horizont > 0:
+                        y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                        y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
+                    else:
+                        y_pred1 = y_pred
+                        y_real1 = y_real
+                    #
+                    if self.type == 'series':
+                        y_pred1 = np.concatenate(y_pred1)
+                        y_real1 = np.concatenate(y_real1)
+                    #
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
+                    if len(y_pred1) > 0:
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred1, y_real1).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e)
+                                else:
+                                    print(e)
+                                    print(self.weights)
+                                    cv[z] = np.sum(e * self.weights)
+                                rmse[z] = np.nan
+                                nmbe[z] = np.nan
+                            else:
+                                e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                e_r = evals(y_pred1, y_real1).rmse()
+                                e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e_cv)
+                                    rmse[z] = np.sum(e_r)
+                                    nmbe[z] = np.sum(e_n)
+                                else:
+                                    cv[z] = np.sum(e_cv * self.weights)
+                                    rmse[z] = np.sum(e_r * self.weights)
+                                    nmbe[z] = np.sum(e_n * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[z] = 9999
+                            rmse[z] = 9999
+                            nmbe[z] = 9999
+                    else:
+                        raise NameError('Empty prediction')
+                else:
+                    if self.type == 'series':
+                        y_pred = np.concatenate(y_pred)
+                        y_real = np.concatenate(y_real)
+                    if self.mask == True:
+                        # Outliers and missing values
+                        o = np.where(y_real < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred = np.delete(y_pred, o, 0)
+                            y_real = np.delete(y_real, o, 0)
+                    if len(y_pred) > 0:
+                        if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred, y_real).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e)
+                                else:
+                                    print(e)
+                                    print(self.weights)
+                                    cv[z] = np.sum(e * self.weights)
+                                rmse[z] = np.nan
+                                nmbe[z] = np.nan
+                            else:
+                                e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                                e_r = evals(y_pred, y_real).rmse()
+                                e_n = evals(y_pred, y_real).nmbe(mean_y)
+                                if isinstance(self.weights, list):
+                                    cv[z] = np.sum(e_cv)
+                                    rmse[z] = np.sum(e_r)
+                                    nmbe[z] = np.sum(e_n)
+                                else:
+                                    cv[z] = np.sum(e_cv * self.weights)
+                                    rmse[z] = np.sum(e_r * self.weights)
+                                    nmbe[z] = np.sum(e_n * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cv[z] = 9999
+                            rmse[z] = 9999
+                            nmbe[z] = 9999
+                    else:
+                        raise NameError('Empty prediction')
+                if plot == True and len(y_realF.shape) > 1:
+                    s = np.max(y_realF.iloc[:, 0]).astype(int) + 15
+                    i = np.min(y_realF.iloc[:, 0]).astype(int) - 15
+                    a = np.round(cv[z], 2)
+                    plt.figure()
+                    plt.ylim(i, s)
+                    plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                    a = 'Subsample-'
+                    b = str(z) + '.png'
+                    plot_name = a + b
+                    plt.show()
+                    plt.savefig(plot_name)
+                elif plot == True and len(y_realF.shape) < 2:
+                    s = np.max(y_realF).astype(int) + 15
+                    i = np.min(y_realF).astype(int) - 15
+                    a = np.round(cv[z], 2)
+                    plt.figure()
+                    plt.ylim(i, s)
+                    plt.plot(y_realF, color='black', label='Real')
+                    plt.plot(y_predF, color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                    a = 'Subsample-'
+                    b = str(z) + '.png'
+                    plot_name = a + b
+                    plt.show()
+                    plt.savefig(plot_name)
+            res = {'preds': predictions, 'reals': reales, 'times_test': times_test, 'cv_rmse': cv,
+                   'std_cv': np.std(cv),
+                   'nmbe': nmbe, 'rmse': rmse,
+                   'times_comp': times}
+            print(("The model with", C, " C", epsilon, "epsilon and a tol of", tol, "has: \n"
+                                                                                                        "The average CV(RMSE) is",
+                   np.mean(cv), " \n"
+                                "The average NMBE is", np.mean(nmbe), "\n"
+                                                                      "The average RMSE is", np.mean(rmse), "\n"
+                                                                                                            "The average time to train is",
+                   np.mean(times)))
+            z = Queue()
+            if type(q) == type(z):
+                q.put(np.array([np.mean(cv), np.std(cv)]))
+            else:
+                return (res)
+
+    def optimal_search(self, C_options,epsilon_options,tol_options, fold,mean_y, parallel, top):
+        '''
+        :param fold: division in cv analyses
+        :param parallel: True or false (True to linux)
+        :param top: the best options yielded
+        :return: the options with their results and the top options
+        '''
+        from itertools import permutations
+        opt= permutations(C_options+epsilon_options+tol_options,3)
+        results = [0 for x in range(len(opt))]
+        deviations = [0 for x in range(len(opt))]
+        options = {'C':[], 'epsilon':[], 'tol':[]}
+        w=0
+        contador= len(opt)-1
+        if parallel <2:
+            for t in range(len(C_options)):
+                print('##################### Option ####################', w)
+                C_sel = C_options[t]
+                for i in range(len(epsilon_options)):
+                    epsilon_sel=epsilon_options[i]
+                    for u in range(len(tol_options)):
+                        options['C'].append(C_sel)
+                        options['epsilon'].append(epsilon_sel)
+                        options['tol']=tol_options[u]
+                        res = SVM.cv_analysis(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False)
+                        results[w]=np.mean(res['cv_rmse'])
+                        deviations[w]=np.std(res['cv_rmse'])
+                        w +=1
+        elif parallel>=2:
+            processes = []
+            res2 = []
+            dev2 = []
+            z = 0
+            q = Queue()
+            for t in range(len(C_options)):
+                print('##################### Option ####################', w)
+                C_sel = C_options[t]
+                for i in range(len(epsilon_options)):
+                    epsilon_sel = epsilon_options[i]
+                    for u in range(len(tol_options)):
+                        options['C'].append(C_sel)
+                        options['epsilon'].append(epsilon_sel)
+                        options['tol'] = tol_options[u]
+                        if z < parallel and w < contador:
+                            multiprocessing.set_start_method('fork')
+                            p = Process(target=SVM.cv_analysis,
+                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False, q))
+                            p.start()
+                            processes.append(p)
+                            z1 =z+ 1
+                        elif z == parallel and w < contador:
+                            p.close()
+                            for p in processes:
+                                p.join()
+                            for v in range(len(processes)):
+                                res2.append(q.get()[0])
+                                res2.append(q.get()[1])
+                            processes = []
+                            # multiprocessing.set_start_method('fork')
+                            # multiprocessing.set_start_method('spawn')
+                            q = Queue()
+                            p = Process(target=SVM.cv_analysis,
+                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False q))
+                            p.start()
+                            processes.append(p)
+                            z1 = 1
+                        elif w == contador:
+                            p = Process(target=SVM.cv_analysis,
+                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False q))
+                            p.start()
+                            processes.append(p)
+                            p.close()
+                            for p in processes:
+                                p.join()
+                                #res2.append(q.get())
+                            for v in range(len(processes)):
+                                res2.append(q.get()[0])
+                                dev2.append(q.get()[1])
+                        z=z1
+                        w += 1
+            results = res2
+            deviations = dev2
+        else:
+            raise NameError('Option not considered')
+        r1 = results.copy()
+        d1 = deviations.copy()
+        print(r1)
+        top_results = {'error':[], 'std':[], 'C':[], 'epsilon':[], 'tol':[]}
+        for i in range(top):
+                a = np.where(r1==np.min(r1))[0]
+                print(a)
+                if len(a)==1:
+                    zz = a[0]
+                else:
+                    zz= a[0][0]
+                top_results['error'].append(r1[zz])
+                top_results['std'].append(d1[zz])
+                top_results['C'].append(options['C'][zz])
+                top_results['epsilon'].append(options['epsilon'][zz])
+                top_results['tol'].append(options['tol'][zz])
+                r1.remove(np.min(r1))
+                d1.remove(d1[zz])
+                options['neurons'].pop(zz)
+                options['pacience'].pop(zz)
+        print('Process finished!!!')
+        res = {'errors': results,'options':options, 'best': top_results}
+        return(res)
+
+
+
     def nsga2_individual(self, med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
                          xlimit_sup, dictionary, weights):
         '''
