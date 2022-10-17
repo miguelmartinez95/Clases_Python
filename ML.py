@@ -12,6 +12,7 @@ from keras.layers import Masking, Dropout
 from datetime import datetime
 from time import time
 #import skfda
+import collections
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
@@ -753,9 +754,13 @@ class MLP(ML):
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
 
-                for t in range(y_pred.shape[1]):
-                    y_pred[np.where(y_pred < self.inf_limit)[0],t] = self.inf_limit
-                    y_pred[np.where(y_pred > self.sup_limit)[0],t] = self.sup_limit
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    for t in range(len(self.pos_y)):
+                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                else:
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
 
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
