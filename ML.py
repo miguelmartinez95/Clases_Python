@@ -2099,7 +2099,7 @@ class MyProblem_mlp(ElementwiseProblem):
         print(x)
         n_dense = x[range(self.l_dense)]*20
         n_pacience = x[len(x) - 1]*20
-        f1, f2 = self.cv_opt(self.data, 5, n_dense, n_pacience, self.batch, self.med, self.dictionary)
+        f1, f2 = self.cv_opt(self.data, 3, n_dense, n_pacience, self.batch, self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
             self.contador, '\n #########################')
