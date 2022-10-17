@@ -578,6 +578,24 @@ class LSTM_model(DL):
         self.weights=weights
         self.n_steps=n_steps
 
+    @staticmethod
+    def complex(neurons_lstm, neurons_dense, max_N, max_H):
+        '''
+        :param max_N: maximun neurons in the network
+        :param max_H: maximum hidden layers in the network
+        :return: complexity of the model
+        '''
+
+        if any(neurons_lstm == 0):
+            neurons_lstm = neurons_lstm[neurons_lstm > 0]
+        if any(neurons_dense == 0):
+            neurons_dense = neurons_dense[neurons_dense > 0]
+
+        u = len(neurons_lstm) + len(neurons_dense)
+
+        F = 0.25 * (u / max_H) + 0.75 * np.sum(np.concatenate((neurons_lstm, neurons_dense))) / max_N
+
+        return F
 
     @staticmethod
     def three_dimension(data_new, n_inputs):
@@ -1466,7 +1484,8 @@ class LSTM_model(DL):
 
             z = Queue()
             if type(q) == type(z):
-                q.put(np.array([np.mean(cv), np.std(cv)]))
+                #q.put(np.array([np.mean(cv), np.std(cv)]))
+                q.put(np.array([np.mean(cv), LSTM.complex(layers_lstm,layers_neurons,2000,12)]))
             else:
                 return (res_final)
 
@@ -1836,7 +1855,7 @@ class LSTM_model(DL):
 
         return res
 
-    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, onebyone,batch, mean_y,parallel,top,values):
+    def optimal_search(self, fold, rep, neurons_dense, neurons_lstm, paciences, onebyone,batch, mean_y,parallel,weights,values):
         '''
         Parallelisation is not work tested!!!
 
@@ -1847,8 +1866,8 @@ class LSTM_model(DL):
         :return: errors obtained with the options considered together  with the best solutions
         '''
 
-        results = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
-        deviations = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
+        error = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
+        complexity = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
 
         options = {'neurons_dense': [], 'neurons_lstm': [], 'pacience': []}
         w = 0
@@ -1864,8 +1883,8 @@ class LSTM_model(DL):
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
                         res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense,onebyone, paciences[i], batch, mean_y,values,False)
-                        results[w] = np.mean(res['cv_rmse'])
-                        deviations[w] = np.std(res['cv_rmse'])
+                        error[w] = np.mean(res['cv_rmse'])
+                        complexity[w] = LSTM.complex(neuron_lstm, neuron_dense,2000,12)
                         w += 1
         elif parallel>=2:
             processes = []
@@ -1926,40 +1945,71 @@ class LSTM_model(DL):
                         z=z1
 
                         w += 1
-            results = res2
-            deviations = dev2
+            error = res2
+            complexity = dev2
         else:
             raise NameError('Option not considered')
 
-        r1 = results.copy()
-        d1 = deviations.copy()
+        r1 = error.copy()
+        d1 = complexity.copy()
         print('Resultados search', r1)
-        top_results = {'error': [], 'std': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
 
-        for i in range(top):
-            a = np.where(r1 == np.min(r1))[0]
-            print(a)
-            if len(a) == 1:
-                zz = a[0]
-            else:
-                zz = a[0][0]
+        scal_cv = MinMaxScaler(feature_range=(0, 1))
+        scal_com = MinMaxScaler(feature_range=(0, 1))
 
-            top_results['error'].append(r1[zz])
-            top_results['std'].append(d1[zz])
-            top_results['neurons_dense'].append(options['neurons_dense'][zz])
-            top_results['neurons_lstm'].append(options['neurons_lstm'][zz])
-            top_results['pacience'].append(options['pacience'][zz])
+        scal_cv.fit(np.array(r1).reshape(-1, 1))
+        scal_com.fit(np.array(d1).reshape(-1, 1))
 
-            r1.remove(np.min(r1))
-            d1.remove(d1[zz])
-            options['neurons_dense'].pop(zz)
-            options['neurons_lstm'].pop(zz)
-            options['pacience'].pop(zz)
+        cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
+        com = scal_com.transform(np.array(d1).reshape(-1, 1))
 
-        print('The best results: ', top_results)
+        r_final = np.array([cv[:, 0], com[:, 0]])
+
+        I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+        obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
+
+        top_result = {'error': [], 'complexity': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
+        top_result['error']=r1[I]
+        top_result['complexity']=d1[I]
+        top_result['neurons_dense']=options['neurons_dense'][I]
+        top_result['neurons_lstm']=options['neurons_lstm'][I]
+        top_result['pacience']=options['pacience'][I]
+
+        plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+        plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+        plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+                    label='Optimum')
+        plt.legend()
+        plt.savefig('optimisation_plot.png')
+
+        #top_results = {'error': [], 'std': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
+#
+        #for i in range(top):
+        #    a = np.where(r1 == np.min(r1))[0]
+        #    print(a)
+        #    if len(a) == 1:
+        #        zz = a[0]
+        #    else:
+        #        zz = a[0][0]
+#
+        #    top_results['error'].append(r1[zz])
+        #    top_results['std'].append(d1[zz])
+        #    top_results['neurons_dense'].append(options['neurons_dense'][zz])
+        #    top_results['neurons_lstm'].append(options['neurons_lstm'][zz])
+        #    top_results['pacience'].append(options['pacience'][zz])
+#
+        #    r1.remove(np.min(r1))
+        #    d1.remove(d1[zz])
+        #    options['neurons_dense'].pop(zz)
+        #    options['neurons_lstm'].pop(zz)
+        #    options['pacience'].pop(zz)
+#
+        #print('The best results: ', top_results)
 
         print('Process finished!!!')
-        res = {'errors': results, 'options': options, 'best': top_results}
+        res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
 
         return res
 
@@ -2427,24 +2477,6 @@ class MyProblem(ElementwiseProblem):
         self.values=values
         self.weights=weights
 
-    @staticmethod
-    def complex(neurons_lstm, neurons_dense, max_N, max_H):
-        '''
-        :param max_N: maximun neurons in the network
-        :param max_H: maximum hidden layers in the network
-        :return: complexity of the model
-        '''
-
-        if any(neurons_lstm == 0):
-            neurons_lstm = neurons_lstm[neurons_lstm > 0]
-        if any(neurons_dense == 0):
-            neurons_dense = neurons_dense[neurons_dense > 0]
-
-        u = len(neurons_lstm) + len(neurons_dense)
-
-        F = 0.25 * (u / max_H) + 0.75 * np.sum(np.concatenate((neurons_lstm, neurons_dense))) / max_N
-
-        return F
 
     def cv_opt(self,data,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
         '''
@@ -2647,7 +2679,7 @@ class MyProblem(ElementwiseProblem):
 
                 zz += 1
 #
-            complexity = MyProblem.complex(neurons_lstm,neurons_dense, 2000, 12)
+            complexity = LSTM.complex(neurons_lstm,neurons_dense, 2000, 12)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
