@@ -1080,7 +1080,7 @@ class MLP(ML):
         cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
         com = scal_com.transform(np.array(d1).reshape(-1, 1))
 
-        r_final = np.array([cv[:, 0], com[:, 0]])
+        r_final = np.array([cv[:, 0], com[:, 0]]).T
 
         I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -1093,10 +1093,11 @@ class MLP(ML):
         top_result['pacience'] = options['pacience'][I]
 
 
+        plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-        plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-        plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-        plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+        plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+        plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
         plt.legend()
         plt.savefig('optimisation_plot.png')
@@ -1474,7 +1475,7 @@ class MLP(ML):
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            r_final = np.array([cv[:,0], com[:,0]])
+            r_final = np.array([cv[:,0], com[:,0]]).T
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -1485,10 +1486,12 @@ class MLP(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.scatter(r_final[:,0], r_final[:,1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.figure(figsize=(12, 9))
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+                        label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
         else:
@@ -1714,7 +1717,7 @@ class MLP(ML):
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            r_final = np.array([cv[:,0], com[:,0]])
+            r_final = np.array([cv[:,0], com[:,0]]).T
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -1725,10 +1728,12 @@ class MLP(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.scatter(r_final[:,0], r_final[:,1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.figure(figsize=(12, 9))
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+                        label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
         else:
@@ -2819,7 +2824,7 @@ class SVM(ML):
         cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
         com = scal_com.transform(np.array(d1).reshape(-1, 1))
 
-        r_final = np.array([cv[:, 0], com[:, 0]])
+        r_final = np.array([cv[:, 0], com[:, 0]]).T
 
         I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -2832,10 +2837,11 @@ class SVM(ML):
         top_result['epsilon'] = options['epsilon'][I]
         top_result['tol'] = options['tol'][I]
 
+        plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-        plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-        plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-        plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+        plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+        plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
         plt.legend()
         plt.savefig('optimisation_plot.png')
@@ -2926,7 +2932,7 @@ class SVM(ML):
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            r_final = np.array([cv[:,0], com[:,0]])
+            r_final = np.array([cv[:,0], com[:,0]]).T
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -2937,10 +2943,12 @@ class SVM(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.scatter(r_final[:,0], r_final[:,1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.figure(figsize=(12, 9))
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+                        label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
         else:
@@ -3054,7 +3062,7 @@ class SVM(ML):
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            r_final = np.array([cv[:,0], com[:,0]])
+            r_final = np.array([cv[:,0], com[:,0]]).T
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -3065,10 +3073,12 @@ class SVM(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.scatter(r_final[:,0], r_final[:,1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.figure(figsize=(12, 9))
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+                        label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
         else:
