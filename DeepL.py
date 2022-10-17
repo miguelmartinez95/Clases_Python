@@ -1963,7 +1963,7 @@ class LSTM_model(DL):
         cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
         com = scal_com.transform(np.array(d1).reshape(-1, 1))
 
-        r_final = np.array([cv[:, 0], com[:, 0]])
+        r_final = np.array([cv[:, 0], com[:, 0]]).T
 
         I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -2071,7 +2071,7 @@ class LSTM_model(DL):
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            r_final = np.array([cv[:,0], com[:,0]])
+            r_final = np.array([cv[:,0], com[:,0]]).T
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -2198,7 +2198,7 @@ class LSTM_model(DL):
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
-            r_final = np.array([cv[:,0], com[:,0]])
+            r_final = np.array([cv[:,0], com[:,0]]).T
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -2209,10 +2209,12 @@ class LSTM_model(DL):
             print(rf.shape)
             print(rx.shape)
 
-            plt.scatter(r_final[:,0], r_final[:,1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
+            plt.figure(figsize=(12, 9))
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=350, color='red', alpha=1, marker='o', facecolors='none',
+                        label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
 
