@@ -528,6 +528,20 @@ class MLP(ML):
         horizont: distance to the present
         I want to predict the moment four steps in future
         '''
+
+    @staticmethod
+    def complex_mlp(neurons, max_N, max_H):
+        '''
+        :param max_N: maximun neurons in the network
+        :param max_H: maximum hidden layers in the network
+        :return: complexity of the model
+        '''
+        if any(neurons == 0):
+            neurons = neurons[neurons > 0]
+        u = len(neurons)
+        F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
+        return F
+
     @staticmethod
     def mlp_classification(layers, neurons, inputs, outputs, mask, mask__value):
         '''
@@ -972,19 +986,20 @@ class MLP(ML):
 
             z = Queue()
             if type(q)==type(z):
-                q.put(np.array([np.mean(cv), np.std(cv)]))
+                #q.put(np.array([np.mean(cv), np.std(cv)]))
+                q.put(np.array([np.mean(cv), MLP.complex_mlp(neurons,2000,8)]))
             else:
                 return (res)
 
-    def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel,dropout, top):
+    def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel,dropout, weights):
         '''
         :param fold: division in cv analyses
         :param parallel: True or false (True to linux)
         :param top: the best options yielded
         :return: the options with their results and the top options
         '''
-        results = [0 for x in range(len(neurons) * len(paciences))]
-        deviations = [0 for x in range(len(neurons) * len(paciences))]
+        error = [0 for x in range(len(neurons) * len(paciences))]
+        complexity = [0 for x in range(len(neurons) * len(paciences))]
         options = {'neurons':[], 'pacience':[]}
         w=0
         contador= len(neurons) * len(paciences)-1
@@ -996,8 +1011,8 @@ class MLP(ML):
                     options['neurons'].append(neuron)
                     options['pacience'].append(paciences[i])
                     res = self.cv_analysis(fold, neuron , paciences[i],batch,mean_y,dropout,False)
-                    results[w]=np.mean(res['cv_rmse'])
-                    deviations[w]=np.std(res['cv_rmse'])
+                    error[w]=np.mean(res['cv_rmse'])
+                    complexity[w]=MLP.complex_mlp(neuron,2000,8)
                     w +=1
         elif parallel>=2:
             processes = []
@@ -1048,31 +1063,62 @@ class MLP(ML):
                             dev2.append(q.get()[1])
                     z=z1
                     w += 1
-            results = res2
-            deviations = dev2
+            error = res2
+            complexity = dev2
         else:
             raise NameError('Option not considered')
-        r1 = results.copy()
-        d1 = deviations.copy()
+        r1 = error.copy()
+        d1 = complexity.copy()
         print(r1)
-        top_results = {'error':[], 'std':[], 'neurons':[], 'pacience':[]}
-        for i in range(top):
-                a = np.where(r1==np.min(r1))[0]
-                print(a)
-                if len(a)==1:
-                    zz = a[0]
-                else:
-                    zz= a[0][0]
-                top_results['error'].append(r1[zz])
-                top_results['std'].append(d1[zz])
-                top_results['neurons'].append(options['neurons'][zz])
-                top_results['pacience'].append(options['pacience'][zz])
-                r1.remove(np.min(r1))
-                d1.remove(d1[zz])
-                options['neurons'].pop(zz)
-                options['pacience'].pop(zz)
+
+        scal_cv = MinMaxScaler(feature_range=(0, 1))
+        scal_com = MinMaxScaler(feature_range=(0, 1))
+
+        scal_cv.fit(np.array(r1).reshape(-1, 1))
+        scal_com.fit(np.array(d1).reshape(-1, 1))
+
+        cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
+        com = scal_com.transform(np.array(d1).reshape(-1, 1))
+
+        r_final = np.array([cv[:, 0], com[:, 0]])
+
+        I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+        # obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
+
+        top_result = {'error': [], 'complexity': [], 'nuerons': [], 'pacience': []}
+        top_result['error'] = r1[I]
+        top_result['complexity'] = d1[I]
+        top_result['neurons'] = options['neurons'][I]
+        top_result['pacience'] = options['pacience'][I]
+
+
+        plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+        plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+        plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+                    label='Optimum')
+        plt.legend()
+        plt.savefig('optimisation_plot.png')
+
+        #top_results = {'error':[], 'std':[], 'neurons':[], 'pacience':[]}
+        #for i in range(top):
+        #        a = np.where(r1==np.min(r1))[0]
+        #        print(a)
+        #        if len(a)==1:
+        #            zz = a[0]
+        #        else:
+        #            zz= a[0][0]
+        #        top_results['error'].append(r1[zz])
+        #        top_results['std'].append(d1[zz])
+        #        top_results['neurons'].append(options['neurons'][zz])
+        #        top_results['pacience'].append(options['pacience'][zz])
+        #        r1.remove(np.min(r1))
+        #        d1.remove(d1[zz])
+        #        options['neurons'].pop(zz)
+        #        options['pacience'].pop(zz)
         print('Process finished!!!')
-        res = {'errors': results,'options':options, 'best': top_results}
+        res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
 
     def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[]):
@@ -1787,18 +1833,6 @@ class MyProblem_mlp(ElementwiseProblem):
         self.n_var = n_var
         self.dictionary = dictionary
         self.weights = weights
-    @staticmethod
-    def complex_mlp(neurons, max_N, max_H):
-        '''
-        :param max_N: maximun neurons in the network
-        :param max_H: maximum hidden layers in the network
-        :return: complexity of the model
-        '''
-        if any(neurons == 0):
-            neurons = neurons[neurons > 0]
-        u = len(neurons)
-        F = 0.25 * (u / max_H) + 0.75 * np.sum(neurons) / max_N
-        return F
 
     def cv_opt(self,data, fold, neurons, pacience, batch, mean_y, dictionary):
         '''
@@ -2000,7 +2034,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
 
-            complexity = MyProblem_mlp.complex_mlp(neurons, 50000, 8)
+            complexity = MLP.complex_mlp(neurons, 2000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             print(dictionary[name1] )
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
