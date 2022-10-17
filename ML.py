@@ -1104,7 +1104,7 @@ class MLP(ML):
         plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
         plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
-        plt.legend()
+        plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
 
         #top_results = {'error':[], 'std':[], 'neurons':[], 'pacience':[]}
@@ -1497,7 +1497,7 @@ class MLP(ML):
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
             plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend()
+            plt.legend(borderpad=1.25)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -1739,7 +1739,7 @@ class MLP(ML):
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
             plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend(borderpad=1.5)
+            plt.legend(borderpad=1.25)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -2510,9 +2510,14 @@ class SVM(ML):
 
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(test_y))
-                for t in range(y_pred.shape[1]):
-                    y_pred[np.where(y_pred < self.inf_limit)[0], t] = self.inf_limit
-                    y_pred[np.where(y_pred > self.sup_limit)[0], t] = self.sup_limit
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    for t in range(len(self.pos_y)):
+                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                else:
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -2848,7 +2853,7 @@ class SVM(ML):
         plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
         plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
-        plt.legend()
+        plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
 
         #top_results = {'error':[], 'std':[], 'C':[], 'epsilon':[], 'tol':[]}
@@ -2954,7 +2959,7 @@ class SVM(ML):
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
             plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend()
+            plt.legend(borderpad=1.25)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -3084,7 +3089,7 @@ class SVM(ML):
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
             plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend(borderpad=1.5)
+            plt.legend(borderpad=1.25)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F

@@ -1987,7 +1987,7 @@ class LSTM_model(DL):
         plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
         plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
-        plt.legend()
+        plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
 
         #top_results = {'error': [], 'std': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
@@ -2094,7 +2094,7 @@ class LSTM_model(DL):
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
             plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend()
+            plt.legend(borderpad=1.25)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -2222,7 +2222,7 @@ class LSTM_model(DL):
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
             plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend()
+            plt.legend(borderpad=1.25)
             plt.savefig('optimisation_plot.png')
 
         else:
