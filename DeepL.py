@@ -2014,6 +2014,9 @@ class LSTM_model(DL):
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
 
+            scal_cv.fit(res.F[:,0].reshape(-1,1))
+            scal_com.fit(res.F[:,1].reshape(-1,1))
+
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
@@ -2135,6 +2138,9 @@ class LSTM_model(DL):
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
+
+            scal_cv.fit(res.F[:,0].reshape(-1,1))
+            scal_com.fit(res.F[:,1].reshape(-1,1))
 
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
