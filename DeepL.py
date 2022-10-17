@@ -2081,6 +2081,7 @@ class LSTM_model(DL):
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
+            print(r_final.shape)
 
             plt.figure(figsize=(12, 9))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
@@ -2208,6 +2209,7 @@ class LSTM_model(DL):
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
+
 
             plt.figure(figsize=(12, 9))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
