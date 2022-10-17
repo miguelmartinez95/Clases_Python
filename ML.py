@@ -2440,7 +2440,7 @@ class SVM(ML):
             plt.savefig('plot1.png')
         return res
 
-    def cv_analysis(self, fold,C,epsilon,tol, mean_y, plot, q=[], model=[]):
+    def cv_analysis_svm(self, fold,C,epsilon,tol, mean_y, plot, q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -2761,7 +2761,7 @@ class SVM(ML):
                         options['C'].append(C_sel)
                         options['epsilon'].append(epsilon_sel)
                         options['tol']=tol_options[u]
-                        res = SVM.cv_analysis(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False)
+                        res = self.cv_analysis_svm(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False)
                         error[w]=np.mean(res['cv_rmse'])
                         complexity[w]=SVM.complex_svm(C_sel, epsilon_sel,10000,100)
                         w +=1
@@ -2782,7 +2782,7 @@ class SVM(ML):
                         options['tol'] = tol_options[u]
                         if z < parallel and w < contador:
                             multiprocessing.set_start_method('fork')
-                            p = Process(target=SVM.cv_analysis,
+                            p = Process(target=self.cv_analysis_svm,
                                         args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False, q))
                             p.start()
                             processes.append(p)
@@ -2798,13 +2798,13 @@ class SVM(ML):
                             # multiprocessing.set_start_method('fork')
                             # multiprocessing.set_start_method('spawn')
                             q = Queue()
-                            p = Process(target=SVM.cv_analysis,
+                            p = Process(target=self.cv_analysis_svm,
                                         args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False, q))
                             p.start()
                             processes.append(p)
                             z1 = 1
                         elif w == contador:
-                            p = Process(target=SVM.cv_analysis,
+                            p = Process(target=self.cv_analysis_svm,
                                         args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False, q))
                             p.start()
                             processes.append(p)
