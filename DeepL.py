@@ -1485,7 +1485,7 @@ class LSTM_model(DL):
             z = Queue()
             if type(q) == type(z):
                 #q.put(np.array([np.mean(cv), np.std(cv)]))
-                q.put(np.array([np.mean(cv), LSTM.complex(layers_lstm,layers_neurons,2000,12)]))
+                q.put(np.array([np.mean(cv), LSTM_model.complex(layers_lstm,layers_neurons,2000,12)]))
             else:
                 return (res_final)
 
@@ -1884,7 +1884,7 @@ class LSTM_model(DL):
                         options['pacience'].append(paciences[i])
                         res = self.cv_analysis(fold, rep, neuron_lstm, neuron_dense,onebyone, paciences[i], batch, mean_y,values,False)
                         error[w] = np.mean(res['cv_rmse'])
-                        complexity[w] = LSTM.complex(neuron_lstm, neuron_dense,2000,12)
+                        complexity[w] = LSTM_model.complex(neuron_lstm, neuron_dense,2000,12)
                         w += 1
         elif parallel>=2:
             processes = []
@@ -2679,7 +2679,7 @@ class MyProblem(ElementwiseProblem):
 
                 zz += 1
 #
-            complexity = LSTM.complex(neurons_lstm,neurons_dense, 2000, 12)
+            complexity = LSTM_model.complex(neurons_lstm,neurons_dense, 2000, 12)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
