@@ -2406,6 +2406,7 @@ class SVM(ML):
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
         if self.type == 'classification':
+            print('nothing')
             #data2 = self.data
             #yy = data2.iloc[:, self.pos_y]
             #yy = pd.Series(yy, dtype='category')
@@ -2432,7 +2433,7 @@ class SVM(ML):
                     modelF=res['model']
                 else:
                     model1 = model
-                    res = self.__class__.SVR_trainipd.DataFrame(y_train[z]).reset_index(drop=True)ng(pd.concat([y_train[z], x_train[z]], axis=1), C, epsilon, tol,
+                    res = self.__class__.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C, epsilon, tol,
                                                       False,model1)
                     modelF=res['model']
 
@@ -2728,13 +2729,13 @@ class SVM(ML):
                             # multiprocessing.set_start_method('spawn')
                             q = Queue()
                             p = Process(target=SVM.cv_analysis,
-                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False q))
+                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False, q))
                             p.start()
                             processes.append(p)
                             z1 = 1
                         elif w == contador:
                             p = Process(target=SVM.cv_analysis,
-                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False q))
+                                        args=(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False, q))
                             p.start()
                             processes.append(p)
                             p.close()
@@ -3138,10 +3139,6 @@ class MyProblem_svm(ElementwiseProblem):
             # EN PROCESOO ALGÚN DíA !!!!!!!
             ##########################################################################
         else:
-
-                       # Checkpoitn callback
-            es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-            mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
             # Train the model
             for z in range(fold):
                 print('Fold number', z)
@@ -3149,9 +3146,8 @@ class MyProblem_svm(ElementwiseProblem):
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
-                model = SVM.SVR_training(pd.concat([y_train[z], x_train[z]], axis=1), C_svm, epsilon_svm,tol_svm,False)
-
-                model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
+                res = SVM.SVR_training(pd.concat([y_train[z], x_train[z]], axis=1), C_svm, epsilon_svm,tol_svm,False)
+                model=res['model']
                 y_pred = model.predict(test_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = test_y
