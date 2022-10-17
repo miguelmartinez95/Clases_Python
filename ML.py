@@ -2745,12 +2745,12 @@ class SVM(ML):
         :return: the options with their results and the top options
         '''
         from itertools import permutations
-        opt= permutations(C_options+epsilon_options+tol_options,3)
-        error = [0 for x in range(len(opt))]
-        complexity = [0 for x in range(len(opt))]
+        #opt= list(permutations(C_options+epsilon_options+tol_options,3))
+        error = [0 for x in range(len(C_options)*len(epsilon_options)*len(tol_options))]
+        complexity = [0 for x in range(len(C_options)*len(epsilon_options)*len(tol_options))]
         options = {'C':[], 'epsilon':[], 'tol':[]}
         w=0
-        contador= len(opt)-1
+        contador= len(C_options)*len(epsilon_options)*len(tol_options)-1
         if parallel <2:
             for t in range(len(C_options)):
                 print('##################### Option ####################', w)
