@@ -2493,11 +2493,11 @@ class SVM(ML):
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
                 if isinstance(model, list):
-                    res = self.__class__.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C,epsilon,tol,False)
+                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C,epsilon,tol,False)
                     modelF=res['model']
                 else:
                     model1 = model
-                    res = self.__class__.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C, epsilon, tol,
+                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C, epsilon, tol,
                                                       False,model1)
                     modelF=res['model']
 
