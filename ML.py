@@ -51,7 +51,7 @@ class ML:
                'IMPORTANT: the variables that can be lagged to the end of data frame'
               ))
 
-    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit ):
+    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit ):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -61,7 +61,6 @@ class ML:
         self.limits = limits
         self.pos_y = pos_y
         self.n_lags = n_lags
-        self.n_steps = n_steps
         self.mask = mask
         self.mask_value = mask_value
         self.sup_limit = sup_limit
@@ -522,9 +521,10 @@ class MLP(ML):
         print(('Class to built MLP models. \n'
               'All the parameters comes from the ML class except the activation functions'))
     def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
-        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit)
+        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
         self.weights = weights
+        self.n_steps=n_steps
         '''
         horizont: distance to the present
         I want to predict the moment four steps in future
