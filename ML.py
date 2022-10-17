@@ -1095,9 +1095,9 @@ class MLP(ML):
 
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-        plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+        plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
         plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-        plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
         plt.legend()
         plt.savefig('optimisation_plot.png')
@@ -1488,9 +1488,9 @@ class MLP(ML):
 
             plt.figure(figsize=(12, 9))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
@@ -1730,9 +1730,9 @@ class MLP(ML):
 
             plt.figure(figsize=(12, 9))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
@@ -2839,9 +2839,9 @@ class SVM(ML):
 
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-        plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+        plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
         plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-        plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                     label='Optimum')
         plt.legend()
         plt.savefig('optimisation_plot.png')
@@ -2945,9 +2945,9 @@ class SVM(ML):
 
             plt.figure(figsize=(12, 9))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
@@ -3075,9 +3075,9 @@ class SVM(ML):
 
             plt.figure(figsize=(12, 9))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-            plt.xlabel('Normalised CV RMSE', fontsize=20, labelpad=10)
+            plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=250, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
             plt.legend()
             plt.savefig('optimisation_plot.png')
