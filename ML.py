@@ -1441,6 +1441,7 @@ class MLP(ML):
             plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
             plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
             plt.legend()
+            plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
             struct_T = res.X
@@ -1677,6 +1678,7 @@ class MLP(ML):
             plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
             plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
             plt.legend()
+            plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
             struct_T = res.X
@@ -2853,6 +2855,7 @@ class SVM(ML):
             plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
             plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
             plt.legend()
+            plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
             struct_T = res.X
@@ -2977,6 +2980,7 @@ class SVM(ML):
             plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
             plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
             plt.legend()
+            plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
             struct_T = res.X
