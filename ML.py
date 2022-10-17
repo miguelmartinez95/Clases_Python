@@ -2090,6 +2090,18 @@ class SVM(ML):
         '''
 
     @staticmethod
+    def complex_svm(C_svm,epsilon_svm, max_C, max_epsilon):
+        '''
+        :param max_N: maximun neurons in the network
+        :param max_H: maximum hidden layers in the network
+        :return: complexity of the model
+        '''
+
+        F = 0.75 * (C_svm / max_C) + 0.25 * (epsilon_svm/max_epsilon)
+        return F
+
+
+    @staticmethod
     def svm_cv_division(x,y, fold):
         '''
         Division de la muestra en trozos según fold para datos normales y no recurrentes
@@ -2671,11 +2683,12 @@ class SVM(ML):
                    np.mean(times)))
             z = Queue()
             if type(q) == type(z):
-                q.put(np.array([np.mean(cv), np.std(cv)]))
+                #q.put(np.array([np.mean(cv), np.std(cv)]))
+                q.put(np.array([np.mean(cv), SVM.complex_svm(C, epsilon, 10000,100)]))
             else:
                 return (res)
 
-    def optimal_search(self, C_options,epsilon_options,tol_options, fold,mean_y, parallel, top):
+    def optimal_search(self, C_options,epsilon_options,tol_options, fold,mean_y, parallel, weights):
         '''
         :param fold: division in cv analyses
         :param parallel: True or false (True to linux)
@@ -2684,8 +2697,8 @@ class SVM(ML):
         '''
         from itertools import permutations
         opt= permutations(C_options+epsilon_options+tol_options,3)
-        results = [0 for x in range(len(opt))]
-        deviations = [0 for x in range(len(opt))]
+        error = [0 for x in range(len(opt))]
+        complexity = [0 for x in range(len(opt))]
         options = {'C':[], 'epsilon':[], 'tol':[]}
         w=0
         contador= len(opt)-1
@@ -2700,8 +2713,8 @@ class SVM(ML):
                         options['epsilon'].append(epsilon_sel)
                         options['tol']=tol_options[u]
                         res = SVM.cv_analysis(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False)
-                        results[w]=np.mean(res['cv_rmse'])
-                        deviations[w]=np.std(res['cv_rmse'])
+                        error[w]=np.mean(res['cv_rmse'])
+                        complexity[w]=SVM.complex_svm(C_sel, epsilon_sel,10000,100)
                         w +=1
         elif parallel>=2:
             processes = []
@@ -2755,32 +2768,63 @@ class SVM(ML):
                                 dev2.append(q.get()[1])
                         z=z1
                         w += 1
-            results = res2
-            deviations = dev2
+            error = res2
+            complexity = dev2
         else:
             raise NameError('Option not considered')
-        r1 = results.copy()
-        d1 = deviations.copy()
+        r1 = error.copy()
+        d1 = complexity.copy()
         print(r1)
-        top_results = {'error':[], 'std':[], 'C':[], 'epsilon':[], 'tol':[]}
-        for i in range(top):
-                a = np.where(r1==np.min(r1))[0]
-                print(a)
-                if len(a)==1:
-                    zz = a[0]
-                else:
-                    zz= a[0][0]
-                top_results['error'].append(r1[zz])
-                top_results['std'].append(d1[zz])
-                top_results['C'].append(options['C'][zz])
-                top_results['epsilon'].append(options['epsilon'][zz])
-                top_results['tol'].append(options['tol'][zz])
-                r1.remove(np.min(r1))
-                d1.remove(d1[zz])
-                options['neurons'].pop(zz)
-                options['pacience'].pop(zz)
+
+        scal_cv = MinMaxScaler(feature_range=(0, 1))
+        scal_com = MinMaxScaler(feature_range=(0, 1))
+
+        scal_cv.fit(np.array(r1).reshape(-1, 1))
+        scal_com.fit(np.array(d1).reshape(-1, 1))
+
+        cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
+        com = scal_com.transform(np.array(d1).reshape(-1, 1))
+
+        r_final = np.array([cv[:, 0], com[:, 0]])
+
+        I = get_decomposition("pbi").do(r_final, weights).argmin()
+
+        # obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
+
+        top_result = {'error': [], 'complexity': [], 'C': [], 'epsilon': [], 'tol': []}
+        top_result['error'] = r1[I]
+        top_result['complexity'] = d1[I]
+        top_result['C'] = options['C'][I]
+        top_result['epsilon'] = options['epsilon'][I]
+        top_result['tol'] = options['tol'][I]
+
+        plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+        plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
+        plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
+        plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
+                    label='Optimum')
+        plt.legend()
+        plt.savefig('optimisation_plot.png')
+
+        #top_results = {'error':[], 'std':[], 'C':[], 'epsilon':[], 'tol':[]}
+        #for i in range(top):
+        #        a = np.where(r1==np.min(r1))[0]
+        #        print(a)
+        #        if len(a)==1:
+        #            zz = a[0]
+        #        else:
+        #            zz= a[0][0]
+        #        top_results['error'].append(r1[zz])
+        #        top_results['std'].append(d1[zz])
+        #        top_results['C'].append(options['C'][zz])
+        #        top_results['epsilon'].append(options['epsilon'][zz])
+        #        top_results['tol'].append(options['tol'][zz])
+        #        r1.remove(np.min(r1))
+        #        d1.remove(d1[zz])
+        #        options['neurons'].pop(zz)
+        #        options['pacience'].pop(zz)
         print('Process finished!!!')
-        res = {'errors': results,'options':options, 'best': top_results}
+        res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
 
 
@@ -3094,16 +3138,6 @@ class MyProblem_svm(ElementwiseProblem):
         self.n_var = n_var
         self.dictionary = dictionary
         self.weights = weights
-    @staticmethod
-    def complex_svm(C_svm,epsilon_svm, max_C, max_epsilon):
-        '''
-        :param max_N: maximun neurons in the network
-        :param max_H: maximum hidden layers in the network
-        :return: complexity of the model
-        '''
-
-        F = 0.75 * (C_svm / max_C) + 0.25 * (epsilon_svm/max_epsilon)
-        return F
 
     def cv_opt(self,data, fold, C_svm,epsilon_svm,tol_svm, mean_y, dictionary):
         '''
@@ -3294,7 +3328,7 @@ class MyProblem_svm(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
 
-            complexity = MyProblem_svm.complex_mlp(C_svm, epsilon_svm, 10000, 100)
+            complexity = SVM.complex_svm(C_svm, epsilon_svm, 10000, 100)
             dictionary[name1] = np.mean(cvs), complexity
             print(dictionary[name1] )
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}

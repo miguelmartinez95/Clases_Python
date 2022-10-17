@@ -1967,7 +1967,7 @@ class LSTM_model(DL):
 
         I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-        obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
+        #obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
 
         top_result = {'error': [], 'complexity': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
         top_result['error']=r1[I]
