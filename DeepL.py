@@ -147,7 +147,7 @@ class DL:
                 print(type(restriction))
                 print(pd.Series(restriction[0]))
 
-                hours = restriction.hour
+                hours = pd.Series(restriction[:,0]).dt.hour
                 ii = np.where(hours < limit1 | hours > limit2)[0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
