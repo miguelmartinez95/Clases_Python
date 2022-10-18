@@ -2978,7 +2978,7 @@ class SVM(ML):
             pass
         return (obj, struct, obj_T, struct_T, res)
 
-    def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel):
+    def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,weights):
         '''
         :param l_dense: maximun layers dense
         :param batch: batch size
@@ -2997,7 +2997,7 @@ class SVM(ML):
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, C_max,
                                                                             epsilon_max, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dictionary, self.weights)
+                                                                            xlimit_sup, dictionary, weights)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
@@ -3414,7 +3414,7 @@ class MyProblem_svm(ElementwiseProblem):
         g1 = MyProblem_svm.bool(x[0],x[1])
         out["G"] = g1
         print(x)
-        C_F= x[0]*10
+        C_F= x[0]
         epsilon_F =x[1]*0.1
         tol_F = x[2]*0.01
         f1, f2 = self.cv_opt(self.data, 3, C_F, epsilon_F,tol_F,  self.med, self.dictionary)
