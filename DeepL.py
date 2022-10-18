@@ -142,9 +142,10 @@ class DL:
             try:
                 limit1 = limit[0]
                 limit2 = limit[1]
-                print(pd.Series(restriction))
+
                 print(restriction.shape)
                 print(type(restriction))
+                print(pd.Series(restriction[0]))
 
                 hours = restriction.hour
                 ii = np.where(hours < limit1 | hours > limit2)[0]
