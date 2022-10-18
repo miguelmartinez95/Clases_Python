@@ -772,6 +772,8 @@ class LSTM_model(DL):
             # for _ in range(len(data)-(n_lags + horizont)+1):
             # count=n_lags+horizont
                 while in_start < data.shape[0] - (n_steps - 1) - horizont - n_lags:
+                    print(in_start)
+                    print(data.shape)
                     if n_steps == 1:
                         timesF.append(data.index[in_start + n_lags + horizont-1])
                     else:
