@@ -145,6 +145,7 @@ class DL:
                 print(pd.Series(restriction))
                 print(restriction.shape)
                 print(type(restriction))
+
                 hours = restriction.hour
                 ii = np.where(hours < limit1 | hours > limit2)[0]
             except:
