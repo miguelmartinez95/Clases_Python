@@ -142,6 +142,7 @@ class DL:
             try:
                 limit1 = limit[0]
                 limit2 = limit[1]
+                print(restriction)
                 hours = restriction.hour
                 ii = np.where(hours < limit1 | hours > limit2)[0]
             except:
