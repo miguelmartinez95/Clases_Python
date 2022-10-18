@@ -2191,6 +2191,7 @@ class SVM(ML):
     def SVR_training(self,data_train,C, epsilon, tol, save_model, model=[]):
         now = str(datetime.now().microsecond)
         print(data_train)
+
         data_train = pd.DataFrame(data_train)
         x_train = data_train.drop(data_train.columns[self.pos_y], axis=1)
         y_train = data_train.iloc[:,self.pos_y]
