@@ -3214,7 +3214,7 @@ class MyProblem_svm(ElementwiseProblem):
         h_path.mkdir(exist_ok=True)
         h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
 
-        name1 = tuple(np.concatenate((np.aarray([C_svm]), np.array([epsilon_svm]))))
+        name1 = tuple(np.concatenate((np.array([C_svm]), np.array([epsilon_svm]))))
         try:
             a0, a1 = dictionary[name1]
             return a0, a1
