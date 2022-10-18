@@ -2187,17 +2187,17 @@ class SVM(ML):
     def SVM_training(self,layers, neurons, inputs, outputs, mask, mask__value):
         'WORK IN PROGRESS'
 
-
-    def SVR_training(self,data_train,C, epsilon, tol, save_model, model=[]):
+    @staticmethod
+    def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[]):
         now = str(datetime.now().microsecond)
         print(data_train)
 
         data_train = pd.DataFrame(data_train)
-        x_train = data_train.drop(data_train.columns[self.pos_y], axis=1)
-        y_train = data_train.iloc[:,self.pos_y]
+        x_train = data_train.drop(data_train.columns[pos_y], axis=1)
+        y_train = data_train.iloc[:,pos_y]
 
         if isinstance(model, list):
-            if len(self.pos_y)>1:
+            if len(pos_y)>1:
                 model=MultiOutputRegressor(svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
 )
             else:
@@ -2500,11 +2500,11 @@ class SVM(ML):
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
                 if isinstance(model, list):
-                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C,epsilon,tol,False)
+                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),self.pos_y, C,epsilon,tol,False)
                     modelF=res['model']
                 else:
                     model1 = model
-                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1), C, epsilon, tol,
+                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),self.pos_y, C, epsilon, tol,
                                                       False,model1)
                     modelF=res['model']
 
@@ -3260,7 +3260,7 @@ class MyProblem_svm(ElementwiseProblem):
                 print(pd.concat([y_t, x_t], axis=1))
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
-                res = SVM.SVR_training(pd.concat([y_t, x_t], axis=1), C_svm, epsilon_svm,tol_svm,False,[])
+                res = SVM.SVR_training(pd.concat([y_t, x_t], axis=1), self.pos_y,C_svm, epsilon_svm,tol_svm,False,[])
                 model=res['model']
                 y_pred = model.predict(test_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
