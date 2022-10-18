@@ -3411,7 +3411,7 @@ class MyProblem_svm(ElementwiseProblem):
         return ret
     #
     def _evaluate(self, x, out, *args, **kwargs):
-        g1 = MyProblem_svm.bool(x[0],x[1])
+        g1 = MyProblem_svm.bool(x)
         out["G"] = g1
         print(x)
         C_F= x[0]
