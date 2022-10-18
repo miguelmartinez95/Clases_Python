@@ -2765,7 +2765,7 @@ class SVM(ML):
                     for u in range(len(tol_options)):
                         options['C'].append(C_sel)
                         options['epsilon'].append(epsilon_sel)
-                        options['tol']=tol_options[u]
+                        options['tol'].append(tol_options[u])
                         res = self.cv_analysis_svm(fold, C_sel, epsilon_sel, tol_options[u] ,mean_y,False)
                         error[w]=np.mean(res['cv_rmse'])
                         complexity[w]=SVM.complex_svm(C_sel, epsilon_sel,10000,100)
@@ -2784,7 +2784,7 @@ class SVM(ML):
                     for u in range(len(tol_options)):
                         options['C'].append(C_sel)
                         options['epsilon'].append(epsilon_sel)
-                        options['tol'] = tol_options[u]
+                        options['tol'].append(tol_options[u])
                         if z < parallel and w < contador:
                             multiprocessing.set_start_method('fork')
                             p = Process(target=self.cv_analysis_svm,
