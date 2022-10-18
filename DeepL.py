@@ -798,7 +798,7 @@ class LSTM_model(DL):
                     dd = len(data) - len(data) - (n_lags + horizont) + 1
 
             else:
-                while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
+                while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags-1:
                     if n_steps == 1:
                         timesF.append(data.index[in_start + n_lags + horizont-1])
                     else:
