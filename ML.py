@@ -2166,10 +2166,10 @@ class SVM(ML):
         indexes = []
         try:
             while w2 < x.shape[0]:
-                X_test = x.iloc[range(w,w2)]
+                X_test.append(x.iloc[range(w,w2)])
                 X_train.append(x.drop(range(w,w2)))
 
-                Y_test = y.iloc[range(w, w2)]
+                Y_test.append(y.iloc[range(w, w2)])
                 Y_train.append(y.drop(range(w, w2)))
                 indexes.append(np.array([w, w2]))
                 w = w2
