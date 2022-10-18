@@ -3256,7 +3256,7 @@ class MyProblem_svm(ElementwiseProblem):
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
-                res = SVM.SVR_training(pd.concat([y_train[z], x_train[z]], axis=1), C_svm, epsilon_svm,tol_svm,False)
+                res = SVM.SVR_training(pd.concat([y_t[z], x_t[z]], axis=1), C_svm, epsilon_svm,tol_svm,False,[])
                 model=res['model']
                 y_pred = model.predict(test_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
