@@ -148,7 +148,7 @@ class DL:
                 print(pd.Series(restriction[0]))
 
                 hours = pd.Series(restriction[:,0]).dt.hour
-                ii = np.where(hours < limit1 | hours > limit2)[0]
+                ii = np.where((hours < limit1) | (hours > limit2))[0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
