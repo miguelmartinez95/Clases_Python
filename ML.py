@@ -3223,6 +3223,7 @@ class MyProblem_svm(ElementwiseProblem):
         cvs = [0 for x in range(fold)]
         print(type(data))
         names = self.data.columns
+        print(names)
         names = np.delete(names, self.pos_y)
 
         y = self.data.iloc[:,self.pos_y]
