@@ -3257,7 +3257,7 @@ class MyProblem_svm(ElementwiseProblem):
                 print(len(x_train))
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
-                print(x_t)
+                print(pd.concat([y_t, x_t], axis=1))
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
                 res = SVM.SVR_training(pd.concat([y_t, x_t], axis=1), C_svm, epsilon_svm,tol_svm,False,[])
