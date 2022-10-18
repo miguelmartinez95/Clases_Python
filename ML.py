@@ -1,4 +1,4 @@
-
+from sklearn.multioutput import MultiOutputRegressor
 from sklearn.preprocessing import MinMaxScaler
 import sys
 from errors import Eval_metrics as evals
@@ -2195,9 +2195,14 @@ class SVM(ML):
         y_train = data_train.iloc[:,self.pos_y]
 
         if isinstance(model, list):
-            model = svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
+            if len(self.pos_y)>1:
+                model=MultiOutputRegressor(svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
+)
+            else:
+                model = svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
         else:
             model = model
+
         history = model.fit(x_train, y_train)
 
         if save_model==True:
