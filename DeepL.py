@@ -1582,6 +1582,8 @@ class LSTM_model(DL):
                     seq.append(times[range(cont, cont + (self.n_steps - 1) + 1)])
                 cont += self.n_lags
             print(seq)
+            print(len(seq))
+            print(pd.Series(seq))
             times = np.concatenate(seq)
             #times = range(int(shape1/self.n_lags))
             #print('problems with the sample lag by lags and the radiation restriction')
