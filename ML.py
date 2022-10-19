@@ -3245,10 +3245,10 @@ class MyProblem_svm(ElementwiseProblem):
             # Train the model
             for z in range(fold):
                 print('Fold number', z)
-                print(len(x_train))
+
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
-                print(pd.concat([y_t, x_t], axis=1))
+
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
                 res = SVM.SVR_training(pd.concat([y_t, x_t], axis=1), self.pos_y,C_svm, epsilon_svm,tol_svm,False,[])
@@ -3256,10 +3256,17 @@ class MyProblem_svm(ElementwiseProblem):
                 y_pred = model.predict(test_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = test_y
-                y_real2 = np.array(y_real.copy())
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
-                y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    for t in range(len(self.pos_y)):
+                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                    y_real = y_real
+                else:
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                    y_real = y_real.reshape(-1, 1)
+
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -3268,23 +3275,21 @@ class MyProblem_svm(ElementwiseProblem):
                 y_realF.index = times_test[z]
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = ML.fix_values_0(times_test[z],
+                    res = ML.fix_values_0(times_test[z][:,0],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_hour, 0)
                         y_real1 = np.delete(y_real, index_hour, 0)
-                        y_real2 = np.delete(y_real2, index_hour, 0)
                     elif len(index_hour) > 0 and self.horizont > 0:
                         y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
                         y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
-                        y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
@@ -3292,14 +3297,14 @@ class MyProblem_svm(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e)
+                                cvs[z]=np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
                         else:
                             e = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
@@ -3311,20 +3316,21 @@ class MyProblem_svm(ElementwiseProblem):
                     res = ML.fix_values_0(scalar_rad.inverse_transform(x_test[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
+                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
+                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
-                        y_real2 = np.delete(y_real2, index_rad, 0)
                     elif len(index_rad) > 0 and self.horizont > 0:
                         y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
                         y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
-                        y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
@@ -3335,14 +3341,14 @@ class MyProblem_svm(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
                         else:
                             e = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
@@ -3352,7 +3358,7 @@ class MyProblem_svm(ElementwiseProblem):
                 else:
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred2 = np.delete(y_pred, o, 0)
                             y_real2 = np.delete(y_real, o, 0)
@@ -3366,7 +3372,7 @@ class MyProblem_svm(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 print(e)
                                 print(self.weights)
@@ -3375,7 +3381,7 @@ class MyProblem_svm(ElementwiseProblem):
                         else:
                             e = evals(y_pred2, y_real2).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
