@@ -2447,7 +2447,7 @@ class SVM(ML):
             plt.savefig('plot1.png')
         return res
 
-    def cv_analysis_svm(self, fold,C,epsilon,tol, mean_y, plot, q=[], model=[]):
+    def cv_analysis_svm(self, fold, C, epsilon, tol, mean_y, plot, q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -2478,11 +2478,11 @@ class SVM(ML):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
         if self.type == 'classification':
             print('nothing')
-            #data2 = self.data
-            #yy = data2.iloc[:, self.pos_y]
-            #yy = pd.Series(yy, dtype='category')
-            #n_classes = len(yy.cat.categories.to_list())
-            #model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask,
+            # data2 = self.data
+            # yy = data2.iloc[:, self.pos_y]
+            # yy = pd.Series(yy, dtype='category')
+            # n_classes = len(yy.cat.categories.to_list())
+            # model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask,
             #                                          self.mask_value)
             #####################################################################
             # EN PROCESOO ALGÚN DíA !!!!!!!
@@ -2500,13 +2500,17 @@ class SVM(ML):
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
                 if isinstance(model, list):
-                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),self.pos_y, C,epsilon,tol,False)
-                    modelF=res['model']
+                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True),
+                                                       pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),
+                                            self.pos_y, C, epsilon, tol, False)
+                    modelF = res['model']
                 else:
                     model1 = model
-                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True), pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),self.pos_y, C, epsilon, tol,
-                                                      False,model1)
-                    modelF=res['model']
+                    res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True),
+                                                       pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),
+                                            self.pos_y, C, epsilon, tol,
+                                            False, model1)
+                    modelF = res['model']
 
                 print('Fold number', z)
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
@@ -2537,7 +2541,7 @@ class SVM(ML):
                 reales.append(y_realF)
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = super().fix_values_0(times_test[z],
+                    res = super().fix_values_0(times_test[z][:, 0],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
@@ -2549,27 +2553,21 @@ class SVM(ML):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-                    if self.type == 'series':
-                        y_pred1 = np.concatenate(y_pred1)
-                        y_real1 = np.concatenate(y_real1)
+
                     if self.mask == True:
                         # Outliers and missing values
                         o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
+
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
                                 e = evals(y_pred1, y_real1).variation_rate()
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e)
+                                    cv[z] = np.mean(e)
                                 else:
-                                    print(e)
-                                    print(self.weights)
                                     cv[z] = np.sum(e * self.weights)
                                 rmse[z] = np.nan
                                 nmbe[z] = np.nan
@@ -2578,9 +2576,9 @@ class SVM(ML):
                                 e_r = evals(y_pred1, y_real1).rmse()
                                 e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e_cv)
-                                    rmse[z] = np.sum(e_r)
-                                    nmbe[z] = np.sum(e_n)
+                                    cv[z] = np.mean(e_cv)
+                                    rmse[z] = np.mean(e_r)
+                                    nmbe[z] = np.mean(e_n)
                                 else:
                                     cv[z] = np.sum(e_cv * self.weights)
                                     rmse[z] = np.sum(e_r * self.weights)
@@ -2599,8 +2597,9 @@ class SVM(ML):
                     res = super().fix_values_0(scalar_rad.inverse_transform(x_test[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
-                    index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
                     index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
@@ -2610,26 +2609,20 @@ class SVM(ML):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-                    #
-                    if self.type == 'series':
-                        y_pred1 = np.concatenate(y_pred1)
-                        y_real1 = np.concatenate(y_real1)
-                    #
+
                     if self.mask == True:
                         # Outliers and missing values
                         o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
+
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
                                 e = evals(y_pred1, y_real1).variation_rate()
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e)
+                                    cv[z] = np.mean(e)
                                 else:
                                     print(e)
                                     print(self.weights)
@@ -2641,9 +2634,9 @@ class SVM(ML):
                                 e_r = evals(y_pred1, y_real1).rmse()
                                 e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e_cv)
-                                    rmse[z] = np.sum(e_r)
-                                    nmbe[z] = np.sum(e_n)
+                                    cv[z] = np.mean(e_cv)
+                                    rmse[z] = np.mean(e_r)
+                                    nmbe[z] = np.mean(e_n)
                                 else:
                                     cv[z] = np.sum(e_cv * self.weights)
                                     rmse[z] = np.sum(e_r * self.weights)
@@ -2656,9 +2649,7 @@ class SVM(ML):
                     else:
                         raise NameError('Empty prediction')
                 else:
-                    if self.type == 'series':
-                        y_pred = np.concatenate(y_pred)
-                        y_real = np.concatenate(y_real)
+
                     if self.mask == True:
                         # Outliers and missing values
                         o = np.where(y_real < self.inf_limit)[0]
@@ -2670,7 +2661,7 @@ class SVM(ML):
                             if mean_y.size == 0:
                                 e = evals(y_pred, y_real).variation_rate()
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e)
+                                    cv[z] = np.mean(e)
                                 else:
                                     print(e)
                                     print(self.weights)
@@ -2682,9 +2673,9 @@ class SVM(ML):
                                 e_r = evals(y_pred, y_real).rmse()
                                 e_n = evals(y_pred, y_real).nmbe(mean_y)
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e_cv)
-                                    rmse[z] = np.sum(e_r)
-                                    nmbe[z] = np.sum(e_n)
+                                    cv[z] = np.mean(e_cv)
+                                    rmse[z] = np.mean(e_r)
+                                    nmbe[z] = np.mean(e_n)
                                 else:
                                     cv[z] = np.sum(e_cv * self.weights)
                                     rmse[z] = np.sum(e_r * self.weights)
@@ -2731,7 +2722,7 @@ class SVM(ML):
                    'nmbe': nmbe, 'rmse': rmse,
                    'times_comp': times}
             print(("The model with", C, " C", epsilon, "epsilon and a tol of", tol, "has: \n"
-                                                                                                        "The average CV(RMSE) is",
+                                                                                    "The average CV(RMSE) is",
                    np.mean(cv), " \n"
                                 "The average NMBE is", np.mean(nmbe), "\n"
                                                                       "The average RMSE is", np.mean(rmse), "\n"
@@ -2739,8 +2730,8 @@ class SVM(ML):
                    np.mean(times)))
             z = Queue()
             if type(q) == type(z):
-                #q.put(np.array([np.mean(cv), np.std(cv)]))
-                q.put(np.array([np.mean(cv), SVM.complex_svm(C, epsilon, 10000,100)]))
+                # q.put(np.array([np.mean(cv), np.std(cv)]))
+                q.put(np.array([np.mean(cv), SVM.complex_svm(C, epsilon, 10000, 100)]))
             else:
                 return (res)
 

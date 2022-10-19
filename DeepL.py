@@ -1312,8 +1312,8 @@ class LSTM_model(DL):
                                 y_pred1 = np.delete(y_pred, index_hour, 0)
                                 y_real1 = np.delete(y_real, index_hour, 0)
                             elif len(index_hour) > 0 and self.horizont > 0:
-                                y_pred1 = np.delete(y_pred, index_hour - 1, 0)
-                                y_real1 = np.delete(y_real, index_hour - 1, 0)
+                                y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                                y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
                             else:
                                 y_pred1 = y_pred
                                 y_real1 = y_real
