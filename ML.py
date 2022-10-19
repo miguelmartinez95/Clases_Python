@@ -657,8 +657,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-
-    def cv_analysis(self,fold, neurons, pacience, batch, mean_y,dropout, plot,q=[], model=[]):
+    def cv_analysis(self, fold, neurons, pacience, batch, mean_y, dropout, plot, q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
         :param q: a Queue to paralelyse or empty list to do not paralyse
@@ -667,7 +666,6 @@ class MLP(ML):
         '''
         from pathlib import Path
         import random
-
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
         print('##########################'
               '################################'
@@ -675,20 +673,18 @@ class MLP(ML):
               '#################################'
               '################################')
         layers = len(neurons)
-        x =pd.DataFrame(self.data.drop(self.data.columns[self.pos_y],axis=1))
-        if self.type=='series':
+        x = pd.DataFrame(self.data.drop(self.data.columns[self.pos_y], axis=1))
+        if self.type == 'series':
             y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
         else:
-            y =pd.DataFrame(self.data.iloc[:,self.pos_y])
-
-        x=x.reset_index(drop=True)
-        y=y.reset_index(drop=True)
-
+            y = pd.DataFrame(self.data.iloc[:, self.pos_y])
+        x = x.reset_index(drop=True)
+        y = y.reset_index(drop=True)
         res = super().cv_division(x, y, fold)
-        x_test =res['x_test']
-        x_train=res['x_train']
-        x_val=res['x_val']
-        y_test=res['y_test']
+        x_test = res['x_test']
+        x_train = res['x_train']
+        x_val = res['x_val']
+        y_test = res['y_test']
         y_train = res['y_train']
         y_val = res['y_val']
         indexes = res['indexes']
@@ -696,35 +692,32 @@ class MLP(ML):
         tt = self.times
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
-
-        if self.type=='classification':
+        if self.type == 'classification':
             data2 = self.data
-            yy = data2.iloc[:,self.pos_y]
+            yy = data2.iloc[:, self.pos_y]
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
-            model = self.__class__.mlp_classification(layers, neurons,x_train[0].shape[1], n_classes,self.mask, self.mask_value)
+            model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask,
+                                                      self.mask_value)
             ####################################################################
-            #EN PROCESOO ALGÚN DíA !!!!!!!
+            # EN PROCESOO ALGÚN DíA !!!!!!!
             ##########################################################################
         else:
-
             # Train the model
-            times=[0 for x in range(fold)]
-            cv=[0 for x in range(fold)]
-            rmse=[0 for x in range(fold)]
+            times = [0 for x in range(fold)]
+            cv = [0 for x in range(fold)]
+            rmse = [0 for x in range(fold)]
             nmbe = [0 for x in range(fold)]
-            predictions=[]
+            predictions = []
             reales = []
             for z in range(fold):
-
                 h_path = Path('./best_models')
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
-
                 if isinstance(model, list):
                     if self.type == 'regression':
                         model1 = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask,
-                                                               self.mask_value, dropout,len(self.pos_y))
+                                                               self.mask_value, dropout, len(self.pos_y))
                         # Checkpoitn callback
                         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                         mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
@@ -738,8 +731,7 @@ class MLP(ML):
                     model1 = model
                     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                     mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
-
-                modelF=model1
+                modelF = model1
                 print('Fold number', z)
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
@@ -748,16 +740,12 @@ class MLP(ML):
                 val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
                 time_start = time()
-                modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],batch_size=batch)
+                modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],
+                           batch_size=batch)
                 times[z] = round(time() - time_start, 3)
                 y_pred = modelF.predict(val_x)
-
-                print(val_x.shape)
-                print(y_pred.shape)
-
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
-
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
@@ -765,7 +753,6 @@ class MLP(ML):
                 else:
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -778,7 +765,7 @@ class MLP(ML):
                 reales.append(y_realF)
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = super().fix_values_0(times_test[z],
+                    res = super().fix_values_0(times_test[z][:, 0],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
@@ -790,11 +777,9 @@ class MLP(ML):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
-
                     if self.mask == True:
                         # Outliers and missing values
                         o = np.where(y_real1 < self.inf_limit)[0]
@@ -804,13 +789,12 @@ class MLP(ML):
                         else:
                             y_pred1 = y_pred
                             y_real1 = y_real
-
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
                                 e = evals(y_pred1, y_real1).variation_rate()
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e)
+                                    cv[z] = np.mean(e)
                                 else:
                                     print(e)
                                     print(self.weights)
@@ -822,9 +806,9 @@ class MLP(ML):
                                 e_r = evals(y_pred1, y_real1).rmse()
                                 e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e_cv)
-                                    rmse[z] = np.sum(e_r)
-                                    nmbe[z] = np.sum(e_n)
+                                    cv[z] = np.mean(e_cv)
+                                    rmse[z] = np.mean(e_r)
+                                    nmbe[z] = np.mean(e_n)
                                 else:
                                     cv[z] = np.sum(e_cv * self.weights)
                                     rmse[z] = np.sum(e_r * self.weights)
@@ -836,7 +820,6 @@ class MLP(ML):
                             nmbe[z] = 9999
                     else:
                         raise NameError('Empty prediction')
-
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
                     place = np.where(names == 'radiation')[0]
@@ -844,8 +827,7 @@ class MLP(ML):
                     res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
-                    index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
-
+                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
                     index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
@@ -856,27 +838,23 @@ class MLP(ML):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-#
+                    #
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
-#
+                    #
                     if self.mask == True:
                         # Outliers and missing values
                         o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
-
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
                                 e = evals(y_pred1, y_real1).variation_rate()
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e)
+                                    cv[z] = np.mean(e)
                                 else:
                                     print(e)
                                     print(self.weights)
@@ -888,9 +866,9 @@ class MLP(ML):
                                 e_r = evals(y_pred1, y_real1).rmse()
                                 e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e_cv)
-                                    rmse[z] = np.sum(e_r)
-                                    nmbe[z] = np.sum(e_n)
+                                    cv[z] = np.mean(e_cv)
+                                    rmse[z] = np.mean(e_r)
+                                    nmbe[z] = np.mean(e_n)
                                 else:
                                     cv[z] = np.sum(e_cv * self.weights)
                                     rmse[z] = np.sum(e_r * self.weights)
@@ -902,25 +880,22 @@ class MLP(ML):
                             nmbe[z] = 9999
                     else:
                         raise NameError('Empty prediction')
-
                 else:
                     if self.type == 'series':
                         y_pred = np.concatenate(y_pred)
                         y_real = np.concatenate(y_real)
-
                     if self.mask == True:
                         # Outliers and missing values
                         o = np.where(y_real < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred = np.delete(y_pred, o, 0)
                             y_real = np.delete(y_real, o, 0)
-
                     if len(y_pred) > 0:
                         if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                             if mean_y.size == 0:
                                 e = evals(y_pred, y_real).variation_rate()
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e)
+                                    cv[z] = np.mean(e)
                                 else:
                                     print(e)
                                     print(self.weights)
@@ -932,9 +907,9 @@ class MLP(ML):
                                 e_r = evals(y_pred, y_real).rmse()
                                 e_n = evals(y_pred, y_real).nmbe(mean_y)
                                 if isinstance(self.weights, list):
-                                    cv[z] = np.sum(e_cv)
-                                    rmse[z] = np.sum(e_r)
-                                    nmbe[z] = np.sum(e_n)
+                                    cv[z] = np.mean(e_cv)
+                                    rmse[z] = np.mean(e_r)
+                                    nmbe[z] = np.mean(e_n)
                                 else:
                                     cv[z] = np.sum(e_cv * self.weights)
                                     rmse[z] = np.sum(e_r * self.weights)
@@ -946,29 +921,25 @@ class MLP(ML):
                             nmbe[z] = 9999
                     else:
                         raise NameError('Empty prediction')
-
-                if plot==True and len(y_realF.shape)>1:
-                    s = np.max(y_realF.iloc[:,0]).astype(int) + 15
-                    i = np.min(y_realF.iloc[:,0]).astype(int) - 15
-                    a =np.round(cv[z],2)
-
+                if plot == True and len(y_realF.shape) > 1:
+                    s = np.max(y_realF.iloc[:, 0]).astype(int) + 15
+                    i = np.min(y_realF.iloc[:, 0]).astype(int) - 15
+                    a = np.round(cv[z], 2)
                     plt.figure()
                     plt.ylim(i, s)
-                    plt.plot(y_realF.iloc[:,0], color='black', label='Real')
-                    plt.plot(y_predF.iloc[:,0], color='blue', label='Prediction')
+                    plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
                     plt.legend()
                     plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                     a = 'Subsample-'
                     b = str(z) + '.png'
-
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
-                elif plot==True and len(y_realF.shape)<2:
+                elif plot == True and len(y_realF.shape) < 2:
                     s = np.max(y_realF).astype(int) + 15
                     i = np.min(y_realF).astype(int) - 15
-                    a =np.round(cv[z],2)
-
+                    a = np.round(cv[z], 2)
                     plt.figure()
                     plt.ylim(i, s)
                     plt.plot(y_realF, color='black', label='Real')
@@ -977,26 +948,24 @@ class MLP(ML):
                     plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
                     a = 'Subsample-'
                     b = str(z) + '.png'
-
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
-
-
-            res={'preds': predictions, 'reals':reales, 'times_test':times_test, 'cv_rmse':cv, 'std_cv':np.std(cv),
-                 'nmbe':nmbe, 'rmse':rmse,
-                 'times_comp':times}
-
-            print(("The model with", layers," layers", neurons, "neurons and a pacience of",pacience,"has: \n"
-            "The average CV(RMSE) is", np.mean(cv), " \n"
-            "The average NMBE is", np.mean(nmbe), "\n"
-            "The average RMSE is", np.mean(rmse), "\n"
-            "The average time to train is", np.mean(times)))
-
+            res = {'preds': predictions, 'reals': reales, 'times_test': times_test, 'cv_rmse': cv,
+                   'std_cv': np.std(cv),
+                   'nmbe': nmbe, 'rmse': rmse,
+                   'times_comp': times}
+            print(("The model with", layers, " layers", neurons, "neurons and a pacience of", pacience, "has: \n"
+                                                                                                        "The average CV(RMSE) is",
+                   np.mean(cv), " \n"
+                                "The average NMBE is", np.mean(nmbe), "\n"
+                                                                      "The average RMSE is", np.mean(rmse), "\n"
+                                                                                                            "The average time to train is",
+                   np.mean(times)))
             z = Queue()
-            if type(q)==type(z):
-                #q.put(np.array([np.mean(cv), np.std(cv)]))
-                q.put(np.array([np.mean(cv), MLP.complex_mlp(neurons,2000,8)]))
+            if type(q) == type(z):
+                # q.put(np.array([np.mean(cv), np.std(cv)]))
+                q.put(np.array([np.mean(cv), MLP.complex_mlp(neurons, 2000, 8)]))
             else:
                 return (res)
 
@@ -1913,10 +1882,17 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_pred = model.predict(val_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
-                y_real2 = np.array(y_real.copy())
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
-                y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    for t in range(len(self.pos_y)):
+                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                    y_real = y_real
+                else:
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                    y_real = y_real.reshape(-1, 1)
+
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -1925,23 +1901,21 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_realF.index = times_test[z]
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = ML.fix_values_0(times_test[z],
+                    res = ML.fix_values_0(times_test[z][:,0],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_hour, 0)
                         y_real1 = np.delete(y_real, index_hour, 0)
-                        y_real2 = np.delete(y_real2, index_hour, 0)
                     elif len(index_hour) > 0 and self.horizont > 0:
                         y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
                         y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
-                        y_real2 = np.delete(y_real2, index_hour - self.horizont, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
@@ -1949,14 +1923,14 @@ class MyProblem_mlp(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z]=np.sum(e)
+                                cvs[z]=np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
                         else:
                             e = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
@@ -1968,38 +1942,37 @@ class MyProblem_mlp(ElementwiseProblem):
                     res = ML.fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                                                self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
+                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
+                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
-                        y_real2 = np.delete(y_real2, index_rad, 0)
                     elif len(index_rad) > 0 and self.horizont > 0:
                         y_pred1 = np.delete(y_pred, index_rad - self.horizont, 0)
                         y_real1 = np.delete(y_real, index_rad - self.horizont, 0)
-                        y_real2 = np.delete(y_real2, index_rad - self.horizont, 0)
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
+
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
                             e=evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
                         else:
                             e = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
@@ -2009,13 +1982,10 @@ class MyProblem_mlp(ElementwiseProblem):
                 else:
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
+                        o = np.where(y_real < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred2 = np.delete(y_pred, o, 0)
                             y_real2 = np.delete(y_real, o, 0)
-                        else:
-                            y_pred2 = y_pred
-                            y_real2 = y_real
                     else:
                         y_pred2 = y_pred
                         y_real2 = y_real
@@ -2023,7 +1993,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         if mean_y.size == 0:
                             e=evals(y_pred2, y_real2).variation_rate()
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 print(e)
                                 print(self.weights)
@@ -2032,7 +2002,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         else:
                             e = evals(y_pred2, y_real2).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
-                                cvs[z] = np.sum(e)
+                                cvs[z] = np.mean(e)
                             else:
                                 cvs[z] = np.sum(e * self.weights)
 
@@ -3337,7 +3307,7 @@ class MyProblem_svm(ElementwiseProblem):
                 else:
                     if self.mask == True:
                         # Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
+                        o = np.where(y_real < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred2 = np.delete(y_pred, o, 0)
                             y_real2 = np.delete(y_real, o, 0)
