@@ -1626,7 +1626,7 @@ class LSTM_model(DL):
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
 
-            res = super().fix_values_0(self.times,
+            res = super().fix_values_0(times,
                                        self.zero_problem, self.limits)
 
             index_hour = res['indexes_out']
