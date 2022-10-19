@@ -1575,7 +1575,7 @@ class LSTM_model(DL):
         if self.horizont == 0 and onebyone[1] == True:
             seq=list()
             cont = -1+ self.n_lags+self.horizont
-            while cont <= len(times) - self.n_lags - self.horizont:
+            while cont <= len(times) - self.horizont:
                 if self.n_steps == 1:
                     seq.append(times[cont + (self.n_steps - 1)])
                 else:
