@@ -1302,7 +1302,7 @@ class LSTM_model(DL):
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
-                        if len(y_pred <= 1):
+                        if len(y_pred) <= 1:
                             y_pred1 = np.nan
                             y_real1 = y_real
                         else:
@@ -1644,7 +1644,7 @@ class LSTM_model(DL):
 
             index_hour = res['indexes_out']
 
-            if len(y_pred <= 1):
+            if len(y_pred) <= 1:
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
