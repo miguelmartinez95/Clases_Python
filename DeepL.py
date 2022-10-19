@@ -1656,14 +1656,14 @@ class LSTM_model(DL):
                     y_real1 = np.delete(y_real, index_hour, 0)
                     times = np.delete(times, index_hour, 0)
                 elif len(index_hour) > 0 and self.horizont > 0:
-                    y_pred1 = np.delete(y_pred, index_hour - 1, 0)
-                    y_real1 = np.delete(y_real, index_hour - 1, 0)
-                    times = np.delete(times, index_hour - 1, 0)
+                    y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                    y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                    times = np.delete(times, index_hour - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
             # Outliers and missing values
-            print(y_pred1)
+            #print(y_pred1)
             if self.mask == True and len(y_pred1) > 0:
                 o = np.where(y_real1 < self.inf_limit)[0]
                 if len(o) > 0:
@@ -1687,8 +1687,8 @@ class LSTM_model(DL):
                             if isinstance(self.weights, list):
                                 cv= np.mean(e)
                             else:
-                                print(e)
-                                print(self.weights)
+                                #print(e)
+                                #print(self.weights)
                                 cv= np.sum(e * self.weights)
                             rmse= np.nan
                             nmbe= np.nan

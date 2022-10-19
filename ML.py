@@ -2249,14 +2249,14 @@ class SVM(ML):
             y_realF = pd.DataFrame(y_real).copy()
 
 
-        print(y_pred)
-        print(y_predF.shape)
+        #print(y_pred)
+        #print(y_predF.shape)
         y_predF.index = times
         y_realF.index = y_predF.index
 
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
-            res = super().fix_values_0( self.times,  self.zero_problem, self.limits)
+            res = super().fix_values_0(times,  self.zero_problem, self.limits)
             index_hour = res['indexes_out']
 
             if len(y_pred)<=1:
@@ -2285,31 +2285,29 @@ class SVM(ML):
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    if len(self.pos_y)>1:
-                        cv=[0 for x in range(len(self.pos_y))]
-                        rmse=[0 for x in range(len(self.pos_y))]
-                        nmbe=[0 for x in range(len(self.pos_y))]
-                        r2=[0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
-                                nmbe[t] = np.nan
-                            else:
-                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
-                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
-
-                            rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
-                            r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
-                    else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred1, y_real1).variation_rate()
-                            nmbe = np.nan
+                    if mean_y.size == 0:
+                        e = evals(y_pred1, y_real1).variation_rate()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e)
                         else:
-                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
-                        r2 = evals(y_pred, y_real).r2()
+                            cv = np.sum(e * self.weights)
+                        rmse = np.nan
+                        nmbe = np.nan
+                    else:
+                        e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        e_r = evals(y_pred1, y_real1).rmse()
+                        e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                        r2 = evals(y_pred1, y_real1).r2()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e_cv)
+                            rmse = np.mean(e_r)
+                            nmbe = np.mean(e_n)
+                        else:
+                            cv = np.sum(e_cv * self.weights)
+                            rmse = np.sum(e_r * self.weights)
+                            nmbe = np.sum(e_n * self.weights)
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -2326,9 +2324,8 @@ class SVM(ML):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
                                           self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
-
-            index_rad= np.union1d(np.array(index_rad), np.array(index_rad2))
+            index_rad2 = np.where(y_real <= self.inf_limit)[0]
+            index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
             if len(y_pred)<=1:
                 y_pred1 = np.nan
@@ -2356,31 +2353,29 @@ class SVM(ML):
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    if len(self.pos_y) > 1:
-                        cv = [0 for x in range(len(self.pos_y))]
-                        rmse = [0 for x in range(len(self.pos_y))]
-                        nmbe = [0 for x in range(len(self.pos_y))]
-                        r2 = [0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred1[:, t], y_real[:, t]).variation_rate()
-                                nmbe[t] = np.nan
-                            else:
-                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
-                                cv[t] = evals(y_pred1[:, t], y_real1[:, t]).cv_rmse(mean_y[t])
-
-                            rmse[t] = evals(y_pred1[:, t], y_real1[:, t]).rmse()
-                            r2[t] = evals(y_pred1[:, t], y_real1[:, t]).r2()
-                    else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred1, y_real1).variation_rate()
-                            nmbe=np.nan
+                    if mean_y.size == 0:
+                        e = evals(y_pred1, y_real1).variation_rate()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e)
                         else:
-                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
-                        r2 = evals(y_pred, y_real).r2()
+                            cv = np.sum(e * self.weights)
+                        rmse = np.nan
+                        nmbe = np.nan
+                    else:
+                        e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        e_r = evals(y_pred1, y_real1).rmse()
+                        e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                        r2 = evals(y_pred1, y_real1).r2()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e_cv)
+                            rmse = np.mean(e_r)
+                            nmbe = np.mean(e_n)
+                        else:
+                            cv = np.sum(e_cv * self.weights)
+                            rmse = np.sum(e_r * self.weights)
+                            nmbe = np.sum(e_n * self.weights)
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -2402,31 +2397,32 @@ class SVM(ML):
 
             if len(y_pred)>1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
-                    if len(self.pos_y)>1:
-                        cv=[0 for x in range(len(self.pos_y))]
-                        rmse=[0 for x in range(len(self.pos_y))]
-                        nmbe=[0 for x in range(len(self.pos_y))]
-                        r2=[0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred[:,t], y_real[:,t]).variation_rate()
-                                nmbe[t] = np.nan
-                            else:
-                                cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
-                                nmbe[t] = evals(y_pred[:, t], y_real[:, t]).nmbe(mean_y[t])
-
-                            rmse[t] = evals(y_pred[:,t], y_real[:,t]).rmse()
-                            r2[t] = evals(y_pred[:,t], y_real[:,t]).r2()
-                    else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred, y_real).variation_rate()
-                            nmbe = np.nan
+                    if mean_y.size == 0:
+                        e = evals(y_pred, y_real).variation_rate()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e)
                         else:
-                            cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
+                            # print(e)
+                            # print(self.weights)
+                            cv = np.sum(e * self.weights)
+                        rmse = np.nan
+                        nmbe = np.nan
+                        r2 = np.nan
+                    else:
+                        e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        e_r = evals(y_pred, y_real).rmse()
+                        e_n = evals(y_pred, y_real).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e_cv)
+                            rmse = np.mean(e_r)
+                            nmbe = np.mean(e_n)
+                        else:
+                            cv = np.sum(e_cv * self.weights)
+                            rmse = np.sum(e_r * self.weights)
+                            nmbe = np.sum(e_n * self.weights)
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
