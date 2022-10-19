@@ -1589,7 +1589,7 @@ class LSTM_model(DL):
             #times = range(int(shape1/self.n_lags))
             #print('problems with the sample lag by lags and the radiation restriction')
         elif self.horizont == 0 and onebyone[1] == False:
-            times = np.delete(times, range(self.n_lags-1), 0)
+            times = np.delete(times, range(self.n_lags), 0)
         else:
             times = np.delete(times, range(self.n_lags), 0)
 
