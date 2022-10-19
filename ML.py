@@ -114,6 +114,7 @@ class ML:
     def fix_values_0(restriction, zero_problem, limit):
         '''
         Function to fix incorrect values based on some restriction
+
         :param restriction: schedule hours or irradiance variable depending on the zero_problem
         :param zero_problem: schedule or radiation
         :param limit: limit hours or radiation limit
@@ -123,22 +124,25 @@ class ML:
             try:
                 limit1 = limit[0]
                 limit2 = limit[1]
-                hours = restriction.hour
-                ii = np.where(hours < limit1 | hours > limit2)[0]
-                ii= ii[ii>=0]
+
+                #print(restriction.shape)
+                print(type(restriction))
+                print(pd.Series(restriction))
+
+                hours = pd.Series(restriction).dt.hour
+                ii = np.where((hours < limit1) | (hours > limit2))[0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
             try:
-                rad = restriction
+                rad = np.array([restriction])
                 ii = np.where(rad <= limit)[0]
-                ii = ii[ii >= 0]
-                # data.iloc[ii] = 0
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         else:
             ii=[]
             'Unknown situation with nights'
+
         res = {'indexes_out': ii}
         return res
 

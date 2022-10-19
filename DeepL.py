@@ -1336,7 +1336,7 @@ class LSTM_model(DL):
                                 if mean_y.size == 0:
                                     e = evals(y_pred1, y_real1).variation_rate()
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.(e)mean
+                                        cv[zz] = np.mean(e)
                                     else:
                                         print(e)
                                         print(self.weights)
