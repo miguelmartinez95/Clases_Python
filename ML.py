@@ -1178,7 +1178,7 @@ class MLP(ML):
         res = {'model':model, 'times':times, 'history':history}
         return(res)
 
-    def predict(self, model,val,mean_y, times,plotting):
+    def predict(self, model, val, mean_y, times, plotting):
         '''
         :param model: trained model
         :param x_val: x to predict
@@ -1187,23 +1187,23 @@ class MLP(ML):
         :return: predictions with the errors depending of zero_problem
         '''
 
-        y_val = val.iloc[:,self.pos_y]
+        y_val = val.iloc[:, self.pos_y]
         x_val = val.drop(val.columns[self.pos_y], axis=1)
 
-        x_val=x_val.reset_index(drop=True)
-        y_val=y_val.reset_index(drop=True)
+        x_val = x_val.reset_index(drop=True)
+        y_val = y_val.reset_index(drop=True)
         y_pred = model.predict(pd.DataFrame(x_val))
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
 
-        if len(self.pos_y)>1:
+        if len(self.pos_y) > 1:
             for t in range(len(self.pos_y)):
-                y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
-                y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0],t] = self.sup_limit[t]
+                y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
-        elif self.n_steps>1:
+        elif self.n_steps > 1:
             for t in self.n_steps:
                 y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit
                 y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit
@@ -1215,20 +1215,17 @@ class MLP(ML):
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
-
-        print(y_pred)
-        print(y_predF.shape)
         y_predF.index = times
         y_realF.index = y_predF.index
 
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
-            res = super().fix_values_0( self.times,  self.zero_problem, self.limits)
+            res = super().fix_values_0(times, self.zero_problem, self.limits)
             index_hour = res['indexes_out']
 
-            if len(y_pred)<=1:
-                y_pred1= np.nan
-                y_real1=y_real
+            if len(y_pred) <= 1:
+                y_pred1 = np.nan
+                y_real1 = y_real
             else:
                 if len(index_hour) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_hour, 0)
@@ -1244,39 +1241,37 @@ class MLP(ML):
                     y_pred1 = np.concatenate(y_pred1)
                     y_real1 = np.concatenate(y_real1)
 
-                if self.mask == True and len(y_pred1)>0:
+                if self.mask == True and len(y_pred1) > 0:
                     o = np.where(y_real1 < self.inf_limit)[0]
-                    if len(o)>0:
+                    if len(o) > 0:
                         y_pred1 = np.delete(y_pred1, o, 0)
                         y_real1 = np.delete(y_real1, o, 0)
 
-            if len(y_pred1)>1:
+            if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    if len(self.pos_y)>1:
-                        cv=[0 for x in range(len(self.pos_y))]
-                        rmse=[0 for x in range(len(self.pos_y))]
-                        nmbe=[0 for x in range(len(self.pos_y))]
-                        r2=[0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).variation_rate()
-                                nmbe[t] = np.nan
-                            else:
-                                cv[t] = evals(y_pred1[:,t], y_real1[:,t]).cv_rmse(mean_y[t])
-                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
-
-                            rmse[t] = evals(y_pred1[:,t], y_real1[:,t]).rmse()
-                            r2[t] = evals(y_pred1[:,t], y_real1[:,t]).r2()
-                    else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred1, y_real1).variation_rate()
-                            nmbe = np.nan
+                    if mean_y.size == 0:
+                        e = evals(y_pred1, y_real1).variation_rate()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e)
                         else:
-                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
-                        r2 = evals(y_pred, y_real).r2()
+                            cv = np.sum(e * self.weights)
+                        rmse = np.nan
+                        nmbe = np.nan
+                    else:
+                        e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        e_r = evals(y_pred1, y_real1).rmse()
+                        e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                        r2 = evals(y_pred1, y_real1).r2()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e_cv)
+                            rmse = np.mean(e_r)
+                            nmbe = np.mean(e_n)
+                        else:
+                            cv = np.sum(e_cv * self.weights)
+                            rmse = np.sum(e_r * self.weights)
+                            nmbe = np.sum(e_n * self.weights)
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1291,13 +1286,12 @@ class MLP(ML):
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
-                                          self.zero_problem, self.limits)
+                                       self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            index_rad2 = np.where(np.sum(y_real <= self.inf_limit * 0.5, axis=1) > 0)[0]
+            index_rad2 = np.where(y_real <= self.inf_limit)[0]
+            index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
-            index_rad= np.union1d(np.array(index_rad), np.array(index_rad2))
-
-            if len(y_pred)<=1:
+            if len(y_pred) <= 1:
                 y_pred1 = np.nan
                 y_real1 = y_real
             else:
@@ -1315,39 +1309,37 @@ class MLP(ML):
                     y_pred1 = np.concatenate(y_pred1)
                     y_real1 = np.concatenate(y_real1)
 
-                if self.mask == True and len(y_pred1)>0:
+                if self.mask == True and len(y_pred1) > 0:
                     o = np.where(y_real1 < self.inf_limit)[0]
-                    if len(o)>0:
+                    if len(o) > 0:
                         y_pred1 = np.delete(y_pred1, o, 0)
                         y_real1 = np.delete(y_real1, o, 0)
 
-            if len(y_pred1)>1:
+            if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
-                    if len(self.pos_y) > 1:
-                        cv = [0 for x in range(len(self.pos_y))]
-                        rmse = [0 for x in range(len(self.pos_y))]
-                        nmbe = [0 for x in range(len(self.pos_y))]
-                        r2 = [0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred1[:, t], y_real[:, t]).variation_rate()
-                                nmbe[t] = np.nan
-                            else:
-                                nmbe[t] = evals(y_pred1[:, t], y_real1[:, t]).nmbe(mean_y[t])
-                                cv[t] = evals(y_pred1[:, t], y_real1[:, t]).cv_rmse(mean_y[t])
-
-                            rmse[t] = evals(y_pred1[:, t], y_real1[:, t]).rmse()
-                            r2[t] = evals(y_pred1[:, t], y_real1[:, t]).r2()
-                    else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred1, y_real1).variation_rate()
-                            nmbe=np.nan
+                    if mean_y.size == 0:
+                        e = evals(y_pred1, y_real1).variation_rate()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e)
                         else:
-                            cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
-                        r2 = evals(y_pred, y_real).r2()
+                            cv = np.sum(e * self.weights)
+                        rmse = np.nan
+                        nmbe = np.nan
+                    else:
+                        e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        e_r = evals(y_pred1, y_real1).rmse()
+                        e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                        r2 = evals(y_pred1, y_real1).r2()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e_cv)
+                            rmse = np.mean(e_r)
+                            nmbe = np.mean(e_n)
+                        else:
+                            cv = np.sum(e_cv * self.weights)
+                            rmse = np.sum(e_r * self.weights)
+                            nmbe = np.sum(e_n * self.weights)
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1363,49 +1355,48 @@ class MLP(ML):
 
             if self.mask == True:
                 o = np.where(y_real < self.inf_limit)[0]
-                if len(o)>0:
+                if len(o) > 0:
                     y_pred = np.delete(y_pred, o, 0)
                     y_real = np.delete(y_real, o, 0)
 
-            if len(y_pred)>1:
+            if len(y_pred) > 1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
-                    if len(self.pos_y)>1:
-                        cv=[0 for x in range(len(self.pos_y))]
-                        rmse=[0 for x in range(len(self.pos_y))]
-                        nmbe=[0 for x in range(len(self.pos_y))]
-                        r2=[0 for x in range(len(self.pos_y))]
-                        for t in range(len(self.pos_y)):
-                            if mean_y.size == 0:
-                                cv[t] = evals(y_pred[:,t], y_real[:,t]).variation_rate()
-                                nmbe[t] = np.nan
-                            else:
-                                cv[t] = evals(y_pred[:,t], y_real[:,t]).cv_rmse(mean_y[t])
-                                nmbe[t] = evals(y_pred[:, t], y_real[:, t]).nmbe(mean_y[t])
-
-                            rmse[t] = evals(y_pred[:,t], y_real[:,t]).rmse()
-                            r2[t] = evals(y_pred[:,t], y_real[:,t]).r2()
-                    else:
-                        if mean_y.size == 0:
-                            cv = evals(y_pred, y_real).variation_rate()
-                            nmbe = np.nan
+                    if mean_y.size == 0:
+                        e = evals(y_pred, y_real).variation_rate()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e)
                         else:
-                            cv = evals(y_pred, y_real).cv_rmse(mean_y)
-                            nmbe = evals(y_pred, y_real).nmbe(mean_y)
-
-                        rmse = evals(y_pred, y_real).rmse()
+                            cv = np.sum(e * self.weights)
+                        rmse = np.nan
+                        nmbe = np.nan
+                        r2 = np.nan
+                    else:
+                        e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        e_r = evals(y_pred, y_real).rmse()
+                        e_n = evals(y_pred, y_real).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
+                        if isinstance(self.weights, list):
+                            cv = np.mean(e_cv)
+                            rmse = np.mean(e_r)
+                            nmbe = np.mean(e_n)
+                        else:
+                            cv = np.sum(e_cv * self.weights)
+                            rmse = np.sum(e_r * self.weights)
+                            nmbe = np.sum(e_n * self.weights)
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
                     nmbe = 9999
                     rmse = 9999
                     r2 = -9999
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
 
-        res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
-
-        if plotting==True:
+        if plotting == True:
             a = np.round(cv, 2)
             up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
             low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
@@ -1416,6 +1407,7 @@ class MLP(ML):
             plt.legend()
             plt.title("CV(RMSE)={}".format(str(a)))
             plt.savefig('plot1.png')
+
         return res
 
     def nsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
@@ -2273,10 +2265,6 @@ class SVM(ML):
                     y_pred1 = y_pred
                     y_real1 = y_real
 
-                if self.type == 'series':
-                    y_pred1 = np.concatenate(y_pred1)
-                    y_real1 = np.concatenate(y_real1)
-
                 if self.mask == True and len(y_pred1)>0:
                     o = np.where(y_real1 < self.inf_limit)[0]
                     if len(o)>0:
@@ -2341,10 +2329,6 @@ class SVM(ML):
                     y_pred1 = y_pred
                     y_real1 = y_real
 
-                if self.type == 'series':
-                    y_pred1 = np.concatenate(y_pred1)
-                    y_real1 = np.concatenate(y_real1)
-
                 if self.mask == True and len(y_pred1)>0:
                     o = np.where(y_real1 < self.inf_limit)[0]
                     if len(o)>0:
@@ -2385,9 +2369,6 @@ class SVM(ML):
             else:
                 raise NameError('Empty prediction')
         else:
-            if self.type == 'series':
-                y_pred = np.concatenate(y_pred)
-                y_real = np.concatenate(y_real)
 
             if self.mask == True:
                 o = np.where(y_real < self.inf_limit)[0]
@@ -2402,8 +2383,6 @@ class SVM(ML):
                         if isinstance(self.weights, list):
                             cv = np.mean(e)
                         else:
-                            # print(e)
-                            # print(self.weights)
                             cv = np.sum(e * self.weights)
                         rmse = np.nan
                         nmbe = np.nan
@@ -2429,10 +2408,10 @@ class SVM(ML):
                     nmbe = 9999
                     rmse = 9999
                     r2 = -9999
+                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                           'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
-
-        res = {'y_pred': y_predF,  'cv_rmse': cv, 'nmbe': nmbe, 'rmse':rmse,'r2':r2}
 
         if plotting==True:
             a = np.round(cv, 2)
