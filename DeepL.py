@@ -1307,8 +1307,8 @@ class LSTM_model(DL):
                             y_real1 = y_real
                         else:
                             if len(index_hour) > 0 and self.horizont == 0:
-                                print(len(y_pred))
-                                print(len(index_hour))
+                                #print(len(y_pred))
+                                #print(len(index_hour))
                                 y_pred1 = np.delete(y_pred, index_hour, 0)
                                 y_real1 = np.delete(y_real, index_hour, 0)
                             elif len(index_hour) > 0 and self.horizont > 0:
@@ -1319,7 +1319,7 @@ class LSTM_model(DL):
                                 y_real1 = y_real
 
                         # Outliers and missing values
-                        print(y_pred1)
+                        #print(y_pred1)
                         if self.mask == True and len(y_pred1) > 0:
                             o = np.where(y_real1 < self.inf_limit)[0]
                             if len(o) > 0:
@@ -1336,7 +1336,7 @@ class LSTM_model(DL):
                                 if mean_y.size == 0:
                                     e = evals(y_pred1, y_real1).variation_rate()
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.sum(e)
+                                        cv[zz] = np.(e)mean
                                     else:
                                         print(e)
                                         print(self.weights)
@@ -1348,9 +1348,9 @@ class LSTM_model(DL):
                                     e_r = evals(y_pred1, y_real1).rmse()
                                     e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.sum(e_cv)
-                                        rmse[zz] = np.sum(e_r)
-                                        nmbe[zz] = np.sum(e_n)
+                                        cv[zz] = np.mean(e_cv)
+                                        rmse[zz] = np.mean(e_r)
+                                        nmbe[zz] = np.mean(e_n)
                                     else:
                                         cv[zz] = np.sum(e_cv * self.weights)
                                         rmse[zz] = np.sum(e_r * self.weights)
@@ -1408,10 +1408,10 @@ class LSTM_model(DL):
                                 if mean_y.size == 0:
                                     e = evals(y_pred1, y_real1).variation_rate()
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.sum(e)
+                                        cv[zz] = np.mean(e)
                                     else:
-                                        print(e)
-                                        print(self.weights)
+                                        #print(e)
+                                        #print(self.weights)
                                         cv[zz] = np.sum(e * self.weights)
                                     rmse[zz] = np.nan
                                     nmbe[zz] = np.nan
@@ -1420,9 +1420,9 @@ class LSTM_model(DL):
                                     e_r = evals(y_pred2, y_real2).rmse()
                                     e_n = evals(y_pred2, y_real2).nmbe(mean_y)
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.sum(e_cv)
-                                        rmse[zz] = np.sum(e_r)
-                                        nmbe[zz] = np.sum(e_n)
+                                        cv[zz] = np.mean(e_cv)
+                                        rmse[zz] = np.mean(e_r)
+                                        nmbe[zz] = np.mean(e_n)
                                     else:
                                         cv[zz] = np.sum(e_cv * self.weights)
                                         rmse[zz] = np.sum(e_r * self.weights)
@@ -1459,7 +1459,7 @@ class LSTM_model(DL):
                                 if mean_y.size == 0:
                                     e = evals(y_pred2, y_real2).variation_rate()
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.sum(e)
+                                        cv[zz] = np.mean(e)
                                     else:
                                         print(e)
                                         print(self.weights)
@@ -1471,9 +1471,9 @@ class LSTM_model(DL):
                                     e_r = evals(y_pred2, y_real2).rmse()
                                     e_n = evals(y_pred2, y_real2).nmbe(mean_y)
                                     if isinstance(self.weights, list):
-                                        cv[zz] = np.sum(e_cv)
-                                        rmse[zz] = np.sum(e_r)
-                                        nmbe[zz] = np.sum(e_n)
+                                        cv[zz] = np.mean(e_cv)
+                                        rmse[zz] = np.mean(e_r)
+                                        nmbe[zz] = np.mean(e_n)
                                     else:
                                         cv[zz] = np.sum(e_cv * self.weights)
                                         rmse[zz] = np.sum(e_r * self.weights)
@@ -1498,7 +1498,7 @@ class LSTM_model(DL):
             z = Queue()
             if type(q) == type(z):
                 #q.put(np.array([np.mean(cv), np.std(cv)]))
-                q.put(np.array([np.mean(cv), LSTM_model.complex(layers_lstm,layers_neurons,2000,12)]))
+                q.put(np.array([np.mean(cv), self.complex(layers_lstm,layers_neurons,2000,12)]))
             else:
                 return (res_final)
 
@@ -1650,8 +1650,8 @@ class LSTM_model(DL):
             else:
 
                 if len(index_hour) > 0 and self.horizont == 0:
-                    print(len(y_pred))
-                    print(len(index_hour))
+                    #print(len(y_pred))
+                    #print(len(index_hour))
                     y_pred1 = np.delete(y_pred, index_hour, 0)
                     y_real1 = np.delete(y_real, index_hour, 0)
                     times = np.delete(times, index_hour, 0)
@@ -1685,7 +1685,7 @@ class LSTM_model(DL):
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
-                                cv= np.sum(e)
+                                cv= np.mean(e)
                             else:
                                 print(e)
                                 print(self.weights)
@@ -1698,9 +1698,9 @@ class LSTM_model(DL):
                             e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                             r2 = evals(y_pred1, y_real1).r2()
                             if isinstance(self.weights, list):
-                                cv = np.sum(e_cv)
-                                rmse = np.sum(e_r)
-                                nmbe = np.sum(e_n)
+                                cv = np.mean(e_cv)
+                                rmse = np.mean(e_r)
+                                nmbe = np.mean(e_n)
                             else:
                                 cv= np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
@@ -1770,10 +1770,10 @@ class LSTM_model(DL):
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
                             if isinstance(self.weights, list):
-                                cv = np.sum(e)
+                                cv = np.mean(e)
                             else:
-                                print(e)
-                                print(self.weights)
+                                #print(e)
+                                #print(self.weights)
                                 cv = np.sum(e * self.weights)
                             rmse = np.nan
                             nmbe = np.nan
@@ -1783,9 +1783,9 @@ class LSTM_model(DL):
                             e_n = evals(y_pred1, y_real1).nmbe(mean_y)
                             r2 = evals(y_pred1, y_real1).r2()
                             if isinstance(self.weights, list):
-                                cv = np.sum(e_cv)
-                                rmse = np.sum(e_r)
-                                nmbe = np.sum(e_n)
+                                cv = np.mean(e_cv)
+                                rmse = np.mean(e_r)
+                                nmbe = np.mean(e_n)
                             else:
                                 cv = np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
@@ -1828,10 +1828,10 @@ class LSTM_model(DL):
                         if mean_y.size == 0:
                             e = evals(y_pred, y_real).variation_rate()
                             if isinstance(self.weights, list):
-                                cv = np.sum(e)
+                                cv = np.mean(e)
                             else:
-                                print(e)
-                                print(self.weights)
+                                #print(e)
+                                #print(self.weights)
                                 cv = np.sum(e * self.weights)
                             rmse = np.nan
                             nmbe = np.nan
@@ -1842,9 +1842,9 @@ class LSTM_model(DL):
                             e_n = evals(y_pred, y_real).nmbe(mean_y)
                             r2 = evals(y_pred, y_real).r2()
                             if isinstance(self.weights, list):
-                                cv = np.sum(e_cv)
-                                rmse = np.sum(e_r)
-                                nmbe = np.sum(e_n)
+                                cv = np.mean(e_cv)
+                                rmse = np.mean(e_r)
+                                nmbe = np.mean(e_n)
                             else:
                                 cv = np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
@@ -2509,215 +2509,217 @@ class MyProblem(ElementwiseProblem):
         self.values=values
         self.weights=weights
 
+        def cv_opt(self, data, fold, rep, neurons_lstm, neurons_dense, pacience, batch, mean_y, dictionary):
+            '''
+            :param fold:assumed division of the sample for cv
+            :param rep:repetition of the estimation in each subsample
+            :param dictionary: dictionary to fill with the options tested
+            :param q:operator to differentiate when there is parallelisation and the results must be a queue
+            values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+            :return: cv(rmse) and complexity of the model tested
+            '''
+            name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, np.array([pacience]))))
 
-    def cv_opt(self,data,fold,rep, neurons_lstm, neurons_dense, pacience, batch, mean_y,dictionary):
-        '''
-        :param fold:assumed division of the sample for cv
-        :param rep:repetition of the estimation in each subsample
-        :param dictionary: dictionary to fill with the options tested
-        :param q:operator to differentiate when there is parallelisation and the results must be a queue
-        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
-        :return: cv(rmse) and complexity of the model tested
-        '''
-        name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, np.array([pacience]))))
+            try:
+                a0, a1 = dictionary[name1]
+                return a0, a1
 
-        try:
-            a0, a1 = dictionary[name1]
-            return a0, a1
+            except KeyError:
+                pass
+            cvs = [0 for x in range(rep * 2)]
 
-        except KeyError:
-            pass
-        cvs = [0 for x in range(rep*2)]
+            names = self.names
+            names = np.delete(names, self.pos_y)
+            res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.n_steps,
+                                              self.onebyone, self.values)
 
-        names = self.names
-        names = np.delete(names, self.pos_y)
-        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags,self.n_steps, self.onebyone,self.values)
-
-        x_test = np.array(res['x_test'])
-        x_train = np.array(res['x_train'])
-        x_val = np.array(res['x_val'])
-        y_test = np.array(res['y_test'])
-        y_train = np.array(res['y_train'])
-        y_val = np.array(res['y_val'])
-        #
-        times_val = res['time_val']
-#
-        if self.type == 'regression':
-            # Train the model
-            zz = 0
-            if self.values:
-                stop=len(self.values[0])
-            else:
-                stop=len(x_train)
-            for z in range(stop):
-                print('Fold number', z)
-
-                time_start = time()
-                if len(y_train[z].shape)>1:
-                    ytrain=y_train[z]
-                    ytest=y_test[z]
-                    yval=y_val[z]
+            x_test = np.array(res['x_test'])
+            x_train = np.array(res['x_train'])
+            x_val = np.array(res['x_val'])
+            y_test = np.array(res['y_test'])
+            y_train = np.array(res['y_train'])
+            y_val = np.array(res['y_val'])
+            #
+            times_val = res['time_val']
+            #
+            if self.type == 'regression':
+                # Train the model
+                zz = 0
+                if self.values:
+                    stop = len(self.values[0])
                 else:
-                    ytrain=y_train[z].reshape(len(y_train[z]), 1)
-                    ytest=y_test[z].reshape(len(y_test[z]),1)
-                    yval=y_val[z].reshape(len(y_val[z]),1)
-                model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
-                                                          neurons_dense,
-                                                          self.mask, self.mask_value, self.repeat_vector,
-                                                          self.dropout)
-                model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
-                                                   batch)
-                print('Teh training spent ',time()-time_start)
-                if isinstance(self.pos_y, collections.abc.Sized):
-                    outputs=len(self.pos_y)
-                else:
-                    outputs =1
+                    stop = len(x_train)
+                for z in range(stop):
+                    print('Fold number', z)
 
-
-                res = LSTM_model.predict_model(model, self.n_lags, x_val[z],batch, outputs)
-                y_pred = res['y_pred']
-                print('Y_val SHAPE in CV_OPT', yval[z].shape)
-                print('X_val SHAPE in CV_OPT', x_val[z].shape)
-                y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                y_real = np.array(self.scalar_y.inverse_transform(yval))
-
-                if isinstance(self.pos_y, collections.abc.Sized):
-                    for t in range(len(self.pos_y)):
-                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
-                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
-                    y_real = y_real
-                else:
-                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
-                    y_real = y_real.reshape(-1, 1)
-
-                print('Y_pred SHAPE in CV_OPT ',y_pred.shape)
-                print('Dates SHAPE this piece', times_val[z].shape)
-
-                y_predF = y_pred.copy()
-                y_predF = pd.DataFrame(y_predF)
-                y_predF.index = times_val[z]
-                y_realF = y_real.copy()
-                y_realF = pd.DataFrame(y_realF)
-                y_realF.index = times_val[z]
-                if self.zero_problem == 'schedule':
-                    print('*****Night-schedule fixed******')
-                    res = DL.fix_values_0(times_val[z][:,0],
-                                               self.zero_problem, self.limits)
-                    index_hour = res['indexes_out']
-                    if len(index_hour) > 0 and self.horizont == 0:
-                        y_pred1 = np.delete(y_pred, index_hour, 0)
-                        y_real1 = np.delete(y_real, index_hour, 0)
-                    elif len(index_hour) > 0 and self.horizont > 0:
-                        y_pred1 = np.delete(y_pred, index_hour - 1, 0)
-                        y_real1 = np.delete(y_real, index_hour - 1, 0)
+                    time_start = time()
+                    if len(y_train[z].shape) > 1:
+                        ytrain = y_train[z]
+                        ytest = y_test[z]
+                        yval = y_val[z]
                     else:
-                        y_pred1 = y_pred
-                        y_real1 = y_real
-                    # Outliers and missing values
-                    if self.mask == True and len(y_pred1) > 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
-                        if mean_y.size == 0:
-                            e = evals(y_pred1, y_real1).variation_rate()
-                            if isinstance(self.weights, list):
-                                cvs[zz] = np.sum(e)
-                            else:
-                                cvs[zz] = np.sum(e * self.weights)
+                        ytrain = y_train[z].reshape(len(y_train[z]), 1)
+                        ytest = y_test[z].reshape(len(y_test[z]), 1)
+                        yval = y_val[z].reshape(len(y_val[z]), 1)
+                    model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
+                                                              neurons_dense,
+                                                              self.mask, self.mask_value, self.repeat_vector,
+                                                              self.dropout)
+                    model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
+                                                            batch)
+                    print('Teh training spent ', time() - time_start)
+                    if isinstance(self.pos_y, collections.abc.Sized):
+                        outputs = len(self.pos_y)
+                    else:
+                        outputs = 1
+
+                    res = LSTM_model.predict_model(model, self.n_lags, x_val[z], batch, outputs)
+                    y_pred = res['y_pred']
+                    print('Y_val SHAPE in CV_OPT', yval[z].shape)
+                    print('X_val SHAPE in CV_OPT', x_val[z].shape)
+                    y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
+                    y_real = np.array(self.scalar_y.inverse_transform(yval))
+
+                    if isinstance(self.pos_y, collections.abc.Sized):
+                        for t in range(len(self.pos_y)):
+                            y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
+                            y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                        y_real = y_real
+                    else:
+                        y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
+                        y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                        y_real = y_real.reshape(-1, 1)
+
+                    print('Y_pred SHAPE in CV_OPT ', y_pred.shape)
+                    print('Dates SHAPE this piece', times_val[z].shape)
+
+                    y_predF = y_pred.copy()
+                    y_predF = pd.DataFrame(y_predF)
+                    y_predF.index = times_val[z]
+                    y_realF = y_real.copy()
+                    y_realF = pd.DataFrame(y_realF)
+                    y_realF.index = times_val[z]
+                    if self.zero_problem == 'schedule':
+                        print('*****Night-schedule fixed******')
+                        res = DL.fix_values_0(times_val[z][:, 0],
+                                              self.zero_problem, self.limits)
+                        index_hour = res['indexes_out']
+                        if len(index_hour) > 0 and self.horizont == 0:
+                            y_pred1 = np.delete(y_pred, index_hour, 0)
+                            y_real1 = np.delete(y_real, index_hour, 0)
+                        elif len(index_hour) > 0 and self.horizont > 0:
+                            y_pred1 = np.delete(y_pred, index_hour - 1, 0)
+                            y_real1 = np.delete(y_real, index_hour - 1, 0)
                         else:
-                            e = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            if isinstance(self.weights, list):
-                                cvs[zz] = np.sum(e)
-                            else:
-                                cvs[zz] = np.sum(e * self.weights)
-                    else:
-                        print('Missing values are detected when we are evaluating the predictions')
-                        cvs[zz] = 9999
-                elif self.zero_problem == 'radiation':
-                    print('*****Night-radiation fixed******')
-                    place = np.where(names == 'radiation')[0]
-                    scalar_rad = self.scalar_x['radiation']
-                    res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
-                                               self.zero_problem, self.limits)
-                    index_rad = res['indexes_out']
-                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
-                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
-                    if len(index_rad) > 0 and self.horizont == 0:
-                        y_pred1 = np.delete(y_pred, index_rad, 0)
-                        y_real1 = np.delete(y_real, index_rad, 0)
-                    elif len(index_rad) > 0 and self.horizont > 0:
-                        y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
-                        y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
-                    else:
-                        y_pred1 = y_pred
-                        y_real1 = y_real
-                    print(len(y_pred1))
-                    print(len(y_real1))
-                    # Outliers and missing values
-                    if self.mask == True and len(y_pred1) > 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                    if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
-                        if mean_y.size == 0:
-                            e = evals(y_pred1, y_real1).variation_rate()
-                            if isinstance(self.weights, list):
-                                cvs[zz] = np.sum(e)
-                            else:
-                                cvs[zz] = np.sum(e * self.weights)
-                        else:
-                            e = evals(y_pred1, y_real1).cv_rmse(mean_y)
-                            if isinstance(self.weights, list):
-                                cvs[zz] = np.sum(e)
-                            else:
-                                cvs[zz] = np.sum(e * self.weights)
-                    else:
-                        print('Missing values are detected when we are evaluating the predictions')
-                        cvs[zz] = 9999
-                else:
-                    y_real2=y_real.copy()
-                    if self.mask == True and len(y_pred) > 0:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
                         # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred2 = np.delete(y_pred, o, 0)
-                            y_real2 = np.delete(y_real, o, 0)
-                        else:
-                            y_pred2 = y_pred
-                            y_real2 = y_real
-                    if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0 and len(y_pred2)>0 and len(y_real2)>0:
-                        if mean_y.size == 0:
-                            e=evals(y_pred2, y_real2).variation_rate()
-                            if isinstance(self.weights, list):
-                                cvs[zz] = np.sum(e)
+                        if self.mask == True and len(y_pred1) > 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(
+                                y_pred1) > 0 and len(y_real1) > 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred1, y_real1).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cvs[zz] = np.mean(e)
+                                else:
+                                    cvs[zz] = np.sum(e * self.weights)
                             else:
-                                print(e)
-                                print(self.weights)
-                                cvs[zz] = np.sum(e * self.weights)
+                                e = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                if isinstance(self.weights, list):
+                                    cvs[zz] = np.mean(e)
+                                else:
+                                    cvs[zz] = np.sum(e * self.weights)
                         else:
-                            e = evals(y_pred2, y_real2).cv_rmse(mean_y)
-                            if isinstance(self.weights, list):
-                                cvs[zz] = np.sum(e)
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cvs[zz] = 9999
+                    elif self.zero_problem == 'radiation':
+                        print('*****Night-radiation fixed******')
+                        place = np.where(names == 'radiation')[0]
+                        scalar_rad = self.scalar_x['radiation']
+                        res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
+                                              self.zero_problem, self.limits)
+                        index_rad = res['indexes_out']
+                        index_rad2 = np.where(y_real <= self.inf_limit)[0]
+                        index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+                        if len(index_rad) > 0 and self.horizont == 0:
+                            y_pred1 = np.delete(y_pred, index_rad, 0)
+                            y_real1 = np.delete(y_real, index_rad, 0)
+                        elif len(index_rad) > 0 and self.horizont > 0:
+                            y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                            y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
+                        else:
+                            y_pred1 = y_pred
+                            y_real1 = y_real
+                        print(len(y_pred1))
+                        print(len(y_real1))
+                        # Outliers and missing values
+                        if self.mask == True and len(y_pred1) > 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(
+                                y_pred1) > 0 and len(y_real1) > 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred1, y_real1).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cvs[zz] = np.mean(e)
+                                else:
+                                    cvs[zz] = np.sum(e * self.weights)
                             else:
-                                cvs[zz] = np.sum(e * self.weights)
-
+                                e = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                                if isinstance(self.weights, list):
+                                    cvs[zz] = np.mean(e)
+                                else:
+                                    cvs[zz] = np.sum(e * self.weights)
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cvs[zz] = 9999
                     else:
-                        print('Missing values are detected when we are evaluating the predictions')
-                        cvs[zz] = 9999
+                        y_real2 = y_real.copy()
+                        if self.mask == True and len(y_pred) > 0:
+                            # Outliers and missing values
+                            o = np.where(y_real2 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred2 = np.delete(y_pred, o, 0)
+                                y_real2 = np.delete(y_real, o, 0)
+                            else:
+                                y_pred2 = y_pred
+                                y_real2 = y_real
+                        if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0 and len(
+                                y_pred2) > 0 and len(y_real2) > 0:
+                            if mean_y.size == 0:
+                                e = evals(y_pred2, y_real2).variation_rate()
+                                if isinstance(self.weights, list):
+                                    cvs[zz] = np.mean(e)
+                                else:
+                                    # print(e)
+                                    # print(self.weights)
+                                    cvs[zz] = np.sum(e * self.weights)
+                            else:
+                                e = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                                if isinstance(self.weights, list):
+                                    cvs[zz] = np.mean(e)
+                                else:
+                                    cvs[zz] = np.sum(e * self.weights)
 
-                zz += 1
-#
-            complexity = LSTM_model.complex(neurons_lstm,neurons_dense, 2000, 12)
-            dictionary[name1] = np.mean(cvs), complexity
-            res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
-            print(res_final)
-            return res_final['cvs'], res_final['complexity']
+                        else:
+                            print('Missing values are detected when we are evaluating the predictions')
+                            cvs[zz] = 9999
 
-#
+                    zz += 1
+                #
+                complexity = LSTM_model.complex(neurons_lstm, neurons_dense, 2000, 12)
+                dictionary[name1] = np.mean(cvs), complexity
+                res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
+                print(res_final)
+                return res_final['cvs'], res_final['complexity']
+
+    #
     @staticmethod
     def bool4(x, l_lstm, l_dense):
         '''
