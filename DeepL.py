@@ -1662,7 +1662,6 @@ class LSTM_model(DL):
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
-
             # Outliers and missing values
             print(y_pred1)
             if self.mask == True and len(y_pred1) > 0:
