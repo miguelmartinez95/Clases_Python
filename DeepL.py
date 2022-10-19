@@ -1573,8 +1573,18 @@ class LSTM_model(DL):
 
 
         if self.horizont == 0 and onebyone[1] == True:
-            times = range(int(shape1/self.n_lags))
-            print('problems with the sample lag by lags and the radiation restriction')
+            seq=list()
+            cont = -1+ self.n_lags+self.horizont
+            while cont <= len(times) - self.n_lags - self.horizont:
+                print(cont)
+                if self.n_steps == 1:
+                    seq.append(times[cont + (self.n_steps - 1)])
+                else:
+                    seq.append(times[range(cont, cont + (self.n_steps - 1) + 1)])
+                cont += self.n_lags
+            times = np.concatenate(seq)
+            #times = range(int(shape1/self.n_lags))
+            #print('problems with the sample lag by lags and the radiation restriction')
         elif self.horizont == 0 and onebyone[1] == False:
             times = np.delete(times, range(self.n_lags-1), 0)
         else:
