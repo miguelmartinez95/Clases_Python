@@ -1322,7 +1322,7 @@ class LSTM_model(DL):
                         print(y_pred1)
                         if self.mask == True and len(y_pred1) > 0:
                             o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(0) > 0:
+                            if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
                                 times = np.delete(times, o, 0)
