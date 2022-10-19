@@ -1307,6 +1307,8 @@ class LSTM_model(DL):
                             y_real1 = y_real
                         else:
                             if len(index_hour) > 0 and self.horizont == 0:
+                                print(len(y_pred))
+                                print(len(index_hour))
                                 y_pred1 = np.delete(y_pred, index_hour, 0)
                                 y_real1 = np.delete(y_real, index_hour, 0)
                             elif len(index_hour) > 0 and self.horizont > 0:
@@ -1317,6 +1319,7 @@ class LSTM_model(DL):
                                 y_real1 = y_real
 
                         # Outliers and missing values
+                        print(y_pred1)
                         if self.mask == True and len(y_pred1) > 0:
                             o = np.where(y_real1 < self.inf_limit)[0]
                             if len(0) > 0:
@@ -1647,6 +1650,8 @@ class LSTM_model(DL):
             else:
 
                 if len(index_hour) > 0 and self.horizont == 0:
+                    print(len(y_pred))
+                    print(len(index_hour))
                     y_pred1 = np.delete(y_pred, index_hour, 0)
                     y_real1 = np.delete(y_real, index_hour, 0)
                     times = np.delete(times, index_hour, 0)
@@ -1659,6 +1664,7 @@ class LSTM_model(DL):
                     y_real1 = y_real
 
             # Outliers and missing values
+            print(y_pred1)
             if self.mask == True and len(y_pred1) > 0:
                 o = np.where(y_real1 < self.inf_limit)[0]
                 if len(0) > 0:
