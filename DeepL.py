@@ -143,11 +143,11 @@ class DL:
                 limit1 = limit[0]
                 limit2 = limit[1]
 
-                print(restriction.shape)
+                #print(restriction.shape)
                 print(type(restriction))
-                print(pd.Series(restriction[0]))
+                print(pd.Series(restriction))
 
-                hours = pd.Series(restriction[:,0]).dt.hour
+                hours = pd.Series(restriction).dt.hour
                 ii = np.where((hours < limit1) | (hours > limit2))[0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
@@ -1294,7 +1294,7 @@ class LSTM_model(DL):
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
 
-                        res = super().fix_values_0(times_val[z],
+                        res = super().fix_values_0(times_val[z][:,0],
                                                       self.zero_problem, self.limits)
 
 
@@ -2597,7 +2597,7 @@ class MyProblem(ElementwiseProblem):
                 y_realF.index = times_val[z]
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = DL.fix_values_0(times_val[z],
+                    res = DL.fix_values_0(times_val[z][:,0],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
