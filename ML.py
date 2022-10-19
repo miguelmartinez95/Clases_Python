@@ -1239,7 +1239,7 @@ class MLP(ML):
                             cv = np.sum(e_cv * self.weights)
                             rmse = np.sum(e_r * self.weights)
                             nmbe = np.sum(e_n * self.weights)
-                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    res = {'y_pred': y_predF, 'y_real':y_realF,'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1307,7 +1307,7 @@ class MLP(ML):
                             cv = np.sum(e_cv * self.weights)
                             rmse = np.sum(e_r * self.weights)
                             nmbe = np.sum(e_n * self.weights)
-                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1352,7 +1352,7 @@ class MLP(ML):
                             cv = np.sum(e_cv * self.weights)
                             rmse = np.sum(e_r * self.weights)
                             nmbe = np.sum(e_n * self.weights)
-                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -2264,7 +2264,7 @@ class SVM(ML):
                             cv = np.sum(e_cv * self.weights)
                             rmse = np.sum(e_r * self.weights)
                             nmbe = np.sum(e_n * self.weights)
-                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -2328,7 +2328,7 @@ class SVM(ML):
                             cv = np.sum(e_cv * self.weights)
                             rmse = np.sum(e_r * self.weights)
                             nmbe = np.sum(e_n * self.weights)
-                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -2370,7 +2370,7 @@ class SVM(ML):
                             cv = np.sum(e_cv * self.weights)
                             rmse = np.sum(e_r * self.weights)
                             nmbe = np.sum(e_n * self.weights)
-                    res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
