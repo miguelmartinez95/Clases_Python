@@ -525,7 +525,7 @@ class MLP(ML):
     def info(self):
         print(('Class to built MLP models. \n'
               'All the parameters comes from the ML class except the activation functions'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
         super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
         self.weights = weights
@@ -2308,7 +2308,7 @@ class MyProblem_mlp(ElementwiseProblem):
 class SVM(ML):
     def info(self):
         print(('Class to built SVM models. \n'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit,weights, type):
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,extract_cero,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit,weights, type):
         super().__init__(data,horizont, scalar_y,scalar_x, zero_problem, extract_cero, limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
         self.weights = weights
