@@ -2180,35 +2180,35 @@ class MyProblem_mlp(ElementwiseProblem):
                         if mean_y.size == 0:
                             o = np.where(y_real < self.inf_limit)[0]
                             if len(o) > 0:
-                                y_pred2 = np.delete(y_pred, o, 0)
-                                y_real2 = np.delete(y_real, o, 0)
+                                y_pred = np.delete(y_pred, o, 0)
+                                y_real = np.delete(y_real, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
                                 o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
 
                             oT = np.unique(np.concatenate(o))
-                            y_pred2 = np.delete(y_pred, oT, 0)
-                            y_real2 = np.delete(y_real, oT, 0)
+                            y_pred = np.delete(y_pred, oT, 0)
+                            y_real = np.delete(y_real, oT, 0)
 
-                    if self.extract_cero == True and len(y_pred2) > 0:
+                    if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
-                            o = np.where(y_real2 == 0)[0]
+                            o = np.where(y_real == 0)[0]
                             if len(o) > 0:
-                                y_pred2 = np.delete(y_pred2, o, 0)
-                                y_real2 = np.delete(y_real2, o, 0)
+                                y_pred = np.delete(y_pred, o, 0)
+                                y_real = np.delete(y_real, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
-                                o.append(np.where(y_real2[:, t] == 0)[0])
+                                o.append(np.where(y_real[:, t] == 0)[0])
 
                             oT = np.unique(np.concatenate(o))
-                            y_pred2 = np.delete(y_pred2, oT, 0)
-                            y_real2 = np.delete(y_real2, oT, 0)
+                            y_pred = np.delete(y_pred, oT, 0)
+                            y_real = np.delete(y_real, oT, 0)
                             
-                    if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+                    if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                         if mean_y.size == 0:
-                            e=evals(y_pred2, y_real2).variation_rate()
+                            e=evals(y_pred, y_real).variation_rate()
                             if isinstance(self.weights, list):
                                 cvs[z] = np.mean(e)
                             else:
@@ -2217,7 +2217,7 @@ class MyProblem_mlp(ElementwiseProblem):
                                 cvs[z] = np.sum(e * self.weights)
 
                         else:
-                            e = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                            e = evals(y_pred, y_real).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
                                 cvs[z] = np.mean(e)
                             else:
@@ -3715,44 +3715,43 @@ class MyProblem_svm(ElementwiseProblem):
                         if mean_y.size == 0:
                             o = np.where(y_real < self.inf_limit)[0]
                             if len(o) > 0:
-                                y_pred2 = np.delete(y_pred, o, 0)
-                                y_real2 = np.delete(y_real, o, 0)
+                                y_pred = np.delete(y_pred, o, 0)
+                                y_real = np.delete(y_real, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
                                 o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
 
                             oT = np.unique(np.concatenate(o))
-                            y_pred2 = np.delete(y_pred, oT, 0)
-                            y_real2 = np.delete(y_real, oT, 0)
+                            y_pred = np.delete(y_pred, oT, 0)
+                            y_real = np.delete(y_real, oT, 0)
 
-                    if self.extract_cero == True and len(y_pred2) > 0:
+                    if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
-                            o = np.where(y_real2 == 0)[0]
+                            o = np.where(y_real == 0)[0]
                             if len(o) > 0:
-                                y_pred2 = np.delete(y_pred2, o, 0)
-                                y_real2 = np.delete(y_real2, o, 0)
+                                y_pred = np.delete(y_pred, o, 0)
+                                y_real = np.delete(y_real, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
-                                o.append(np.where(y_real2[:, t] == 0)[0])
+                                o.append(np.where(y_real[:, t] == 0)[0])
 
                             oT = np.unique(np.concatenate(o))
-                            y_pred2 = np.delete(y_pred2, oT, 0)
-                            y_real2 = np.delete(y_real2, oT, 0)
+                            y_pred = np.delete(y_pred, oT, 0)
+                            y_real = np.delete(y_real, oT, 0)
 
-                    if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0:
+                    if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                         if mean_y.size == 0:
-                            e=evals(y_pred2, y_real2).variation_rate()
+                            e=evals(y_pred, y_real).variation_rate()
                             if isinstance(self.weights, list):
                                 cvs[z] = np.mean(e)
                             else:
                                 print(e)
                                 print(self.weights)
                                 cvs[z] = np.sum(e * self.weights)
-
                         else:
-                            e = evals(y_pred2, y_real2).cv_rmse(mean_y)
+                            e = evals(y_pred, y_real).cv_rmse(mean_y)
                             if isinstance(self.weights, list):
                                 cvs[z] = np.mean(e)
                             else:
