@@ -787,7 +787,6 @@ class MLP(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -796,7 +795,6 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
@@ -804,7 +802,6 @@ class MLP(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -813,7 +810,6 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -875,7 +871,6 @@ class MLP(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -884,7 +879,6 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
@@ -892,7 +886,6 @@ class MLP(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -901,7 +894,6 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -945,7 +937,7 @@ class MLP(ML):
                             if len(o) > 0:
                                 y_pred = np.delete(y_pred, o, 0)
                                 y_real = np.delete(y_real, o, 0)
-                                times = np.delete(times, o, 0)
+
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -954,7 +946,6 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
@@ -962,7 +953,7 @@ class MLP(ML):
                             if len(o) > 0:
                                 y_pred = np.delete(y_pred, o, 0)
                                 y_real = np.delete(y_real, o, 0)
-                                times = np.delete(times, o, 0)
+
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -971,7 +962,6 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if len(y_pred) > 0:
                         if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
@@ -1299,7 +1289,6 @@ class MLP(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -1308,7 +1297,6 @@ class MLP(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
 
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
@@ -1316,7 +1304,6 @@ class MLP(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -1325,7 +1312,6 @@ class MLP(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
 
             if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -1396,7 +1382,6 @@ class MLP(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -1405,7 +1390,6 @@ class MLP(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
 
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
@@ -1413,7 +1397,6 @@ class MLP(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -1422,8 +1405,6 @@ class MLP(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
-
             if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
@@ -1469,7 +1450,6 @@ class MLP(ML):
                     if len(o) > 0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
-                        times = np.delete(times, o, 0)
                 else:
                     o = list()
                     for t in range(len(mean_y)):
@@ -1478,7 +1458,6 @@ class MLP(ML):
                     oT = np.unique(np.concatenate(o))
                     y_pred = np.delete(y_pred, oT, 0)
                     y_real = np.delete(y_real, oT, 0)
-                    times = np.delete(times, oT, 0)
 
             if self.extract_cero == True and len(y_pred) > 0:
                 if mean_y.size == 0:
@@ -1486,7 +1465,6 @@ class MLP(ML):
                     if len(o) > 0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
-                        times = np.delete(times, o, 0)
                 else:
                     o = list()
                     for t in range(len(mean_y)):
@@ -1495,7 +1473,6 @@ class MLP(ML):
                     oT = np.unique(np.concatenate(o))
                     y_pred = np.delete(y_pred, oT, 0)
                     y_real = np.delete(y_real, oT, 0)
-                    times = np.delete(times, oT, 0)
 
             if len(y_pred) > 1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
@@ -2481,7 +2458,6 @@ class SVM(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -2490,7 +2466,6 @@ class SVM(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
 
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
@@ -2498,7 +2473,6 @@ class SVM(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -2507,8 +2481,6 @@ class SVM(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
-
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -2574,7 +2546,6 @@ class SVM(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -2583,7 +2554,6 @@ class SVM(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
 
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
@@ -2591,7 +2561,6 @@ class SVM(ML):
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
-                            times = np.delete(times, o, 0)
                     else:
                         o = list()
                         for t in range(len(mean_y)):
@@ -2600,8 +2569,6 @@ class SVM(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-                        times = np.delete(times, oT, 0)
-
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -2644,7 +2611,6 @@ class SVM(ML):
                     if len(o) > 0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
-                        times = np.delete(times, o, 0)
                 else:
                     o = list()
                     for t in range(len(mean_y)):
@@ -2653,7 +2619,6 @@ class SVM(ML):
                     oT = np.unique(np.concatenate(o))
                     y_pred = np.delete(y_pred, oT, 0)
                     y_real = np.delete(y_real, oT, 0)
-                    times = np.delete(times, oT, 0)
 
             if self.extract_cero == True and len(y_pred) > 0:
                 if mean_y.size == 0:
@@ -2661,7 +2626,6 @@ class SVM(ML):
                     if len(o) > 0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
-                        times = np.delete(times, o, 0)
                 else:
                     o = list()
                     for t in range(len(mean_y)):
@@ -2670,8 +2634,6 @@ class SVM(ML):
                     oT = np.unique(np.concatenate(o))
                     y_pred = np.delete(y_pred, oT, 0)
                     y_real = np.delete(y_real, oT, 0)
-                    times = np.delete(times, oT, 0)
-
 
             if len(y_pred)>1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
@@ -2836,7 +2798,6 @@ class SVM(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -2845,7 +2806,6 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
@@ -2853,7 +2813,6 @@ class SVM(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -2862,8 +2821,6 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
-
 
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -2920,7 +2877,6 @@ class SVM(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -2929,7 +2885,6 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
@@ -2937,7 +2892,6 @@ class SVM(ML):
                             if len(o) > 0:
                                 y_pred1 = np.delete(y_pred1, o, 0)
                                 y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -2946,8 +2900,6 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-                            times = np.delete(times, oT, 0)
-
 
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -2988,7 +2940,6 @@ class SVM(ML):
                             if len(o) > 0:
                                 y_pred = np.delete(y_pred, o, 0)
                                 y_real = np.delete(y_real, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -2997,7 +2948,6 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
@@ -3005,7 +2955,6 @@ class SVM(ML):
                             if len(o) > 0:
                                 y_pred = np.delete(y_pred, o, 0)
                                 y_real = np.delete(y_real, o, 0)
-                                times = np.delete(times, o, 0)
                         else:
                             o = list()
                             for t in range(len(mean_y)):
@@ -3014,7 +2963,6 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-                            times = np.delete(times, oT, 0)
 
                     if len(y_pred) > 0:
                         if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
