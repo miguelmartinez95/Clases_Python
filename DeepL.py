@@ -67,7 +67,7 @@ class DL:
 
         print('Super class to built different deep learning models. This class has other more specific classes associated with it ')
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names,extract_cero):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -83,6 +83,7 @@ class DL:
         self.sup_limit = sup_limit
         self.inf_limit = inf_limit
         self.names=names
+        self.extract_cero = extract_cero
 
     @staticmethod
     def cv_division(x,y, fold):
@@ -575,8 +576,8 @@ class LSTM_model(DL):
         weights: weights for the outputs. mainly for multivriate output
         '''
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names, repeat_vector,dropout,weights, type):
-        super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names)
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type):
+        super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names,extract_cero)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
         self.type = type
@@ -1321,11 +1322,39 @@ class LSTM_model(DL):
                         # Outliers and missing values
                         #print(y_pred1)
                         if self.mask == True and len(y_pred1) > 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
+                            if mean_y.size == 0:
+                                o = np.where(y_real1 < self.inf_limit)[0]
+                                if len(o) > 0:
+                                    y_pred1 = np.delete(y_pred1, o, 0)
+                                    y_real1 = np.delete(y_real1, o, 0)
+                                    times = np.delete(times, o, 0)
+                            else:
+                                o=list()
+                                for t in range(len(mean_y)):
+                                    o.append(np.where(y_real1[:,t] < self.inf_limit[t])[0])
+
+                                oT=np.unique(np.concatenate(o))
+                                y_pred1 = np.delete(y_pred1, oT, 0)
+                                y_real1 = np.delete(y_real1, oT, 0)
+                                times = np.delete(times, oT, 0)
+
+
+                        if self.extract_cero == True and len(y_pred1) > 0:
+                            if mean_y.size == 0:
+                                o = np.where(y_real1 == 0)[0]
+                                if len(o) > 0:
+                                    y_pred1 = np.delete(y_pred1, o, 0)
+                                    y_real1 = np.delete(y_real1, o, 0)
+                                    times = np.delete(times, o, 0)
+                            else:
+                                o = list()
+                                for t in range(len(mean_y)):
+                                    o.append(np.where(y_real1[:, t] == 0)[0])
+
+                                oT = np.unique(np.concatenate(o))
+                                y_pred1 = np.delete(y_pred1, oT, 0)
+                                y_real1 = np.delete(y_real1, oT, 0)
+                                times = np.delete(times, oT, 0)
 
                         #After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
@@ -1393,11 +1422,38 @@ class LSTM_model(DL):
 
                         # Outliers and missing values
                         if self.mask == True and len(y_pred1) > 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                                times = np.delete(times, o, 0)
+                            if mean_y.size == 0:
+                                o = np.where(y_real1 < self.inf_limit)[0]
+                                if len(o) > 0:
+                                    y_pred1 = np.delete(y_pred1, o, 0)
+                                    y_real1 = np.delete(y_real1, o, 0)
+                                    times = np.delete(times, o, 0)
+                            else:
+                                o = list()
+                                for t in range(len(mean_y)):
+                                    o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                                oT = np.unique(np.concatenate(o))
+                                y_pred1 = np.delete(y_pred1, oT, 0)
+                                y_real1 = np.delete(y_real1, oT, 0)
+                                times = np.delete(times, oT, 0)
+
+                        if self.extract_cero == True and len(y_pred1) > 0:
+                            if mean_y.size == 0:
+                                o = np.where(y_real1 == 0)[0]
+                                if len(o) > 0:
+                                    y_pred1 = np.delete(y_pred1, o, 0)
+                                    y_real1 = np.delete(y_real1, o, 0)
+                                    times = np.delete(times, o, 0)
+                            else:
+                                o = list()
+                                for t in range(len(mean_y)):
+                                    o.append(np.where(y_real1[:, t] == 0)[0])
+
+                                oT = np.unique(np.concatenate(o))
+                                y_pred1 = np.delete(y_pred1, oT, 0)
+                                y_real1 = np.delete(y_real1, oT, 0)
+                                times = np.delete(times, oT, 0)
 
                         #After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
@@ -1435,26 +1491,49 @@ class LSTM_model(DL):
                         else:
                             raise NameError('Empty prediction')
                     else:
-                        y_real2 = y_real.copy()
-
                         predictions.append(y_predF)
                         reales.append(y_realF)
 
                         # Outliers and missing values
                         if self.mask == True and len(y_pred) > 0:
-                            o = np.where(y_real2 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred2 = np.delete(y_pred, o, 0)
-                                y_real2 = np.delete(y_real, o, 0)
+                            if mean_y.size == 0:
+                                o = np.where(y_real < self.inf_limit)[0]
+                                if len(o) > 0:
+                                    y_pred2 = np.delete(y_pred, o, 0)
+                                    y_real2 = np.delete(y_real, o, 0)
+                                    times = np.delete(times, o, 0)
                             else:
-                                y_pred2 = y_pred
-                                y_real2 = y_real
+                                o = list()
+                                for t in range(len(mean_y)):
+                                    o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+
+                                oT = np.unique(np.concatenate(o))
+                                y_pred2 = np.delete(y_pred, oT, 0)
+                                y_real2 = np.delete(y_real, oT, 0)
+                                times = np.delete(times, oT, 0)
+
+                        if self.extract_cero == True and len(y_pred2) > 0:
+                            if mean_y.size == 0:
+                                o = np.where(y_real2 == 0)[0]
+                                if len(o) > 0:
+                                    y_pred2 = np.delete(y_pred2, o, 0)
+                                    y_real2 = np.delete(y_real2, o, 0)
+                                    times = np.delete(times, o, 0)
+                            else:
+                                o = list()
+                                for t in range(len(mean_y)):
+                                    o.append(np.where(y_real2[:, t] == 0)[0])
+
+                                oT = np.unique(np.concatenate(o))
+                                y_pred2 = np.delete(y_pred2, oT, 0)
+                                y_real2 = np.delete(y_real2, oT, 0)
+                                times = np.delete(times, oT, 0)
 
                         #After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
                         # on the other hand, we compute the classic error metrics
 
-                        if len(y_pred) > 0:
+                        if len(y_pred2) > 0:
                             if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0 and len(y_pred2)>0 and len(y_real2)>0:
                                 if mean_y.size == 0:
                                     e = evals(y_pred2, y_real2).variation_rate()
@@ -1665,11 +1744,38 @@ class LSTM_model(DL):
             # Outliers and missing values
             #print(y_pred1)
             if self.mask == True and len(y_pred1) > 0:
-                o = np.where(y_real1 < self.inf_limit)[0]
-                if len(o) > 0:
-                    y_pred1 = np.delete(y_pred1, o, 0)
-                    y_real1 = np.delete(y_real1, o, 0)
-                    times = np.delete(times, o, 0)
+                if mean_y.size == 0:
+                    o = np.where(y_real1 < self.inf_limit)[0]
+                    if len(o) > 0:
+                        y_pred1 = np.delete(y_pred1, o, 0)
+                        y_real1 = np.delete(y_real1, o, 0)
+                        times = np.delete(times, o, 0)
+                else:
+                    o = list()
+                    for t in range(len(mean_y)):
+                        o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                    oT = np.unique(np.concatenate(o))
+                    y_pred1 = np.delete(y_pred1, oT, 0)
+                    y_real1 = np.delete(y_real1, oT, 0)
+                    times = np.delete(times, oT, 0)
+
+            if self.extract_cero == True and len(y_pred1) > 0:
+                if mean_y.size == 0:
+                    o = np.where(y_real1 == 0)[0]
+                    if len(o) > 0:
+                        y_pred1 = np.delete(y_pred1, o, 0)
+                        y_real1 = np.delete(y_real1, o, 0)
+                        times = np.delete(times, o, 0)
+                else:
+                    o = list()
+                    for t in range(len(mean_y)):
+                        o.append(np.where(y_real1[:, t] == 0)[0])
+
+                    oT = np.unique(np.concatenate(o))
+                    y_pred1 = np.delete(y_pred1, oT, 0)
+                    y_real1 = np.delete(y_real1, oT, 0)
+                    times = np.delete(times, oT, 0)
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -1748,11 +1854,38 @@ class LSTM_model(DL):
 
                 # Outliers and missing values
                 if self.mask == True and len(y_pred1) > 0:
-                    o = np.where(y_real1 < self.inf_limit)[0]
-                    if len(o) > 0:
-                        y_pred1 = np.delete(y_pred1, o, 0)
-                        y_real1 = np.delete(y_real1, o, 0)
-                        times = np.delete(times, o, 0)
+                    if mean_y.size == 0:
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                            times = np.delete(times, o, 0)
+                    else:
+                        o = list()
+                        for t in range(len(mean_y)):
+                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                        oT = np.unique(np.concatenate(o))
+                        y_pred1 = np.delete(y_pred1, oT, 0)
+                        y_real1 = np.delete(y_real1, oT, 0)
+                        times = np.delete(times, oT, 0)
+
+                if self.extract_cero == True and len(y_pred1) > 0:
+                    if mean_y.size == 0:
+                        o = np.where(y_real1 == 0)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                            times = np.delete(times, o, 0)
+                    else:
+                        o = list()
+                        for t in range(len(mean_y)):
+                            o.append(np.where(y_real1[:, t] == 0)[0])
+
+                        oT = np.unique(np.concatenate(o))
+                        y_pred1 = np.delete(y_pred1, oT, 0)
+                        y_real1 = np.delete(y_real1, oT, 0)
+                        times = np.delete(times, oT, 0)
 
             if len(y_pred1)>0:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -1805,14 +1938,39 @@ class LSTM_model(DL):
                 raise NameError('Empty prediction')
         else:
             # Outliers and missing values
-            y_real2 = y_real.copy()
-
             if self.mask == True and len(y_pred) > 0:
-                o = np.where(y_real2 < self.inf_limit)[0]
-                if len(o)>0:
-                    y_pred = np.delete(y_pred, o, 0)
-                    y_real = np.delete(y_real, o, 0)
-                    times = np.delete(times, o, 0)
+                if mean_y.size == 0:
+                    o = np.where(y_real < self.inf_limit)[0]
+                    if len(o) > 0:
+                        y_pred = np.delete(y_pred, o, 0)
+                        y_real = np.delete(y_real, o, 0)
+                        times = np.delete(times, o, 0)
+                else:
+                    o = list()
+                    for t in range(len(mean_y)):
+                        o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+
+                    oT = np.unique(np.concatenate(o))
+                    y_pred = np.delete(y_pred, oT, 0)
+                    y_real = np.delete(y_real, oT, 0)
+                    times = np.delete(times, oT, 0)
+
+            if self.extract_cero == True and len(y_pred) > 0:
+                if mean_y.size == 0:
+                    o = np.where(y_real == 0)[0]
+                    if len(o) > 0:
+                        y_pred = np.delete(y_pred, o, 0)
+                        y_real = np.delete(y_real, o, 0)
+                        times = np.delete(times, o, 0)
+                else:
+                    o = list()
+                    for t in range(len(mean_y)):
+                        o.append(np.where(y_real[:, t] == 0)[0])
+
+                    oT = np.unique(np.concatenate(o))
+                    y_pred = np.delete(y_pred, oT, 0)
+                    y_real = np.delete(y_real, oT, 0)
+                    times = np.delete(times, oT, 0)
             if len(y_pred)>0:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     if daily == True:
@@ -2057,11 +2215,11 @@ class LSTM_model(DL):
 
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+            problem = MyProblem(self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+            problem = MyProblem(self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps, self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
@@ -2183,11 +2341,11 @@ class LSTM_model(DL):
 
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+            problem = MyProblem(self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
+            problem = MyProblem(self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
@@ -2467,7 +2625,7 @@ class MyProblem(ElementwiseProblem):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 
 
-    def __init__(self,names, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
+    def __init__(self,names,extract_cero, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
@@ -2479,6 +2637,7 @@ class MyProblem(ElementwiseProblem):
                          **kwargs)
 
         self.names=names
+        self.extract_cero=extract_cero
         self.data=data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -2606,10 +2765,35 @@ class MyProblem(ElementwiseProblem):
                         y_real1 = y_real
                     # Outliers and missing values
                     if self.mask == True and len(y_pred1) > 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 == 0)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(
                             y_pred1) > 0 and len(y_real1) > 0:
                         if mean_y.size == 0:
@@ -2648,10 +2832,34 @@ class MyProblem(ElementwiseProblem):
 
                     # Outliers and missing values
                     if self.mask == True and len(y_pred1) > 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 == 0)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(
                             y_pred1) > 0 and len(y_real1) > 0:
                         if mean_y.size == 0:
@@ -2670,16 +2878,35 @@ class MyProblem(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[zz] = 9999
                 else:
-                    y_real2 = y_real.copy()
                     if self.mask == True and len(y_pred) > 0:
-                        # Outliers and missing values
-                        o = np.where(y_real2 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred2 = np.delete(y_pred, o, 0)
-                            y_real2 = np.delete(y_real, o, 0)
+                        if mean_y.size == 0:
+                            o = np.where(y_real < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred2 = np.delete(y_pred, o, 0)
+                                y_real2 = np.delete(y_real, o, 0)
                         else:
-                            y_pred2 = y_pred
-                            y_real2 = y_real
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred2 = np.delete(y_pred, oT, 0)
+                            y_real2 = np.delete(y_real, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred2) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real2 == 0)[0]
+                            if len(o) > 0:
+                                y_pred2 = np.delete(y_pred2, o, 0)
+                                y_real2 = np.delete(y_real2, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real2[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred2 = np.delete(y_pred2, oT, 0)
+                            y_real2 = np.delete(y_real2, oT, 0)
                     if np.sum(np.isnan(y_pred2)) == 0 and np.sum(np.isnan(y_real2)) == 0 and len(
                             y_pred2) > 0 and len(y_real2) > 0:
                         if mean_y.size == 0:
