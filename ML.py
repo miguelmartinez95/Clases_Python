@@ -51,7 +51,7 @@ class ML:
                'IMPORTANT: the variables that can be lagged to the end of data frame'
               ))
 
-    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit ):
+    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -59,6 +59,7 @@ class ML:
         self.zero_problem = zero_problem
         self.times = times
         self.limits = limits
+        self.extract_cero=extract_cero
         self.pos_y = pos_y
         self.n_lags = n_lags
         self.mask = mask
@@ -525,7 +526,7 @@ class MLP(ML):
         print(('Class to built MLP models. \n'
               'All the parameters comes from the ML class except the activation functions'))
     def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type):
-        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
+        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
         self.weights = weights
         self.n_steps=n_steps
@@ -780,15 +781,40 @@ class MLP(ML):
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
-                    if self.mask == True:
-                        # Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                    if self.mask == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                                times = np.delete(times, o, 0)
                         else:
-                            y_pred1 = y_pred
-                            y_real1 = y_real
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+                            times = np.delete(times, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 == 0)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                                times = np.delete(times, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+                            times = np.delete(times, oT, 0)
+
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
@@ -843,12 +869,40 @@ class MLP(ML):
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
                     #
-                    if self.mask == True:
-                        # Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                    if self.mask == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                                times = np.delete(times, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+                            times = np.delete(times, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 == 0)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                                times = np.delete(times, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+                            times = np.delete(times, oT, 0)
+
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
@@ -884,12 +938,41 @@ class MLP(ML):
                     if self.type == 'series':
                         y_pred = np.concatenate(y_pred)
                         y_real = np.concatenate(y_real)
-                    if self.mask == True:
-                        # Outliers and missing values
-                        o = np.where(y_real < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred = np.delete(y_pred, o, 0)
-                            y_real = np.delete(y_real, o, 0)
+                    # Outliers and missing values
+                    if self.mask == True and len(y_pred) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred = np.delete(y_pred, o, 0)
+                                y_real = np.delete(y_real, o, 0)
+                                times = np.delete(times, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred = np.delete(y_pred, oT, 0)
+                            y_real = np.delete(y_real, oT, 0)
+                            times = np.delete(times, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real == 0)[0]
+                            if len(o) > 0:
+                                y_pred = np.delete(y_pred, o, 0)
+                                y_real = np.delete(y_real, o, 0)
+                                times = np.delete(times, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred = np.delete(y_pred, oT, 0)
+                            y_real = np.delete(y_real, oT, 0)
+                            times = np.delete(times, oT, 0)
+
                     if len(y_pred) > 0:
                         if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                             if mean_y.size == 0:
@@ -1211,10 +1294,38 @@ class MLP(ML):
                     y_real1 = np.concatenate(y_real1)
 
                 if self.mask == True and len(y_pred1) > 0:
-                    o = np.where(y_real1 < self.inf_limit)[0]
-                    if len(o) > 0:
-                        y_pred1 = np.delete(y_pred1, o, 0)
-                        y_real1 = np.delete(y_real1, o, 0)
+                    if mean_y.size == 0:
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                            times = np.delete(times, o, 0)
+                    else:
+                        o = list()
+                        for t in range(len(mean_y)):
+                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                        oT = np.unique(np.concatenate(o))
+                        y_pred1 = np.delete(y_pred1, oT, 0)
+                        y_real1 = np.delete(y_real1, oT, 0)
+                        times = np.delete(times, oT, 0)
+
+                if self.extract_cero == True and len(y_pred1) > 0:
+                    if mean_y.size == 0:
+                        o = np.where(y_real1 == 0)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                            times = np.delete(times, o, 0)
+                    else:
+                        o = list()
+                        for t in range(len(mean_y)):
+                            o.append(np.where(y_real1[:, t] == 0)[0])
+
+                        oT = np.unique(np.concatenate(o))
+                        y_pred1 = np.delete(y_pred1, oT, 0)
+                        y_real1 = np.delete(y_real1, oT, 0)
+                        times = np.delete(times, oT, 0)
 
             if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -1278,11 +1389,40 @@ class MLP(ML):
                     y_pred1 = np.concatenate(y_pred1)
                     y_real1 = np.concatenate(y_real1)
 
+                # Outliers and missing values
                 if self.mask == True and len(y_pred1) > 0:
-                    o = np.where(y_real1 < self.inf_limit)[0]
-                    if len(o) > 0:
-                        y_pred1 = np.delete(y_pred1, o, 0)
-                        y_real1 = np.delete(y_real1, o, 0)
+                    if mean_y.size == 0:
+                        o = np.where(y_real1 < self.inf_limit)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                            times = np.delete(times, o, 0)
+                    else:
+                        o = list()
+                        for t in range(len(mean_y)):
+                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                        oT = np.unique(np.concatenate(o))
+                        y_pred1 = np.delete(y_pred1, oT, 0)
+                        y_real1 = np.delete(y_real1, oT, 0)
+                        times = np.delete(times, oT, 0)
+
+                if self.extract_cero == True and len(y_pred1) > 0:
+                    if mean_y.size == 0:
+                        o = np.where(y_real1 == 0)[0]
+                        if len(o) > 0:
+                            y_pred1 = np.delete(y_pred1, o, 0)
+                            y_real1 = np.delete(y_real1, o, 0)
+                            times = np.delete(times, o, 0)
+                    else:
+                        o = list()
+                        for t in range(len(mean_y)):
+                            o.append(np.where(y_real1[:, t] == 0)[0])
+
+                        oT = np.unique(np.concatenate(o))
+                        y_pred1 = np.delete(y_pred1, oT, 0)
+                        y_real1 = np.delete(y_real1, oT, 0)
+                        times = np.delete(times, oT, 0)
 
             if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
@@ -1322,11 +1462,40 @@ class MLP(ML):
                 y_pred = np.concatenate(y_pred)
                 y_real = np.concatenate(y_real)
 
-            if self.mask == True:
-                o = np.where(y_real < self.inf_limit)[0]
-                if len(o) > 0:
-                    y_pred = np.delete(y_pred, o, 0)
-                    y_real = np.delete(y_real, o, 0)
+            # Outliers and missing values
+            if self.mask == True and len(y_pred) > 0:
+                if mean_y.size == 0:
+                    o = np.where(y_real < self.inf_limit)[0]
+                    if len(o) > 0:
+                        y_pred = np.delete(y_pred, o, 0)
+                        y_real = np.delete(y_real, o, 0)
+                        times = np.delete(times, o, 0)
+                else:
+                    o = list()
+                    for t in range(len(mean_y)):
+                        o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+
+                    oT = np.unique(np.concatenate(o))
+                    y_pred = np.delete(y_pred, oT, 0)
+                    y_real = np.delete(y_real, oT, 0)
+                    times = np.delete(times, oT, 0)
+
+            if self.extract_cero == True and len(y_pred) > 0:
+                if mean_y.size == 0:
+                    o = np.where(y_real == 0)[0]
+                    if len(o) > 0:
+                        y_pred = np.delete(y_pred, o, 0)
+                        y_real = np.delete(y_real, o, 0)
+                        times = np.delete(times, o, 0)
+                else:
+                    o = list()
+                    for t in range(len(mean_y)):
+                        o.append(np.where(y_real[:, t] == 0)[0])
+
+                    oT = np.unique(np.concatenate(o))
+                    y_pred = np.delete(y_pred, oT, 0)
+                    y_real = np.delete(y_real, oT, 0)
+                    times = np.delete(times, oT, 0)
 
             if len(y_pred) > 1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
@@ -1403,13 +1572,13 @@ class MLP(ML):
         print('DATA is', type(self.data))
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
                                 med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.extract_cero, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
@@ -1641,13 +1810,13 @@ class MLP(ML):
         print('DATA is', type(self.data))
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
                                 med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
+            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
@@ -1773,7 +1942,7 @@ from pymoo.core.problem import ElementwiseProblem
 class MyProblem_mlp(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
-    def __init__(self, horizont, scalar_y, zero_problem, limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
+    def __init__(self, horizont, scalar_y, zero_problem, extract_cero,limits, times, pos_y, mask, mask_value, n_lags, inf_limit,
                  sup_limit, type, data,scalar_x, med, contador,
                  n_var,l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary,weights, **kwargs):
         super().__init__(n_var=n_var,
@@ -1789,6 +1958,7 @@ class MyProblem_mlp(ElementwiseProblem):
         self.scalar_y = scalar_y
         self.scalar_x = scalar_x
         self.zero_problem = zero_problem
+        self.extract_cero = extract_cero
         self.limits = limits
         self.times = times
         self.pos_y = pos_y
@@ -1913,12 +2083,36 @@ class MyProblem_mlp(ElementwiseProblem):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-                    if self.mask == True:
-                        # Outliers and missing values
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
+                    if self.mask == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 < self.inf_limit)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+
+                    if self.extract_cero == True and len(y_pred1) > 0:
+                        if mean_y.size == 0:
+                            o = np.where(y_real1 == 0)[0]
+                            if len(o) > 0:
+                                y_pred1 = np.delete(y_pred1, o, 0)
+                                y_real1 = np.delete(y_real1, o, 0)
+                        else:
+                            o = list()
+                            for t in range(len(mean_y)):
+                                o.append(np.where(y_real1[:, t] == 0)[0])
+
+                            oT = np.unique(np.concatenate(o))
+                            y_pred1 = np.delete(y_pred1, oT, 0)
+                            y_real1 = np.delete(y_real1, oT, 0)
+
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
                             e=evals(y_pred1, y_real1).variation_rate()
