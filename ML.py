@@ -1602,13 +1602,15 @@ class MLP(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.figure(figsize=(12, 9))
+            plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=200, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend(borderpad=1.25)
+            plt.xticks(fontsize=18)
+            plt.yticks(fontsize=18)
+            plt.legend(borderpad=1, fontsize=15)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -1844,13 +1846,15 @@ class MLP(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.figure(figsize=(12, 9))
+            plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=200, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend(borderpad=1.25)
+            plt.xticks(fontsize=18)
+            plt.yticks(fontsize=18)
+            plt.legend(borderpad=1, fontsize=15)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -3259,13 +3263,15 @@ class SVM(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.figure(figsize=(12, 9))
+            plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=200, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend(borderpad=1.25)
+            plt.xticks(fontsize=18)
+            plt.yticks(fontsize=18)
+            plt.legend(borderpad=1, fontsize=15)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -3389,13 +3395,15 @@ class SVM(ML):
             print(rf.shape)
             print(rx.shape)
 
-            plt.figure(figsize=(12, 9))
+            plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=175, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=200, color='red', alpha=1, marker='o', facecolors='none',
                         label='Optimum')
-            plt.legend(borderpad=1.25)
+            plt.xticks(fontsize=18)
+            plt.yticks(fontsize=18)
+            plt.legend(borderpad=1, fontsize=15)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
