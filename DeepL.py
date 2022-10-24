@@ -2220,9 +2220,9 @@ class LSTM_model(DL):
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-            obj_T = r_final
+            obj_T = res.F
             struct_T = rx
-            obj = r_final[I, :]
+            obj = res.F[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
@@ -2350,9 +2350,9 @@ class LSTM_model(DL):
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-            obj_T = r_final
+            obj_T = res.F
             struct_T = rx
-            obj = r_final[I, :]
+            obj = res.F[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
