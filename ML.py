@@ -1595,9 +1595,9 @@ class MLP(ML):
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-            obj_T = r_final
+            obj_T = res.F
             struct_T = rx
-            obj = r_final[I, :]
+            obj = res.F[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
@@ -1839,9 +1839,9 @@ class MLP(ML):
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-            obj_T = r_final
+            obj_T = res.F
             struct_T = rx
-            obj = r_final[I, :]
+            obj = res.F[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
@@ -3256,9 +3256,9 @@ class SVM(ML):
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-            obj_T = r_final
+            obj_T = res.F
             struct_T = rx
-            obj = r_final[I, :]
+            obj = res.F[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
@@ -3388,9 +3388,9 @@ class SVM(ML):
 
             I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-            obj_T = r_final
+            obj_T = res.F
             struct_T = rx
-            obj = r_final[I, :]
+            obj = res.F[I, :]
             struct = rx[I, :]
             print(rf.shape)
             print(rx.shape)
