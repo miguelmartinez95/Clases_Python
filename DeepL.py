@@ -2250,7 +2250,7 @@ class LSTM_model(DL):
         else:
             pass
 
-        return (obj, struct,obj_T, struct_T,  res)
+        return (obj, struct,obj_T, struct_T,  res,contador)
 
     def optimal_search_nsga2(self,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights, n_last=5, nth_gen=5):
         '''
@@ -2273,7 +2273,7 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
+        obj, x_obj, obj_total, x_obj_total,res,evaluations = self.nsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -2282,7 +2282,7 @@ class LSTM_model(DL):
 
         print('Process finished!!!')
         print('The selection is \n', x_obj, 'with a result of \n', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res,'evaluations':evaluations}
         return res
 
 
@@ -2380,7 +2380,7 @@ class LSTM_model(DL):
         else:
             pass
 
-        return (obj, struct,obj_T, struct_T,  res)
+        return (obj, struct,obj_T, struct_T,  res,contador)
 
 
 
@@ -2406,7 +2406,7 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
-        obj, x_obj, obj_total, x_obj_total,res = self.rnsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
+        obj, x_obj, obj_total, x_obj_total,res,evaluations = self.rnsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -2415,7 +2415,7 @@ class LSTM_model(DL):
 
         print('Process finished!!!')
         print('The selection is \n', x_obj, 'with a result of \n', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res,'evaluations':evaluations}
         return res
 
 
