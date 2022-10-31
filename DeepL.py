@@ -2279,6 +2279,7 @@ class LSTM_model(DL):
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
         np.savetxt('x.txt', x_obj_total)
+        np.savetxt('evaluations.txt', evaluations)
 
         print('Process finished!!!')
         print('The selection is \n', x_obj, 'with a result of \n', obj)
@@ -2412,6 +2413,7 @@ class LSTM_model(DL):
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
         np.savetxt('x.txt', x_obj_total)
+        np.savetxt('evaluations.txt', evaluations)
 
         print('Process finished!!!')
         print('The selection is \n', x_obj, 'with a result of \n', obj)
