@@ -2367,7 +2367,7 @@ class LSTM_model(DL):
             plt.xticks(fontsize=18)
             plt.yticks(fontsize=18)
             plt.legend(borderpad=1, fontsize=15)
-            plt.savefig('optimisation_plot.png')
+            plt.savefig('optimisationR_plot.png')
 
         else:
             obj_T = res.F
@@ -2409,11 +2409,11 @@ class LSTM_model(DL):
         print('start optimisation!!!')
         obj, x_obj, obj_total, x_obj_total,res,evaluations = self.rnsga2_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
 
-        np.savetxt('objectives_selected.txt', obj)
-        np.savetxt('x_selected.txt', x_obj)
-        np.savetxt('objectives.txt', obj_total)
-        np.savetxt('x.txt', x_obj_total)
-        np.savetxt('evaluations.txt', evaluations)
+        np.savetxt('objectives_selectedR.txt', obj)
+        np.savetxt('x_selectedR.txt', x_obj)
+        np.savetxt('objectivesR.txt', obj_total)
+        np.savetxt('xR.txt', x_obj_total)
+        np.savetxt('evaluationsR.txt', evaluations)
 
         print('Process finished!!!')
         print('The selection is \n', x_obj, 'with a result of \n', obj)
