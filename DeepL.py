@@ -2121,6 +2121,15 @@ class LSTM_model(DL):
         top_result['neurons_lstm']=options['neurons_lstm'][I]
         top_result['pacience']=options['pacience'][I]
 
+        print(top_result['error'])
+        print(top_result['complexity'])
+        print(top_result['neurons_lstm'])
+        print(top_result['neurons_dense'])
+        print(top_result['pacience'])
+
+        np.savetxt('objectives_selected.txt', np.array([top_result['error'],top_result['complexity']]))
+        np.savetxt('x_selected.txt', np.array([top_result['neurons_lstm'],top_result['neurons_dense'],top_result['pacience']]))
+
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
         plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
