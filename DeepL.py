@@ -2111,7 +2111,7 @@ class LSTM_model(DL):
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
         from pymoo.decomposition.aasf import AASF
-        I = get_decomposition("aasf").do(r_final, weights).argmin()
+        I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
         #obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
