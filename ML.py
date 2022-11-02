@@ -1665,118 +1665,6 @@ class MLP(ML):
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
 
-
-#    def rvea_individual(self, med, contador, n_processes, l_dense, batch, pop_size, N_gen, xlimit_inf,
-#                         xlimit_sup,dropout, dictionary, weights):
-#        '''
-#        :param med:
-#        :param contador: a operator to count the attempts
-#        :param n_processes: how many processes are parallelise
-#        :param l_dense:maximun number of layers dense
-#        :param batch: batch size
-#        :param pop_size: population size selected for RVEA
-#        :param tol: tolearance selected to terminate the process
-#        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
-#        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
-#        :param dictionary: dictionary to stored the options tested
-#        :return: options in Pareto front, the optimal selection and the total results
-#        '''
-#
-#        print('DATA is', type(self.data))
-#        if n_processes > 1:
-#            pool = multiprocessing.Pool(n_processes)
-#            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
-#                                self.mask,
-#                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-#                                self.type, self.data,self.scalar_x,
-#                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
-#        else:
-#            problem = MyProblem_mlp(self.horizont, self.scalar_y, self.zero_problem, self.limits, self.times, self.pos_y,
-#                                self.mask,
-#                                self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
-#                                self.type, self.data,self.scalar_x,
-#                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, weights)
-#        ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
-#
-#        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
-#                         crossover=get_crossover("int_sbx"),
-#                         mutation=get_mutation("int_pm", prob=0.1))
-#
-#        res = minimize(problem,
-#                       algorithm,
-#                       ("n_gen", N_gen),
-#                       # ("n_gen", 20),
-#                       pf=True,
-#                       verbose=True,
-#                       seed=7)
-#
-#        if res.F.shape[0] > 1:
-#            rf = res.F
-#            rx = res.X
-#            weights = np.array([0.5, 0.5])
-#            scal_cv = MinMaxScaler(feature_range=(0, 1))
-#            scal_com = MinMaxScaler(feature_range=(0, 1))
-#
-#            cv = scal_cv.transform(res.F[:, 0].reshape(-1, 1))
-#            com = scal_com.transform(res.F[:, 1].reshape(-1, 1))
-#
-#            r_final = np.array([cv[:, 0], com[:, 0]])
-#
-#            I = get_decomposition("pbi").do(r_final, weights).argmin()
-#
-#            obj_T = r_final
-#            struct_T = rx
-#            obj = r_final[I, :]
-#            struct = rx[I, :]
-#            print(rf.shape)
-#            print(rx.shape)
-#
-#            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
-#            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-#            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-#            plt.scatter(r_final[I, 0], r_final[I, 1], s=450, color='red', alpha=1, marker='o', facecolors='none',
-#                        label='Optimum')
-#            plt.legend()
-#        else:
-#            obj_T = res.F
-#            struct_T = res.X
-#            obj = res.F
-#            struct = res.X
-#        print('The number of evaluations were:', contador)
-#        if n_processes > 1:
-#            pool.close()
-#        else:
-#            pass
-#        return (obj, struct, obj_T, struct_T, res)
-#
-#    def optimal_search_rvea(self, l_dense, batch, pop_size, N_gen, xlimit_inf, xlimit_sup, mean_y,dropout, parallel):
-#        '''
-#        :param l_dense: maximun layers dense
-#        :param batch: batch size
-#        :param pop_size: population size for NSGA2
-#        :param tol: tolerance to built the pareto front
-#        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
-#        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
-#        :param parallel: how many processes are parallelise
-#        if mean_y is empty a variation rate will be applied
-#        :return: the options selected for the pareto front, the optimal selection and the total results
-#        '''
-#        manager = multiprocessing.Manager()
-#        dictionary = manager.dict()
-#        contador = manager.list()
-#        contador.append(0)
-#        print('Start the optimization!!!!!')
-#        obj, x_obj, obj_total, x_obj_total, res = self.rvea_individual(mean_y, contador, parallel, l_dense,
-#                                                                            batch, pop_size, N_gen, xlimit_inf,
-#                                                                            xlimit_sup, dropout,dictionary, self.weights)
-#        np.savetxt('objectives_selected.txt', obj)
-#        np.savetxt('x_selected.txt', x_obj)
-#        np.savetxt('objectives.txt', obj_total)
-#        np.savetxt('x.txt', x_obj_total)
-#        print('Process finished!!!')
-#        print('The selection is', x_obj, 'with a result of', obj)
-#        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
-#        return res
     def rnsga2_individual(self, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
                          xlimit_sup,dropout, dictionary, weights,epsilon):
         '''
@@ -1868,7 +1756,7 @@ class MLP(ML):
             plt.xticks(fontsize=18)
             plt.yticks(fontsize=18)
             plt.legend(borderpad=1, fontsize=15)
-            plt.savefig('optimisation_plot.png')
+            plt.savefig('optimisation_plotR.png')
         else:
             obj_T = res.F
             struct_T = res.X
@@ -1901,10 +1789,10 @@ class MLP(ML):
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dropout,dictionary, weights,epsilon)
-        np.savetxt('objectives_selected.txt', obj)
-        np.savetxt('x_selected.txt', x_obj)
-        np.savetxt('objectives.txt', obj_total)
-        np.savetxt('x.txt', x_obj_total)
+        np.savetxt('objectives_selectedR.txt', obj)
+        np.savetxt('x_selectedR.txt', x_obj)
+        np.savetxt('objectivesR.txt', obj_total)
+        np.savetxt('xR.txt', x_obj_total)
         np.savetxt('evaluationsR.txt', evaluations)
 
         print('Process finished!!!')
@@ -3416,7 +3304,7 @@ class SVM(ML):
             plt.xticks(fontsize=18)
             plt.yticks(fontsize=18)
             plt.legend(borderpad=1, fontsize=15)
-            plt.savefig('optimisation_plot.png')
+            plt.savefig('optimisation_plotR.png')
         else:
             obj_T = res.F
             struct_T = res.X
@@ -3449,10 +3337,10 @@ class SVM(ML):
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(mean_y, contador, parallel, C_max,
                                                                             epsilon_max, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dictionary, weights,epsilon)
-        np.savetxt('objectives_selected.txt', obj)
-        np.savetxt('x_selected.txt', x_obj)
-        np.savetxt('objectives.txt', obj_total)
-        np.savetxt('x.txt', x_obj_total)
+        np.savetxt('objectives_selectedR.txt', obj)
+        np.savetxt('x_selectedR.txt', x_obj)
+        np.savetxt('objectivesR.txt', obj_total)
+        np.savetxt('xR.txt', x_obj_total)
         np.savetxt('evaluationsR.txt', evaluations)
 
         print('Process finished!!!')
