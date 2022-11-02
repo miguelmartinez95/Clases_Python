@@ -2141,29 +2141,6 @@ class LSTM_model(DL):
         plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
 
-        #top_results = {'error': [], 'std': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
-#
-        #for i in range(top):
-        #    a = np.where(r1 == np.min(r1))[0]
-        #    print(a)
-        #    if len(a) == 1:
-        #        zz = a[0]
-        #    else:
-        #        zz = a[0][0]
-#
-        #    top_results['error'].append(r1[zz])
-        #    top_results['std'].append(d1[zz])
-        #    top_results['neurons_dense'].append(options['neurons_dense'][zz])
-        #    top_results['neurons_lstm'].append(options['neurons_lstm'][zz])
-        #    top_results['pacience'].append(options['pacience'][zz])
-#
-        #    r1.remove(np.min(r1))
-        #    d1.remove(d1[zz])
-        #    options['neurons_dense'].pop(zz)
-        #    options['neurons_lstm'].pop(zz)
-        #    options['pacience'].pop(zz)
-#
-        #print('The best results: ', top_results)
 
         print('Process finished!!!')
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
@@ -2229,7 +2206,8 @@ class LSTM_model(DL):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
+            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -2360,7 +2338,8 @@ class LSTM_model(DL):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
+            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx

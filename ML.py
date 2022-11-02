@@ -1133,7 +1133,8 @@ class MLP(ML):
 
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
-        I = get_decomposition("pbi").do(r_final, weights).argmin()
+        I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+        #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
         # obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
 
@@ -1142,6 +1143,15 @@ class MLP(ML):
         top_result['complexity'] = d1[I]
         top_result['neurons'] = options['neurons'][I]
         top_result['pacience'] = options['pacience'][I]
+
+        print(top_result['error'])
+        print(top_result['complexity'])
+        print(top_result['neurons_lstm'])
+        print(top_result['neurons_dense'])
+        print(top_result['pacience'])
+
+        np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'],top_result['complexity']]))
+        np.savetxt('x_selected_brute.txt', np.array([top_result['neurons_lstm'],top_result['neurons_dense'],top_result['pacience']]))
 
 
         plt.figure(figsize=(12,9))
@@ -1622,7 +1632,7 @@ class MLP(ML):
             pool.close()
         else:
             pass
-        return (obj, struct, obj_T, struct_T, res)
+        return (obj, struct, obj_T, struct_T, res,contador)
 
     def optimal_search_nsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights):
         '''
@@ -1641,16 +1651,18 @@ class MLP(ML):
         contador = manager.list()
         contador.append(0)
         print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, l_dense,
+        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.nsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dropout,dictionary, weights)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
         np.savetxt('x.txt', x_obj_total)
+        np.savetxt('evaluations.txt', evaluations)
+
         print('Process finished!!!')
         print('The selection is', x_obj, 'with a result of', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
 
 
@@ -1837,7 +1849,8 @@ class MLP(ML):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
+            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -1866,7 +1879,7 @@ class MLP(ML):
             pool.close()
         else:
             pass
-        return (obj, struct, obj_T, struct_T, res)
+        return (obj, struct, obj_T, struct_T, res,contador)
 
     def optimal_search_rnsga2(self, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights,epsilon=0.01):
         '''
@@ -1885,16 +1898,18 @@ class MLP(ML):
         contador = manager.list()
         contador.append(0)
         print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res = self.rnsga2_individual(mean_y, contador, parallel, l_dense,
+        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dropout,dictionary, weights,epsilon)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
         np.savetxt('x.txt', x_obj_total)
+        np.savetxt('evaluationsR.txt', evaluations)
+
         print('Process finished!!!')
         print('The selection is', x_obj, 'with a result of', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
 
 
@@ -3146,7 +3161,8 @@ class SVM(ML):
 
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
-        I = get_decomposition("pbi").do(r_final, weights).argmin()
+        I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+        #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
         # obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
 
@@ -3157,6 +3173,15 @@ class SVM(ML):
         top_result['epsilon'] = options['epsilon'][I]
         top_result['tol'] = options['tol'][I]
 
+        print(top_result['error'])
+        print(top_result['complexity'])
+        print(top_result['neurons_lstm'])
+        print(top_result['neurons_dense'])
+        print(top_result['pacience'])
+
+        np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'], top_result['complexity']]))
+        np.savetxt('x_selected_brute.txt',np.array([top_result['neurons_lstm'], top_result['neurons_dense'], top_result['pacience']]))
+
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
         plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
@@ -3166,23 +3191,6 @@ class SVM(ML):
         plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
 
-        #top_results = {'error':[], 'std':[], 'C':[], 'epsilon':[], 'tol':[]}
-        #for i in range(top):
-        #        a = np.where(r1==np.min(r1))[0]
-        #        print(a)
-        #        if len(a)==1:
-        #            zz = a[0]
-        #        else:
-        #            zz= a[0][0]
-        #        top_results['error'].append(r1[zz])
-        #        top_results['std'].append(d1[zz])
-        #        top_results['C'].append(options['C'][zz])
-        #        top_results['epsilon'].append(options['epsilon'][zz])
-        #        top_results['tol'].append(options['tol'][zz])
-        #        r1.remove(np.min(r1))
-        #        d1.remove(d1[zz])
-        #        options['neurons'].pop(zz)
-        #        options['pacience'].pop(zz)
         print('Process finished!!!')
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
@@ -3254,7 +3262,8 @@ class SVM(ML):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
+            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -3283,7 +3292,7 @@ class SVM(ML):
             pool.close()
         else:
             pass
-        return (obj, struct, obj_T, struct_T, res)
+        return (obj, struct, obj_T, struct_T, res,contador)
 
     def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,weights):
         '''
@@ -3302,16 +3311,18 @@ class SVM(ML):
         contador = manager.list()
         contador.append(0)
         print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res = self.nsga2_individual(mean_y, contador, parallel, C_max,
+        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.nsga2_individual(mean_y, contador, parallel, C_max,
                                                                             epsilon_max, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dictionary, weights)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
         np.savetxt('x.txt', x_obj_total)
+        np.savetxt('evaluations.txt', evaluations)
+
         print('Process finished!!!')
         print('The selection is', x_obj, 'with a result of', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
 
     def rnsga2_individual(self, med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
@@ -3386,7 +3397,8 @@ class SVM(ML):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
+            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -3415,7 +3427,7 @@ class SVM(ML):
             pool.close()
         else:
             pass
-        return (obj, struct, obj_T, struct_T, res)
+        return (obj, struct, obj_T, struct_T, res,contador)
 
     def optimal_search_rnsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,weights,epsilon=0.01):
         '''
@@ -3434,16 +3446,18 @@ class SVM(ML):
         contador = manager.list()
         contador.append(0)
         print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res = self.rnsga2_individual(mean_y, contador, parallel, C_max,
+        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(mean_y, contador, parallel, C_max,
                                                                             epsilon_max, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dictionary, weights,epsilon)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
         np.savetxt('x.txt', x_obj_total)
+        np.savetxt('evaluationsR.txt', evaluations)
+
         print('Process finished!!!')
         print('The selection is', x_obj, 'with a result of', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res}
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
 
 
