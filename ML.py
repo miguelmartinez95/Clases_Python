@@ -766,7 +766,7 @@ class MLP(ML):
                 reales.append(y_realF)
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = super().fix_values_0(times_test[z][:, 0],
+                    res = super().fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
@@ -1955,7 +1955,7 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_realF.index = times_test[z]
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = ML.fix_values_0(times_test[z][:,0],
+                    res = ML.fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
@@ -2686,7 +2686,7 @@ class SVM(ML):
                 reales.append(y_realF)
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = super().fix_values_0(times_test[z][:, 0],
+                    res = super().fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
@@ -3493,7 +3493,7 @@ class MyProblem_svm(ElementwiseProblem):
                 y_realF.index = times_test[z]
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
-                    res = ML.fix_values_0(times_test[z][:,0],
+                    res = ML.fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
                     if len(index_hour) > 0 and self.horizont == 0:
