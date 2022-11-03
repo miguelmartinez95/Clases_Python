@@ -1574,7 +1574,7 @@ class MLP(ML):
                           # sampling =g,
                           # crossover=0.9,
                           # mutation=0.1)
-                          crossover=get_crossover("int_sbx",0.8),
+                          crossover=get_crossover("int_sbx",prob=0.80),
                           mutation=get_mutation("int_pm", prob=0.25))
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
@@ -1702,7 +1702,7 @@ class MLP(ML):
         ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx", 0.8),
+                          crossover=get_crossover("int_sbx", prob=0.8),
                           mutation=get_mutation("int_pm", prob=0.25),
                            normalization='front',
                            extreme_points_as_reference_points=False,
@@ -3120,7 +3120,7 @@ class SVM(ML):
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights)
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_svm(),eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx",0.8),
+                          crossover=get_crossover("int_sbx",prob=0.8),
                           mutation=get_mutation("int_pm", prob=0.25))
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
@@ -3249,7 +3249,7 @@ class SVM(ML):
         ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx",0.8),
+                          crossover=get_crossover("int_sbx",prob=0.8),
                           mutation=get_mutation("int_pm", prob=0.25),
                            normalization='front',
                            extreme_points_as_reference_points=False,
