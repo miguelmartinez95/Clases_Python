@@ -1146,12 +1146,11 @@ class MLP(ML):
 
         print(top_result['error'])
         print(top_result['complexity'])
-        print(top_result['neurons_lstm'])
-        print(top_result['neurons_dense'])
+        print(top_result['neurons'])
         print(top_result['pacience'])
 
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'],top_result['complexity']]))
-        np.savetxt('x_selected_brute.txt', np.array([top_result['neurons_lstm'],top_result['neurons_dense'],top_result['pacience']]))
+        np.savetxt('x_selected_brute.txt', np.array([np.array(top_result['neurons']),np.array([top_result['pacience']])]))
 
 
         plt.figure(figsize=(12,9))
@@ -1575,8 +1574,8 @@ class MLP(ML):
                           # sampling =g,
                           # crossover=0.9,
                           # mutation=0.1)
-                          crossover=get_crossover("int_sbx"),
-                          mutation=get_mutation("int_pm", prob=0.1))
+                          crossover=get_crossover("int_sbx",0.8),
+                          mutation=get_mutation("int_pm", prob=0.25))
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
@@ -1591,7 +1590,6 @@ class MLP(ML):
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
-            weights = np.array([0.5, 0.5])
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
 
@@ -1701,11 +1699,11 @@ class MLP(ML):
                                 self.type, self.data,self.scalar_x,
                                 med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
 
-        ref_points = np.array([[0.4, 0.2], [0.1, 0.4]])
+        ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx"),
-                          mutation=get_mutation("int_pm", prob=0.1),
+                          crossover=get_crossover("int_sbx", 0.8),
+                          mutation=get_mutation("int_pm", prob=0.25),
                            normalization='front',
                            extreme_points_as_reference_points=False,
                            weights=weights,
@@ -3068,7 +3066,7 @@ class SVM(ML):
         print(top_result['pacience'])
 
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'], top_result['complexity']]))
-        np.savetxt('x_selected_brute.txt',np.array([top_result['neurons_lstm'], top_result['neurons_dense'], top_result['pacience']]))
+        np.savetxt('x_selected_brute.txt',np.array([top_result['neurons_lstm'], np.array(top_result['neurons_dense']), np.array([top_result['pacience']]))
 
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
@@ -3122,8 +3120,8 @@ class SVM(ML):
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights)
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_svm(),eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx"),
-                          mutation=get_mutation("int_pm", prob=0.1))
+                          crossover=get_crossover("int_sbx",0.8),
+                          mutation=get_mutation("int_pm", prob=0.25))
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
@@ -3138,7 +3136,6 @@ class SVM(ML):
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
-            weights = np.array([0.5, 0.5])
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
 
@@ -3249,11 +3246,11 @@ class SVM(ML):
                                 self.type,
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights)
 
-        ref_points = np.array([[0.4, 0.2], [0.1, 0.4]])
+        ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx"),
-                          mutation=get_mutation("int_pm", prob=0.1),
+                          crossover=get_crossover("int_sbx",0.8),
+                          mutation=get_mutation("int_pm", prob=0.25),
                            normalization='front',
                            extreme_points_as_reference_points=False,
                            weights=weights,

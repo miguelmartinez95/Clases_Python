@@ -2130,7 +2130,7 @@ class LSTM_model(DL):
         print(top_result['pacience'])
 
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'],top_result['complexity']]))
-        np.savetxt('x_selected_brute.txt', np.array([top_result['neurons_lstm'],top_result['neurons_dense'],top_result['pacience']]))
+        np.savetxt('x_selected_brute.txt', np.array([np.array(top_result['neurons_lstm']),np.array(top_result['neurons_dense']),np.array([top_result['pacience']])]))
 
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
@@ -2304,7 +2304,7 @@ class LSTM_model(DL):
                                 self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
 
-        ref_points = np.array([[0.4, 0.2], [0.1, 0.4]])
+        ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx"),
