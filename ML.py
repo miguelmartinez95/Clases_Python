@@ -1577,7 +1577,7 @@ class MLP(ML):
                           crossover=get_crossover("int_sbx",prob=0.95),
                           mutation=get_mutation("int_pm", prob=0.4))
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
-                                                              n_last=int(pop_size / 3), nth_gen=int(pop_size / 4),
+                                                              n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
                                                               n_max_evals=5000)
         res = minimize(problem,
