@@ -1150,7 +1150,7 @@ class MLP(ML):
         print(top_result['pacience'])
 
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'],top_result['complexity']]))
-        np.savetxt('x_selected_brute.txt', np.array([np.array(top_result['neurons']),np.array([top_result['pacience']])]))
+        np.savetxt('x_selected_brute.txt', np.concatenate((top_result['neurons'],np.array([top_result['pacience']]))))
 
 
         plt.figure(figsize=(12,9))
