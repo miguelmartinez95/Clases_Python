@@ -1723,7 +1723,6 @@ class MLP(ML):
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
-            weights = np.array([0.5, 0.5])
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
 
@@ -3270,7 +3269,6 @@ class SVM(ML):
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
-            weights = np.array([0.5, 0.5])
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
 
