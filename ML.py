@@ -1699,7 +1699,7 @@ class MLP(ML):
                                 self.type, self.data,self.scalar_x,
                                 med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
 
-        ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
+        ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx", prob=0.95),
@@ -3246,7 +3246,7 @@ class SVM(ML):
                                 self.type,
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights)
 
-        ref_points = np.array([[0.2, 0.1], [0.1, 0.2]])
+        ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx",prob=0.8),
