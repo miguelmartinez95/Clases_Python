@@ -3066,7 +3066,7 @@ class SVM(ML):
         print(top_result['pacience'])
 
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'], top_result['complexity']]))
-        np.savetxt('x_selected_brute.txt',np.array([top_result['neurons_lstm'], np.array(top_result['neurons_dense']), np.array([top_result['pacience']]))
+        np.savetxt('x_selected_brute.txt',np.array([top_result['C'],top_result['epsilon'],top_result['tol'] ]))
 
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
