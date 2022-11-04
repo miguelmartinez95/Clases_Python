@@ -3696,7 +3696,7 @@ class MyProblem_svm(ElementwiseProblem):
         print(x)
         C_F= x[0]*0.1
         epsilon_F =x[1]*0.1
-        tol_F = x[2]*0.01
+        tol_F = x[2]*0.1
         f1, f2 = self.cv_opt(self.data, 3, C_F, epsilon_F,tol_F,  self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
