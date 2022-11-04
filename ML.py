@@ -3248,8 +3248,8 @@ class SVM(ML):
         ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
 
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
-                          crossover=get_crossover("int_sbx",prob=0.8),
-                          mutation=get_mutation("int_pm", prob=0.25),
+                          crossover=get_crossover("int_sbx",prob=0.95),
+                          mutation=get_mutation("int_pm", prob=0.4),
                            normalization='front',
                            extreme_points_as_reference_points=False,
                            weights=weights,
