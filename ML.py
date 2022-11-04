@@ -3694,7 +3694,7 @@ class MyProblem_svm(ElementwiseProblem):
         g1 = MyProblem_svm.bool(x)
         out["G"] = g1
         print(x)
-        C_F= x[0]*0.5
+        C_F= x[0]*0.1
         epsilon_F =x[1]*0.1
         tol_F = x[2]*0.01
         f1, f2 = self.cv_opt(self.data, 3, C_F, epsilon_F,tol_F,  self.med, self.dictionary)
