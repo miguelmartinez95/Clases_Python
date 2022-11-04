@@ -3106,13 +3106,13 @@ class SVM(ML):
         print('DATA is', type(self.data))
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
@@ -3233,13 +3233,13 @@ class SVM(ML):
         print('DATA is', type(self.data))
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
@@ -3368,7 +3368,7 @@ from pymoo.core.problem import ElementwiseProblem
 class MyProblem_svm(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search.')
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits, times, pos_y, n_lags,
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,extract_cero,limits, times, pos_y, n_lags,
                  mask, mask_value, inf_limit,sup_limit, type,med, contador,
         n_var, C_max, epsilon_max, xlimit_inf, xlimit_sup, dictionary, weights, **kwargs):
         super().__init__(n_var=n_var,
@@ -3385,6 +3385,7 @@ class MyProblem_svm(ElementwiseProblem):
         self.scalar_y = scalar_y
         self.scalar_x = scalar_x
         self.zero_problem = zero_problem
+        self.extract_cero = extract_cero
         self.limits = limits
         self.times = times
         self.pos_y = pos_y
