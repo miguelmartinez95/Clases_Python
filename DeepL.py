@@ -396,7 +396,8 @@ class DL:
         self.times = self.data.index
 
     def missing_values_masking_onehot(self):
-        places=np.where(self.data.isnull().any(axis = 1))[0]
+        d=self.data.drop(self.data.columns[self.pos_y],axis=1)
+        places=np.where(d.isnull().any(axis = 1))[0]
         if len(places)<1:
             print('No rows with missing values')
         else:
