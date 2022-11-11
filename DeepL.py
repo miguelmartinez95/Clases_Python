@@ -153,11 +153,12 @@ class DL:
 
                 #print(restriction.shape)
                 print(ii1)
-                print(pd.Series(restriction))
+                print(limit1)
+                print(limit2)
 
                 hours = pd.Series(restriction).dt.hour
                 ii = np.where((hours < limit1) | (hours > limit2))[0]
-
+                print(ii)
                 if np.isnan(ii1):
                     ii = np.union1d(ii1, ii)[~np.isnan(np.union1d(ii1, ii))]
                 else:
