@@ -148,8 +148,8 @@ class DL:
                 else:
                     ii1 = np.nan
 
-                limit1 = limit[0]
-                limit2 = limit[1]
+                limit1 = int(limit[0])
+                limit2 = int(limit[1])
 
                 #print(restriction.shape)
                 print(type(restriction))
