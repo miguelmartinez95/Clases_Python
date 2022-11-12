@@ -123,8 +123,14 @@ class ML:
         '''
         if zero_problem == 'schedule':
             try:
-                limit1 = limit[0]
-                limit2 = limit[1]
+                if limit[2]=='weekend':
+                    wday = pd.Series(restriction).dt.weekday
+                    ii1 = np.where(wday>4)[0]
+                else:
+                    ii1 = np.nan
+
+                limit1 = int(limit[0])
+                limit2 = int(limit[1])
 
                 #print(restriction.shape)
                 print(type(restriction))
@@ -132,6 +138,8 @@ class ML:
 
                 hours = pd.Series(restriction).dt.hour
                 ii = np.where((hours < limit1) | (hours > limit2))[0]
+                print(ii)
+                ii = np.union1d(ii1, ii)[~np.isnan(np.union1d(ii1, ii))]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
