@@ -141,25 +141,22 @@ class DL:
         '''
         if zero_problem == 'schedule':
             try:
+                limit1 = int(limit[0])
+                limit2 = int(limit[1])
 
                 if limit[2]=='weekend':
                     wday = pd.Series(restriction).dt.weekday
                     ii1 = np.where(wday>4)[0]
+
+                    hours = pd.Series(restriction).dt.hour
+                    ii = np.where((hours < limit1) | (hours > limit2))[0]
+                    print(ii)
+                    ii = np.union1d(ii1, ii)
+
                 else:
-                    ii1 = np.nan
+                    hours = pd.Series(restriction).dt.hour
+                    ii = np.where((hours < limit1) | (hours > limit2))[0]
 
-                limit1 = int(limit[0])
-                limit2 = int(limit[1])
-
-                #print(restriction.shape)
-                print(ii1)
-                print(limit1)
-                print(limit2)
-
-                hours = pd.Series(restriction).dt.hour
-                ii = np.where((hours < limit1) | (hours > limit2))[0]
-                print(ii)
-                ii = np.union1d(ii1, ii)[~np.isnan(np.union1d(ii1, ii))]
 
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
