@@ -23,13 +23,11 @@ import random
 from datetime import datetime
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.algorithms.moo.rnsga2 import RNSGA2
-from pymoo.factory import get_problem, get_visualization, get_decomposition
-from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+from pymoo.factory import get_decomposition
+from pymoo.factory import get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
-from pymoo.factory import get_reference_directions
-from pymoo.algorithms.moo.rvea import RVEA
 
 '''
 Conexion con GPUs
@@ -461,118 +459,6 @@ class DL:
         self.data.iloc[:,self.pos_y] = a
 
 
-#    def fda_outliers(self, freq):
-#        '''
-#        Function to detect functional outliers
-
-#        REVISE !!!
-
-#        :param freq: amount of values in a hour (value to divide 60 and the result is the amount of data in a hour)
-#        :return: the variable y with missing value in the days considered as outliers
-#        '''
-#        step = int(60/freq)
-#        y = self.data.iloc[:, self.pos_y]
-#        long=len(y)
-#        hour=self.times.hour
-#        start = np.where(hour==0)[0][0]
-
-#      #  if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
-#      #      d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
-#      #      end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
-#      #  elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
-#      #      if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
-#      #          end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
-#      #      else:
-#      #          d = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] - np.where(hour == 23)[0][
-#      #              len(np.where(hour == 23)[0]) - 1]
-#      #          end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-d]
-#      #  else:
-#      #      end=[]
-#      #      raise NameError('Problem with the limit of sample creating the functional sample')
-
-
-#        #y1 = y.iloc[range(start+1)]
-#        #y2 = y.iloc[range(end-1, len(y))]
-
-#        #y_short = y.iloc[range(start+1,end-1)]
-#        y_short=y.iloc[:,0]
-#        print(y_short.shape)
-
-#        if len(y_short) % (step*24)!=0:
-#            print(len(y_short))
-#            print(len(y_short)/(step*24))
-#            raise NameError('Sample size not it is well divided among days')
-
-#        fd_y = DL.cortes(y_short, len(y_short), int(24*step)).transpose()
-#        print(fd_y.shape)
-#        grid = []
-#        for t in range(int(24*step)):
-#            grid.append(t)
-
-#        fd_y2 = fd_y.copy()
-#        missing = []
-#        missing_p = []
-#        for t in range(fd_y.shape[0]):
-#            if np.sum(np.isnan(fd_y[t,:])) > 0:
-#                missing.append(t)
-#                missing_p.append(np.where(np.isnan(fd_y[t,:]))[0])
-
-#        if len(missing)>0:
-#            fd_y3 = pd.DataFrame(fd_y2.copy())
-#            for j in range(len(missing)):
-#                fd_y3.iloc[missing[j], missing_p[j]]=self.mask_value
-#                fd_y2[missing[j], missing_p[j]]=self.mask_value
-#            index2 = fd_y3.index
-#            print(missing)
-#            print(index2)
-#        else:
-#            fd_y3 = pd.DataFrame(fd_y2.copy())
-#            index2 = fd_y3.index
-
-
-#        fd = fd_y2.tolist()
-#        fd1 = skfda.FDataGrid(fd, grid)
-
-#        out_detector1 = skfda.exploratory.outliers.IQROutlierDetector(factor=1, depth_method=skfda.exploratory.depth.BandDepth())    #MSPlotOutlierDetector()
-#        out_detector2 = skfda.exploratory.outliers.LocalOutlierFactor(n_neighbors=7)
-#        oo1 = out_detector1.fit_predict(fd1)
-#        oo2 = out_detector2.fit_predict(fd1)
-#        o1 = np.where(oo1 ==-1)[0]
-#        o2 = np.where(oo2 ==-1)[0]
-#        o_final = np.intersect1d(o1,o2)
-
-#        print('El número de outliers detectado es:',len(o_final))
-#        #if len(o_final)>0:
-#        #    out = index2[o_final]
-##
-##
-#        #    for t in range(len(o_final)):
-#        #        w = np.empty(fd_y.shape[1])
-#        #        w[:] = self.mask_value
-#        #        fd_y[out[t],:]= w
-##
-#        #Y = fd_y.flatten()
-##
-#        #Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
-#        #if len(Y) != long:
-#        #    print(len(Y))
-#        #    print(long)
-#        #    raise NameError('Sample size error in the second joint')
-
-#        #Y.index=self.data.index
-#        #self.data.iloc[:,self.pos_y] = Y
-
-#        print('Data have been modified masking the outliers days!')
-#        if len(o_final)>0:
-#            O = index2[o_final]
-#        else:
-#            O = np.nan
-
-#        print(O)
-#        return O
-
-
-
 class LSTM_model(DL):
     def info(self):
         print('Class to built LSTM models.')
@@ -705,10 +591,6 @@ class LSTM_model(DL):
                     # define the end of the input sequence
                     in_end = in_start + n_lags
                     out_end=in_end+horizont
-                    #if horizont ==0:
-                    #    out_end = in_end
-                    #else:
-                    #    out_end = in_end+horizont
 
                     xx = data.drop(data.columns[pos_y], axis=1)
                     yy = data.iloc[:,pos_y]
@@ -729,58 +611,7 @@ class LSTM_model(DL):
                 raise NameError('Problems with n_steps and onebyone')
 
         else:
-            #if horizont==0 and onebyone[1]==True:
-            #    limit = int((len(data) - (n_lags + horizont)) / n_lags) + 1
-            #elif horizont==0 and onebyone[1]==False:
-            #    limit=int((len(data)-(n_lags + horizont))/1)+1
-            #else:
-            #    #limit = int((len(data) - (n_lags + horizont)) / onebyone) + 1
-            #    limit = int((len(data) - (n_lags + horizont)) / horizont) + 1
-
             if onebyone[1]==True:
-            #    limitx = int(np.floor(len(data)/n_lags)*n_lags)-(horizont+(n_steps-1))
-            #    limity =limitx+horizont+(n_steps-1)
-#
-            #    print('X limit to cut the dataset in supervised',limitx)
-#
-            #    xx = data.drop(data.columns[pos_y], axis=1)
-            #    yy= data.iloc[:,pos_y]
-#
-            #    print('X shape in supervised',xx.shape[0])
-            #    xx = xx.iloc[range(limitx)]
-            #    yy = yy.iloc[range(limity)]
-            #    L=list()
-#
-            #    ''''
-            #    Dividimos en cachitos en función de los lags
-            #    '''
-            #    while xx.shape[0]%n_lags !=0:
-            #        xx=xx.drop(xx.index[xx.shape[0]-1])
-#
-            #    for i in range(xx.shape[1]):
-            #        L.append(np.split(np.array(xx.iloc[:,i]), int(np.floor(len(xx)/n_lags))))
-            #    X=np.dstack(L)
-            #     if horizont==0:
-            #         seq = list(range(n_lags-1,limity, n_lags))
-            #         y =yy.iloc[seq]
-            #         timesF = yy.index[seq]
-            #     else:
-            #         seq =# list(range(n_lags+horizont-1,limity+horizont, n_lags))
-            #         y =yy.iloc[seq]
-            #         timesF= yy.index[seq]
-            # seq = list(range(n_lags+horizont-1,limity+horizont, n_lags))
-            #seq = list(range(n_lags + horizont - 1, limity + 1, n_lags))
-            ## print('########################################################'
-            ##       '#######################################################'
-            ##       'sequencia Y', seq,'###################################')
-            #y = yy.iloc[seq]
-            #timesF = yy.index[seq]
-#
-            #dd = len(data) - limitx
-
-
-            # for _ in range(len(data)-(n_lags + horizont)+1):
-            # count=n_lags+horizont
                 while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
                     if n_steps == 1:
                         timesF.append(data.index[in_start + n_lags + horizont-1])
@@ -1131,15 +962,11 @@ class LSTM_model(DL):
                     print('####',test.shape)
                     print(len(index_val))
 
-
                     r = LSTM_model.three_dimension(index_val, n_lags)
                     index_val=r['data']
 
                     print(index_val.shape)
-
-
                     index_val = index_val[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:]
-                    #index_val = index_val[range(len(index_val)-math.ceil(len(index_val)/2), len(index_val))]
                     val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
                     test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
 
@@ -1153,9 +980,6 @@ class LSTM_model(DL):
 
 
                     if onebyone[0]==True:
-                        #if horizont==0:
-                        #    index_val = np.delete(index_val, range(n_lags), axis=0)
-                        #else:
                         index_val = np.delete(index_val, range(n_lags+horizont), axis=0)
                     else:
                         if isinstance(ind_val, list):
@@ -1463,8 +1287,6 @@ class LSTM_model(DL):
                                     if isinstance(self.weights, list):
                                         cv[zz] = np.mean(e)
                                     else:
-                                        #print(e)
-                                        #print(self.weights)
                                         cv[zz] = np.sum(e * self.weights)
                                     rmse[zz] = np.nan
                                     nmbe[zz] = np.nan
@@ -1656,10 +1478,7 @@ class LSTM_model(DL):
                 else:
                     seq.append(times[range(cont, cont + (self.n_steps - 1) + 1)])
                 cont += self.n_lags
-            #times = pd.to_datetime(pd.Series(seq))
             times = seq
-            #times = range(int(shape1/self.n_lags))
-            #print('problems with the sample lag by lags and the radiation restriction')
         elif self.horizont == 0 and onebyone[1] == False:
             times = np.delete(times, range(self.n_lags), 0)
         else:
@@ -2119,11 +1938,8 @@ class LSTM_model(DL):
 
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
-        from pymoo.decomposition.aasf import AASF
         I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         #I = get_decomposition("pbi").do(r_final, weights).argmin()
-
-        #obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
 
         top_result = {'error': [], 'complexity': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
         top_result['error']=r1[I]
@@ -2418,126 +2234,6 @@ class LSTM_model(DL):
         print('The selection is \n', x_obj, 'with a result of \n', obj)
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res,'evaluations':evaluations}
         return res
-
-
-#    def rvea_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
-#        '''
-#        :param med:
-#        :param contador: a operator to count the attempts
-#        :param n_processes: how many processes are parallelise
-#        :param l_lstm:maximun number of layers lstm
-#        :param l_dense:maximun number of layers dense
-#        :param batch: batch size
-#        :param epsilon: smaller generates solutions tighter
-#        :param pop_size: population size selected for RVEA
-#        :param tol: tolearance selected to terminate the process
-#        :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
-#        :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
-#        :param dictionary: dictionary to stored the options tested
-#        :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
-#        '''
-#
-#        if n_processes>1:
-#            pool = multiprocessing.Pool(n_processes)
-#            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
-#                                self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-#                                self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
-#        else:
-#            problem = MyProblem(self.names,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
-#                                self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-#                                self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
-#
-#
-#        ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=12)
-#
-#        algorithm = RVEA(ref_dirs, pop_size=pop_size, sampling=get_sampling("int_random"),
-#                         crossover=get_crossover("int_sbx"),
-#                         mutation=get_mutation("int_pm", prob=0.1))
-#
-#
-#        res = minimize(problem,
-#                       algorithm,
-#                       ("n_gen", N_gen),
-#                       # ("n_gen", 20),
-#                       pf=True,
-#                       verbose=True,
-#                       seed=7)
-#
-#        if res.F.shape[0] > 1:
-#            rf=res.F
-#            rx=res.X
-#            scal_cv = MinMaxScaler(feature_range=(0, 1))
-#            scal_com = MinMaxScaler(feature_range=(0, 1))
-#
-#            cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
-#            com=scal_com.transform(res.F[:,1].reshape(-1,1))
-#
-#            r_final = np.array([cv[:,0], com[:,0]])
-#
-#            I = get_decomposition("pbi").do(r_final, weights).argmin()
-#
-#            obj_T = r_final
-#            struct_T = rx
-#            obj = r_final[I, :]
-#            struct = rx[I, :]
-#            print(rf.shape)
-#            print(rx.shape)
-#
-#            plt.scatter(r_final[:,0], r_final[:,1], color='black')
-#            plt.xlabel('Normalised CV RMSE', fontsize=22, labelpad=10)
-#            plt.ylabel('Normalised Complexity', fontsize=22, labelpad=10)
-#            plt.scatter(r_final[I,0], r_final[I,1], s=450, color='red', alpha=1, marker='o', facecolors='none', label='Optimum')
-#            plt.legend()
-#
-#        else:
-#            obj_T = res.F
-#            struct_T = res.X
-#            obj = res.F
-#            struct = res.X
-#
-#        print('The number of evaluations were:', contador)
-#        if n_processes>1:
-#            pool.close()
-#        else:
-#            pass
-#
-#        return (obj, struct,obj_T, struct_T,  res)
-#
-#
-#
-#    def optimal_search_rvea(self,l_lstm, l_dense, batch, pop_size, N_gen,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights):
-#        '''
-#        :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
-#        :param l_dense: maximun layers dense
-#        :param batch: batch size
-#        :param pop_size: population size for RVEA
-#        :param tol: tolerance to built the pareto front
-#        :param epsilon: smaller generates solutions tighter
-#        :param xlimit_inf: array with lower limits for neurons lstm (range of number multiplied by 10), dense (range of number multiplied by 10) and
-#        pacience (range of number multiplied by 10)
-#        :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
-#        :param parallel: how many processes are parallelise
-#        n_last: more robust, we consider the last n generations and take the maximum
-#        nth_gen: whenever the termination criterion is calculated
-#        :return: the options selected for the pareto front, the optimal selection and the total results
-#        '''
-#
-#        manager = multiprocessing.Manager()
-#        dictionary = manager.dict()
-#        contador = manager.list()
-#        contador.append(0)
-#        print('start optimisation!!!')
-#        obj, x_obj, obj_total, x_obj_total,res = self.rvea_individual(mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,N_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
-#
-#        np.savetxt('objectives_selected.txt', obj)
-#        np.savetxt('x_selected.txt', x_obj)
-#        np.savetxt('objectives.txt', obj_total)
-#        np.savetxt('x.txt', x_obj_total)
-#
-#        print('Process finished!!!')
-#        print('The selection is \n', x_obj, 'with a result of \n', obj)
-#        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res}
-#        return res
 
 from pymoo.core.repair import Repair
 class MyRepair(Repair):
