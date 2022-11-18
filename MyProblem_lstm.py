@@ -7,7 +7,6 @@ import pandas as pd
 from errors import Eval_metrics as evals
 from DeepL_v2 import DL
 
-
 class MyProblem_lstm(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')

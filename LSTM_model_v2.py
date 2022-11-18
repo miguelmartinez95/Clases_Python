@@ -1562,7 +1562,7 @@ class LSTM_model(DL):
 
         return res
 
-    def nsga2_individual(self,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
+    def nsga2_individual(self,model,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
         from MyProblem_lstm import MyProblem_lstm
         '''
         :param med:
