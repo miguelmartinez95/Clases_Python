@@ -1,8 +1,0 @@
-Classes create to build machine learning models:
-- ML_v2: general class to preprocess data
-- MLP_model_v2: class to build and train and predict with MLP models
-- SVM_model_v2: class to build and train and predict with SVM models
-- MyProblem_mlp: problem to optimise MLP architecture
-- MyProblem_svm: problem to optimise SVM architecture
-- MyRepair_mlp: function to repair the searching for optimisation
-- MyRepair_svr: function to repair the searching for optimisation
