@@ -5,12 +5,14 @@ from time import time
 import collections
 import pandas as pd
 from errors import Eval_metrics as evals
+from LSTM_model_v2 import LSTM_model
+
 class MyProblem_lstm(ElementwiseProblem):
     def info(self):
         print('Class to create a specific problem to use NSGA2 in architectures search. Two objectives and a constraint (Repair) concerning the neurons in each layer')
 
 
-    def __init__(self,model,names,extract_cero, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
+    def __init__(self,names,extract_cero, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
                  n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
@@ -21,7 +23,6 @@ class MyProblem_lstm(ElementwiseProblem):
                          #elementwise_evaluation=True,
                          **kwargs)
 
-        self.model =model
         self.names=names
         self.extract_cero=extract_cero
         self.data=data
@@ -72,7 +73,7 @@ class MyProblem_lstm(ElementwiseProblem):
         cvs = [0 for x in range(rep * 2)]
         names = self.names
         names = np.delete(names, self.pos_y)
-        res = self.model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.n_steps,
+        res = LSTM_model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.n_steps,
                                           self.onebyone, self.values)
         x_test = np.array(res['x_test'])
         x_train = np.array(res['x_train'])
@@ -101,18 +102,18 @@ class MyProblem_lstm(ElementwiseProblem):
                     ytrain = y_train[z].reshape(len(y_train[z]), 1)
                     ytest = y_test[z].reshape(len(y_test[z]), 1)
                     yval = y_val[z].reshape(len(y_val[z]), 1)
-                model = self.model.built_model_regression(x_train[z], ytrain, neurons_lstm,
+                model = LSTM_model.built_model_regression(x_train[z], ytrain, neurons_lstm,
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
                                                           self.dropout)
-                model, history = self.model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
+                model, history = LSTM_model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                         batch)
                 print('Teh training spent ', time() - time_start)
                 if isinstance(self.pos_y, collections.abc.Sized):
                     outputs = len(self.pos_y)
                 else:
                     outputs = 1
-                res = self.model.predict_model(model, self.n_lags, x_val[z], batch, outputs)
+                res = LSTM_model.predict_model(model, self.n_lags, x_val[z], batch, outputs)
                 y_pred = res['y_pred']
                 print('Y_val SHAPE in CV_OPT', yval[z].shape)
                 print('X_val SHAPE in CV_OPT', x_val[z].shape)
@@ -314,7 +315,7 @@ class MyProblem_lstm(ElementwiseProblem):
                         cvs[zz] = 9999
                 zz += 1
             #
-            complexity = self.model.complex(neurons_lstm, neurons_dense, 2000, 12)
+            complexity = LSTM_model.complex(neurons_lstm, neurons_dense, 2000, 12)
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
