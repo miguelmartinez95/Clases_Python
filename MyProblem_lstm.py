@@ -6,7 +6,7 @@ import collections
 import pandas as pd
 from errors import Eval_metrics as evals
 from DeepL_v2 import DL
-from LSTM_model_v2 import LSTM_model
+
 
 class MyProblem_lstm(ElementwiseProblem):
     def info(self):
@@ -57,6 +57,7 @@ class MyProblem_lstm(ElementwiseProblem):
         self.weights=weights
 
     def cv_opt(self, data, fold, rep, neurons_lstm, neurons_dense, pacience, batch, mean_y, dictionary):
+        from LSTM_model_v2 import LSTM_model
         '''
         :param fold:assumed division of the sample for cv
         :param rep:repetition of the estimation in each subsample
