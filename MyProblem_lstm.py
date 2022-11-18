@@ -5,6 +5,7 @@ from time import time
 import collections
 import pandas as pd
 from errors import Eval_metrics as evals
+from DeepL_v2 import DL
 from LSTM_model_v2 import LSTM_model
 
 class MyProblem_lstm(ElementwiseProblem):
