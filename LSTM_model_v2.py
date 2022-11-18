@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+print('importa bien')
 from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
@@ -23,6 +24,7 @@ import random
 from datetime import datetime
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.algorithms.moo.rnsga2 import RNSGA2
+print('importa bien')
 from pymoo.factory import get_decomposition
 from pymoo.factory import get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
@@ -31,6 +33,7 @@ from pymoo.core.problem import starmap_parallelized_eval
 from DeepL_v2 import DL
 from MyRepair_lstm import MyRepair_lstm
 from MyProblem_lstm import MyProblem_lstm
+print('importa bien todo')
 
 '''
 Conexion con GPUs
