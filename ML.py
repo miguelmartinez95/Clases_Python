@@ -1,6 +1,5 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.preprocessing import MinMaxScaler
-import sys
 from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
@@ -17,17 +16,18 @@ import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
 import matplotlib.pyplot as plt
-from pymoo.factory import get_reference_directions
-from pymoo.algorithms.moo.rvea import RVEA
 from pymoo.algorithms.moo.rnsga2 import RNSGA2
-from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
 from sklearn import svm
+from pymoo.factory import get_decomposition
+import tensorflow as tf
+from pathlib import Path
+import random
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.factory import get_problem, get_visualization, get_decomposition
+from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
-from pymoo.factory import get_reference_directions
-from pymoo.factory import get_problem, get_visualization, get_decomposition
-import tensorflow as tf
 
 '''
 Conecting with GUPs
@@ -439,95 +439,6 @@ class ML:
                   'The variables with missing values are', dd.columns[w])
         self.data = dd
         self.data.index=ii
-#    def fda_outliers(self, freq):
-#        '''
-#        Function to detect functional outliers
-#
-#        REVISE !!!
-#
-#        :param freq: amount of values in a hour
-#        :return: the variable y with missing value in the days considered as outliers
-#        '''
-#        step = int(60/freq)
-#        y = self.data.iloc[:, self.pos_y]
-#        hour = self.times.hour
-#        long=len(y)
-#        start = np.where(hour == 0)[0][0]
-#        print(long)
-#        print(len(self.data.index))
-#
-#        if np.where(hour==0)[0][len(np.where(hour==0)[0])-1] > np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
-#            d = np.where(hour==0)[0][len(np.where(hour==0)[0])-1]-np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
-#            end = np.where(hour==0)[0][len(np.where(hour==0)[0])-1-d]
-#        elif np.where(hour==0)[0][len(np.where(hour==0)[0])-1] < np.where(hour==23)[0][len(np.where(hour==23)[0])-1]:
-#            if np.sum(hour[np.where(hour==0)[0][len(np.where(hour==0)[0])-1]:np.where(hour==23)[0][len(np.where(hour==23)[0])-1]] == 23) == step:
-#                end =np.where(hour==23)[0][len(np.where(hour==23)[0])-1]
-#            else:
-#                d = np.where(hour == 0)[0][len(np.where(hour == 0)[0]) - 1] - np.where(hour == 23)[0][
-#                    len(np.where(hour == 23)[0]) - 1]
-#                end = np.where(hour == 0)[0][len(np.where(hour == 0)[0])-1-d]
-#        else:
-#            end=[]
-#            raise NameError('Problem with the limit of sample creating the functional sample')
-#        y1 = y.iloc[range(start+1)]
-#        y2 = y.iloc[range(end-1, len(y))]
-#        y_short = y.iloc[range(start+1,end-1)]
-#        if len(y_short) % (step*24)!=0:
-#            print(len(y_short))
-#            print(len(y_short)/(step*24))
-#            raise NameError('Sample size not it is well divided among days')
-#        fd_y = ML.cortes(y_short, len(y_short), int(24 * step)).transpose()
-#        grid = []
-#        for t in range(int(24 * step)):
-#            grid.append(t)
-#
-#        fd_y2 = fd_y.copy()
-#        missing = []
-#        missing_p = []
-#        for t in range(fd_y.shape[0]):
-#            if np.sum(np.isnan(fd_y[t, :])) > 0:
-#                missing.append(t)
-#                missing_p.append(np.where(np.isnan(fd_y[t, :]))[0])
-#        if len(missing) > 0:
-#            fd_y3 = pd.DataFrame(fd_y2.copy())
-#            for j in range(len(missing)):
-#                fd_y3.iloc[missing[j], missing_p[j]] = self.mask_value
-#                fd_y2[missing[j], missing_p[j]] = self.mask_value
-#            index2 = fd_y3.index
-#            print(missing)
-#            print(index2)
-#        else:
-#            fd_y3 = pd.DataFrame(fd_y2.copy())
-#            index2 = fd_y3.index
-#        fd = fd_y2.tolist()
-#        fd1 = skfda.FDataGrid(fd, grid)
-#        out_detector1 = skfda.exploratory.outliers.IQROutlierDetector(factor=4,
-#                                                                      depth_method=skfda.exploratory.depth.BandDepth())  # MSPlotOutlierDetector()
-#        out_detector2 = skfda.exploratory.outliers.LocalOutlierFactor(n_neighbors=int(fd_y2.shape[0] / 6))
-#        oo1 = out_detector1.fit_predict(fd1)
-#        oo2 = out_detector2.fit_predict(fd1)
-#        o1 = np.where(oo1 == -1)[0]
-#        o2 = np.where(oo2 == -1)[0]
-#        o_final = np.intersect1d(o1, o2)
-#        print('El número de outliers detectado es:',len(o_final))
-#        # diff = 0
-#        if len(o_final) > 0:
-#            out = index2[o_final]
-#            for t in range(len(o_final)):
-#                w = np.empty(fd_y.shape[1])
-#                w[:] = np.nan
-#                fd_y[out[t], :] = w
-#        Y = fd_y.flatten()
-#        Y = pd.concat([pd.Series(y1), pd.Series(Y), pd.Series(y2)], axis=0)
-#        if len(Y) != long:
-#            print(len(Y))
-#            print(long)
-#            raise NameError('Sample size error in the second joint')
-#        print(len(self.data.index))
-#        Y.index = self.data.index
-#        self.data.iloc[:, self.pos_y] = Y
-#        print('Data have been modified converting the outliers days in missing values!')
-
 
 class MLP(ML):
     def info(self):
@@ -673,8 +584,7 @@ class MLP(ML):
         :param plot: True plots
         :return: predictions, real values, errors and the times needed to train
         '''
-        from pathlib import Path
-        import random
+
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
         print('##########################'
               '################################'
@@ -1144,8 +1054,6 @@ class MLP(ML):
         I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
-        # obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
-
         top_result = {'error': [], 'complexity': [], 'nuerons': [], 'pacience': []}
         top_result['error'] = r1[I]
         top_result['complexity'] = d1[I]
@@ -1169,23 +1077,6 @@ class MLP(ML):
                     label='Optimum')
         plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
-
-        #top_results = {'error':[], 'std':[], 'neurons':[], 'pacience':[]}
-        #for i in range(top):
-        #        a = np.where(r1==np.min(r1))[0]
-        #        print(a)
-        #        if len(a)==1:
-        #            zz = a[0]
-        #        else:
-        #            zz= a[0][0]
-        #        top_results['error'].append(r1[zz])
-        #        top_results['std'].append(d1[zz])
-        #        top_results['neurons'].append(options['neurons'][zz])
-        #        top_results['pacience'].append(options['pacience'][zz])
-        #        r1.remove(np.min(r1))
-        #        d1.remove(d1[zz])
-        #        options['neurons'].pop(zz)
-        #        options['pacience'].pop(zz)
         print('Process finished!!!')
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
@@ -1557,12 +1448,7 @@ class MLP(ML):
         :param dictionary: dictionary to stored the options tested
         :return: options in Pareto front, the optimal selection and the total results
         '''
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.factory import get_problem, get_visualization, get_decomposition
-        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
-        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
-        from pymoo.optimize import minimize
-        from pymoo.core.problem import starmap_parallelized_eval
+
         print('DATA is', type(self.data))
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
@@ -2207,16 +2093,6 @@ class MyProblem_mlp(ElementwiseProblem):
         out["F"] = np.column_stack([f1, f2])
 
 
-
-
-#class XGB(ML):
-#    def info(self):
-#        print(('Class to built XGB models. \n'))
-#    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
-#        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
-
-
-
 class SVM(ML):
     def info(self):
         print(('Class to built SVM models. \n'))
@@ -2339,9 +2215,6 @@ class SVM(ML):
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
-
-        #print(y_pred)
-        #print(y_predF.shape)
         y_predF.index = times
         y_realF.index = y_predF.index
 
@@ -2950,7 +2823,6 @@ class SVM(ML):
                    np.mean(times)))
             z = Queue()
             if type(q) == type(z):
-                # q.put(np.array([np.mean(cv), np.std(cv)]))
                 q.put(np.array([np.mean(cv), SVM.complex_svm(C, epsilon, 10000, 100)]))
             else:
                 return (res)
@@ -2962,8 +2834,7 @@ class SVM(ML):
         :param top: the best options yielded
         :return: the options with their results and the top options
         '''
-        from itertools import permutations
-        #opt= list(permutations(C_options+epsilon_options+tol_options,3))
+
         error = [0 for x in range(len(C_options)*len(epsilon_options)*len(tol_options))]
         complexity = [0 for x in range(len(C_options)*len(epsilon_options)*len(tol_options))]
         options = {'C':[], 'epsilon':[], 'tol':[]}
@@ -3056,8 +2927,6 @@ class SVM(ML):
 
         I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         #I = get_decomposition("pbi").do(r_final, weights).argmin()
-
-        # obj_T = pd.concat([pd.DataFrame(r1), pd.DataFrame(d1)], axis=1)
 
         top_result = {'error': [], 'complexity': [], 'C': [], 'epsilon': [], 'tol': []}
         top_result['error'] = r1[I]
@@ -3232,9 +3101,8 @@ class SVM(ML):
         :param dictionary: dictionary to stored the options tested
         :return: options in Pareto front, the optimal selection and the total results
         '''
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.factory import get_problem, get_visualization, get_decomposition
-        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+        from pymoo.factory import  get_decomposition
+        from pymoo.factory import  get_crossover, get_mutation, get_sampling
         from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
         from pymoo.optimize import minimize
         from pymoo.core.problem import starmap_parallelized_eval
@@ -3711,12 +3579,4 @@ class MyProblem_svm(ElementwiseProblem):
             self.contador, '\n #########################')
         self.contador[0] += 1
         out["F"] = np.column_stack([f1, f2])
-
-
-#class RF(ML):
-#    def info(self):
-#        print(('Class to built RF models. \n'))
-#    def __init__(self,data,scalar_y,scalar_x,zero_problem,limit,schedule,times):
-#        super().__init__(data,scalar_y, scalar_x,zero_problem,limit,schedule, times, pos_y)
-#
 
