@@ -1,5 +1,0 @@
-Classes create to build deep learning models:
-- DeepL_v2: general class to preprocess data
-- LSTM_model_v2: class to build and train and predict with LSTM models
-- MyProblem_lstm: problem to optimise LSTM architecture
-- MyRepair_lstm: function to repair the searching for optimisation
