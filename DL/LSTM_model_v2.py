@@ -61,7 +61,7 @@ class LSTM_model(DL):
         weights: weights for the outputs. mainly for multivriate output
         '''
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type, learning_rate,activation='relu'):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type, learning_rate=0.01,activation='relu'):
         super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names,extract_cero)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
