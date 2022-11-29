@@ -61,7 +61,7 @@ class LSTM_model(DL):
         weights: weights for the outputs. mainly for multivriate output
         '''
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type, activation='relu'):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type, learning_rate,activation='relu'):
         super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names,extract_cero)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
@@ -69,6 +69,7 @@ class LSTM_model(DL):
         self.weights=weights
         self.n_steps=n_steps
         self.activation = activation
+        self.learning_rate = learning_rate
 
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
@@ -261,7 +262,7 @@ class LSTM_model(DL):
         return(np.array(X), np.array(y),timesF, dd)
 
     @staticmethod
-    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout, activation):
+    def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout, learning_rate,activation):
         '''
         WORK IN PROGRESS!!!
 
@@ -271,6 +272,7 @@ class LSTM_model(DL):
         '''
 
         print('No finished')
+        from keras import backend as K
 
 
         layers_lstm = len(neurons_lstm)
@@ -318,13 +320,14 @@ class LSTM_model(DL):
 
         model.add(Dense(n_outputs), kernel_initializer='normal', activation='softmax')
         model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy'])
+        K.set_value(model.optimizer.learning_rate, learning_rate)
         model.summary()
 
         return model
 
 
     @staticmethod
-    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense, mask,mask_value, repeat_vector,dropout, activation):
+    def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense, mask,mask_value, repeat_vector,dropout, learning_rate, activation):
         '''
         :param
         trains: datasets
@@ -337,6 +340,7 @@ class LSTM_model(DL):
 
         CAREFUL: with masking at least two lstm layers are required
         '''
+        from keras import backend as K
 
         if any(neurons_lstm==0):
             neurons_lstm = neurons_lstm[neurons_lstm>0]
@@ -396,6 +400,7 @@ class LSTM_model(DL):
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
 
         model.compile(loss='mse', optimizer='adam',metrics=['mse'])
+        K.set_value(model.optimizer.learning_rate, learning_rate)
         model.summary()
 
         return model
@@ -637,7 +642,7 @@ class LSTM_model(DL):
                 else:
                     y_trainO=y_train[0].reshape(-1, 1)
 
-                model1 = self.__class__.built_model_regression(x_train[0],y_trainO,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout, self.activation)
+                model1 = self.__class__.built_model_regression(x_train[0],y_trainO,neurons_lstm, neurons_dense, self.mask,self.mask_value, self.repeat_vector, self.dropout, self.learning_rate, self.activation)
 
             else:
                 model1=model
@@ -1020,12 +1025,12 @@ class LSTM_model(DL):
         y_train=pd.DataFrame(y_train)
         if isinstance(model, list):
             if self.type=='regression':
-                model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout, self.activation)
+                model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout, self.learning_rate, self.activation)
                 time_start = time()
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
             else:
-                model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout, self.activation)
+                model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout, self.learning_rate, self.activation)
                 time_start = time()
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
