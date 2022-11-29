@@ -29,12 +29,13 @@ class MLP(ML):
     def info(self):
         print(('Class to built MLP models. \n'
               'All the parameters comes from the ML class except the activation functions'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type, activation='relu'):
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type, learning_rate, activation='relu'):
         super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
         self.weights = weights
         self.n_steps=n_steps
         self.activation = activation
+        self.learning_rate = learning_rate
         '''
         horizont: distance to the present
         I want to predict the moment four steps in future
@@ -54,13 +55,14 @@ class MLP(ML):
         return F
 
     @staticmethod
-    def mlp_classification(layers, neurons, inputs, outputs, mask, mask__value, activation):
+    def mlp_classification(layers, neurons, inputs, outputs, mask, mask__value, learning_rate, activation):
         '''
         :param inputs: amount of inputs
         :param outputs: amount of outputs
         :param mask: True or false
         :return:
         '''
+        from keras import backend as K
         # activation2 to classification is usually softmax
         try:
             ANN_model = Sequential()
@@ -72,18 +74,20 @@ class MLP(ML):
             ANN_model.add(Dense(outputs, kernel_initializer='normal', activation='softmax'))
             # Compile the network :
             ANN_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+            K.set_value(ANN_model.optimizer.learning_rate, learning_rate)
             # ANN_model.summary()
             return (ANN_model)
         except:
             raise NameError('Problems building the MLP')
 
     @staticmethod
-    def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout, outputs, activation):
+    def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout, outputs, learning_rate, activation):
         '''
         :param inputs:amount of inputs
         :param mask:True or false
         :return: the MLP architecture
         '''
+        from keras import backend as K
         try:
             ANN_model = Sequential()
             if mask==True and dropout>0:
@@ -114,13 +118,14 @@ class MLP(ML):
             ANN_model.add(Dense(outputs, kernel_initializer='normal', activation='linear'))
             # Compile the network :
             ANN_model.compile(loss='mse', optimizer='adam', metrics=['mean_squared_error'])
+            K.set_value(ANN_model.optimizer.learning_rate, learning_rate)
             # ANN_model.summary()
             return(ANN_model)
         except:
             raise NameError('Problems building the MLP')
 
     @staticmethod
-    def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout,n_steps, activation):
+    def mlp_series(layers, neurons,  inputs,mask, mask_value,dropout,n_steps, learning_rate, activation):
         '''
         The main diference is the n_steps. Focused on estimate one variable to several steps in future
         n_steps:amount of time steps estimated
@@ -128,6 +133,7 @@ class MLP(ML):
         :param mask:True or false
         :return: the MLP architecture
         '''
+        from keras import backend as K
         try:
             ANN_model = Sequential()
             if mask == True and dropout >0:
@@ -158,6 +164,7 @@ class MLP(ML):
             ANN_model.add(Dense(n_steps, kernel_initializer='normal', activation='linear'))
             # Compile the network :
             ANN_model.compile(loss='mse', optimizer='adam', metrics=['mean_squared_error'])
+            K.set_value(ANN_model.optimizer.learning_rate, learning_rate)
             # ANN_model.summary()
             return(ANN_model)
         except:
@@ -203,7 +210,7 @@ class MLP(ML):
             yy = pd.Series(yy, dtype='category')
             n_classes = len(yy.cat.categories.to_list())
             model = self.__class__.mlp_classification(layers, neurons, x_train[0].shape[1], n_classes, self.mask,
-                                                      self.mask_value, self.activation)
+                                                      self.mask_value, self.learning_rate, self.activation)
             ####################################################################
             # EN PROCESOO ALGÚN DíA !!!!!!!
             ##########################################################################
@@ -222,13 +229,13 @@ class MLP(ML):
                 if isinstance(model, list):
                     if self.type == 'regression':
                         model1 = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask,
-                                                               self.mask_value, dropout, len(self.pos_y), self.activation)
+                                                               self.mask_value, dropout, len(self.pos_y), self.learning_rate, self.activation)
                         # Checkpoitn callback
                         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                         mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
                     else:
                         model1 = self.__class__.mlp_series(layers, neurons, x_train[0].shape[1], self.mask,
-                                                           self.mask_value, dropout, self.n_steps, self.activation)
+                                                           self.mask_value, dropout, self.n_steps, self.learning_rate, self.activation)
                         # Checkpoitn callback
                         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                         mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
@@ -692,9 +699,9 @@ class MLP(ML):
             if isinstance(model, list):
                 layers = len(neurons)
                 if self.type=='series':
-                    model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value,dropout, self.n_steps, self.activation)
+                    model = self.__class__.mlp_series(layers, neurons,x_train.shape[1], self.mask, self.mask_value,dropout, self.n_steps, self.learning_rate, self.activation)
                 else:
-                    model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout, len(self.pos_y), self.activation)
+                    model = self.__class__.mlp_regression(layers, neurons, x_train.shape[1], self.mask, self.mask_value, dropout, len(self.pos_y), self.learning_rate, self.activation)
             else:
                 model=model
             # Checkpoint callback
