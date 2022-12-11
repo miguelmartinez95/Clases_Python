@@ -1037,7 +1037,7 @@ class LSTM_model(DL):
         if self.n_steps > 1:
             batch = 1
         else:
-            y_train = pd.DataFrame(y_train)
+            y_train = y_train.reshape(-1,1)
         if isinstance(model, list):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout,self.optimizer, self.learning_rate, self.activation)
