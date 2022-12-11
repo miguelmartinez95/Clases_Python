@@ -1045,6 +1045,7 @@ class LSTM_model(DL):
             batch = 1
         elif self.n_steps==1 and len(self.pos_y)==1:
             y_train = y_train.reshape(-1,1)
+            y_test = y_test.reshape(-1,1)
         if isinstance(model, list):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout,self.optimizer, self.learning_rate, self.activation)
