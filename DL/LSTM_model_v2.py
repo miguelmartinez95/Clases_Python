@@ -999,7 +999,7 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[]):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],testing=False):
         '''
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         if model we have a pretrained model
@@ -1044,7 +1044,10 @@ class LSTM_model(DL):
         if save_model==True:
             name='mlp'+now+'.h5'
             model_trained.save(name, save_format='h5')
-        res = {'model': model_trained, 'times': times, 'history':history}
+        if testing==True:
+            res={'X_test':x_test, 'X_train':x_train, 'y_test':y_test, 'Y_train':y_train, 'ind_test':ind_test, 'ind_train':ind_train}
+        else:
+            res = {'model': model_trained, 'times': times, 'history':history}
         return res
 
 
