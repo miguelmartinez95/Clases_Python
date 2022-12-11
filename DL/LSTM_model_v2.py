@@ -1036,7 +1036,7 @@ class LSTM_model(DL):
         #y_train=pd.DataFrame(y_train)
         if self.n_steps > 1:
             batch = 1
-        else:
+        elif self.n_steps==1 and len(self.pos_y)==1:
             y_train = y_train.reshape(-1,1)
         if isinstance(model, list):
             if self.type=='regression':
