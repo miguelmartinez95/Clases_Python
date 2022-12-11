@@ -1045,7 +1045,7 @@ class LSTM_model(DL):
             name='mlp'+now+'.h5'
             model_trained.save(name, save_format='h5')
         if testing==True:
-            res={'X_test':x_test, 'X_train':x_train, 'y_test':y_test, 'Y_train':y_train, 'ind_test':ind_test, 'ind_train':ind_train}
+            res={'X_test':x_test, 'X_train':x_train, 'Y_test':y_test, 'Y_train':y_train, 'ind_test':ind_test, 'ind_train':ind_train}
         else:
             res = {'model': model_trained, 'times': times, 'history':history}
         return res
