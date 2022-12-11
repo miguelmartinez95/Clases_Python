@@ -177,32 +177,33 @@ class LSTM_model(DL):
         in_start = 0
         # step over the entire history one time step at a time
         if onebyone[0]==True:
-            if n_steps==1:
-                for _ in range(len(data)-(n_lags + horizont)):
-                    #timesF.append(data.index[_ + n_lags-1+horizont])
-
-                    timesF.append(data.index[_ + n_lags+horizont])
-                    # define the end of the input sequence
-                    in_end = in_start + n_lags
-                    out_end=in_end+horizont
-
-                    xx = data.drop(data.columns[pos_y], axis=1)
-                    yy = data.iloc[:,pos_y]
-                    # ensure we have enough data for this instance
-                    if out_end <= len(data):
-                        x_input = xx.iloc[in_start:in_end,:]
-                        X.append(x_input)
-                        #if horizont==0:
+            #if n_steps==1:
+            for _ in range(len(data)-(n_lags + horizont)):
+                #timesF.append(data.index[_ + n_lags-1+horizont])
+                timesF.append(data.index[_ + n_lags+horizont])
+                # define the end of the input sequence
+                in_end = in_start + n_lags
+                out_end=in_end+horizont
+                xx = data.drop(data.columns[pos_y], axis=1)
+                yy = data.iloc[:,pos_y]
+                # ensure we have enough data for this instance
+                if out_end <= len(data):
+                    x_input = xx.iloc[in_start:in_end,:]
+                    X.append(x_input)
+                    #if horizont==0:
+                    if n_steps==1:
                         y.append(yy.iloc[out_end-1])
-                        #else:
-                        #    y.append(yy.iloc[#out_end])
-                        #se selecciona uno
-                    # move along one time step
-                    in_start += 1
-                dd=len(data)-len(data)-(n_lags + horizont)+1
-            else:
-                print('With n_steps > 1 it is not feasible go 1 by 1')
-                raise NameError('Problems with n_steps and onebyone')
+                    else:
+                        y.append(yy.iloc[out_end-1:out_end-1+(n_steps-1)])
+                    #else:
+                    #    y.append(yy.iloc[#out_end])
+                    #se selecciona uno
+                # move along one time step
+                in_start += 1
+            dd=len(data)-len(data)-(n_lags + horizont)+1
+            #else:
+            #    print('With n_steps > 1 it is not feasible go 1 by 1')
+            #    raise NameError('Problems with n_steps and onebyone')
 
         else:
             if onebyone[1]==True:
