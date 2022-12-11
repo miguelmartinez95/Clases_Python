@@ -106,6 +106,8 @@ class MyProblem_lstm(ElementwiseProblem):
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
                                                           self.dropout)
+                if self.n_steps>1:
+                    batch=1
                 model, history = self.model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                         batch)
                 print('Teh training spent ', time() - time_start)

@@ -59,6 +59,7 @@ class LSTM_model(DL):
         randomly. This means that their contribution to the activation of downstream neurons is temporally removed.
         type: regression or classification
         weights: weights for the outputs. mainly for multivriate output
+        n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered)
         '''
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type,
@@ -670,6 +671,8 @@ class LSTM_model(DL):
                 for zz2 in range(rep):
                     modelF = model1
                     time_start = time()
+                    if self.n_steps>1:
+                        batch=1
                     modelF, history = self.__class__.train_model(modelF,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
@@ -1030,11 +1033,13 @@ class LSTM_model(DL):
         x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags,self.n_steps, self.horizont,
                                                                         onebyone)
 
-        y_train=pd.DataFrame(y_train)
+        #y_train=pd.DataFrame(y_train)
         if isinstance(model, list):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout,self.optimizer, self.learning_rate, self.activation)
                 time_start = time()
+                if self.n_steps>1:
+                    batch=1
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
             else:
