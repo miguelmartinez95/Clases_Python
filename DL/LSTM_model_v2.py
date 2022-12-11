@@ -1021,7 +1021,6 @@ class LSTM_model(DL):
         x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags,self.n_steps, self.horizont,
                                                                         onebyone)
 
-
         y_train=pd.DataFrame(y_train)
         if isinstance(model, list):
             if self.type=='regression':
