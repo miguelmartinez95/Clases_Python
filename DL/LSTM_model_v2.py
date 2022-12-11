@@ -181,7 +181,10 @@ class LSTM_model(DL):
             #if n_steps==1:
             for _ in range(len(data)-(n_lags + horizont)):
                 #timesF.append(data.index[_ + n_lags-1+horizont])
-                timesF.append(data.index[_ + n_lags+horizont])
+                if n_steps>1:
+                    timesF.append(data.index[(_ + n_lags+horizont):(_ + n_lags+horizont+n_steps-1)])
+                else:
+                    timesF.append(data.index[_ + n_lags+horizont])
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 out_end=in_end+horizont
