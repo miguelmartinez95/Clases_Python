@@ -361,7 +361,10 @@ class LSTM_model(DL):
 
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
-        n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
+        if len(train_x1.shape)<3:
+            n_timesteps, n_features, n_outputs = train_x1.shape[1], 1, train_y1.shape[1]
+        else:
+            n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
 
         model = Sequential()
 
