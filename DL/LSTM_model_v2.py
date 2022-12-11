@@ -192,10 +192,10 @@ class LSTM_model(DL):
                     if out_end <= len(data):
                         x_input = xx.iloc[in_start:in_end,:]
                         X.append(x_input)
-                        if horizont==0:
-                            y.append(yy.iloc[out_end-1])
-                        else:
-                            y.append(yy.iloc[in_end:out_end])
+                        #if horizont==0:
+                        y.append(yy.iloc[out_end-1])
+                        #else:
+                        #    y.append(yy.iloc[#out_end])
                         #se selecciona uno
                     # move along one time step
                     in_start += 1
@@ -221,12 +221,16 @@ class LSTM_model(DL):
                     if out_end <= len(data):
                         x_input = xx.iloc[in_start:in_end, :]
                         X.append(x_input)
-                        if horizont == 0 and n_steps == 1:
+                        #if horizont == 0 and n_steps == 1:
+                        #    y.append(yy.iloc[out_end - 1])
+                        #elif horizont == 0 and n_steps > 1:
+                        #    y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
+                        #else:
+                        #    y.append(yy.iloc[in_end:out_end])
+                        if n_steps == 1:
                             y.append(yy.iloc[out_end - 1])
-                        elif horizont == 0 and n_steps > 1:
-                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
                         else:
-                            y.append(yy.iloc[in_end:out_end])
+                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
                     # se selecciona uno
                     # move along one time step
                     in_start += n_lags
@@ -249,12 +253,16 @@ class LSTM_model(DL):
                     if out_end <= len(data):
                         x_input = xx.iloc[in_start:in_end, :]
                         X.append(x_input)
-                        if horizont == 0 and n_steps == 1:
+                        #if horizont == 0 and n_steps == 1:
+                        #    y.append(yy.iloc[out_end - 1])
+                        #elif horizont == 0 and n_steps > 1:
+                        #    y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
+                        #else:
+                        #    y.append(yy.iloc[in_end:out_end])
+                        if n_steps == 1:
                             y.append(yy.iloc[out_end - 1])
-                        elif horizont == 0 and n_steps > 1:
-                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
                         else:
-                            y.append(yy.iloc[in_end:out_end])
+                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
                     # se selecciona uno
                     # move along one time step
                     in_start += n_steps
