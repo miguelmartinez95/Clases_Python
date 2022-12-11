@@ -1034,12 +1034,15 @@ class LSTM_model(DL):
                                                                         onebyone)
 
         #y_train=pd.DataFrame(y_train)
+        if self.n_steps > 1:
+            batch = 1
+        else:
+            y_train = pd.DataFrame(y_train)
         if isinstance(model, list):
             if self.type=='regression':
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout,self.optimizer, self.learning_rate, self.activation)
                 time_start = time()
-                if self.n_steps>1:
-                    batch=1
+
                 model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch)
                 times = round(time() - time_start, 3)
             else:
