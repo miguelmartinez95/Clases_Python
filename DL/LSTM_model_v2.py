@@ -363,6 +363,9 @@ class LSTM_model(DL):
         layers_neurons = len(neurons_dense)
         if len(train_x1.shape)<3:
             n_timesteps, n_features, n_outputs = train_x1.shape[1], 1, train_y1.shape[1]
+            if len(train_y1.shape)<2:
+                n_timesteps, n_features, n_outputs = train_x1.shape[1], 1,1
+
         else:
             n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
 
