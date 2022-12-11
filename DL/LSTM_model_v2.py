@@ -195,7 +195,7 @@ class LSTM_model(DL):
                     if n_steps==1:
                         y.append(yy.iloc[out_end-1])
                     else:
-                        y.append(yy.iloc[(out_end-1):(out_end-1+(n_steps-1))])
+                        y.append(yy.iloc[range(out_end-1,out_end-1+(n_steps-1))])
                     #else:
                     #    y.append(yy.iloc[#out_end])
                     #se selecciona uno
