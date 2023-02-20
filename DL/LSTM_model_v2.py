@@ -533,7 +533,9 @@ class LSTM_model(DL):
                 else:
                     raise(NameError('Not considered'))
 
+
                 train, val, index_val = LSTM_model.split_dataset(data, n_lags, w, w2)
+                print('VAL SHAPE',val.shape)
 
                 index_val = index_val[range(index_val.shape[0] - math.ceil(index_val.shape[0] / 2))]
                 st = int(train.shape[0]/3)

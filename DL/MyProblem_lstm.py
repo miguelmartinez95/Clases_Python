@@ -134,7 +134,6 @@ class MyProblem_lstm(ElementwiseProblem):
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
                     y_real = y_real.reshape(-1, 1)
                 print('Y_pred SHAPE in CV_OPT ', y_pred.shape)
-                print('Dates SHAPE this piece', times_val[z].shape)
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_val[z]
