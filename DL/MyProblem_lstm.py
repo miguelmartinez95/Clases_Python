@@ -88,7 +88,7 @@ class MyProblem_lstm(ElementwiseProblem):
             # Train the model
             zz = 0
             if self.values:
-                stop = len(self.values[0])
+                stop = self.values[0]
             else:
                 stop = len(x_train)
             for z in range(stop):
