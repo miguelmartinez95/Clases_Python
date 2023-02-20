@@ -12,7 +12,7 @@ class MyProblem_lstm(ElementwiseProblem):
 
 
     def __init__(self,model,names,extract_cero, horizont,scalar_y,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit, repeat_vector, type,data,scalar_x,dropout, weights, med, contador,
-                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values, **kwargs):
+                 n_var,l_lstm, l_dense,batch,xlimit_inf, xlimit_sup,dictionary,onebyone,values,optimizer,learning_rate,activation, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=2,
@@ -53,6 +53,9 @@ class MyProblem_lstm(ElementwiseProblem):
         self.onebyone =onebyone
         self.values=values
         self.weights=weights
+        self.optimizer=optimizer
+        self.learning_rate=learning_rate
+        self.activation=activation
 
     def cv_opt(self, data, fold, rep, neurons_lstm, neurons_dense, pacience, batch, mean_y, dictionary):
         #from LSTM_model_v2 import LSTM_model
@@ -105,7 +108,7 @@ class MyProblem_lstm(ElementwiseProblem):
                 model = self.model.built_model_regression(x_train[z], ytrain, neurons_lstm,
                                                           neurons_dense,
                                                           self.mask, self.mask_value, self.repeat_vector,
-                                                          self.dropout)
+                                                          self.dropout,self.optimizer,self.learning_rate,self.activation)
                 if self.n_steps>1:
                     batch=1
                 model, history = self.model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,

@@ -1621,11 +1621,13 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,self.optimizer,
+            self.learning_rate,self.activation,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps, self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
+                                self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,
+                                     self.optimizer,self.learning_rate, self.activation)
 
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_lstm(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
