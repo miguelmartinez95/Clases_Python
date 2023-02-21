@@ -14,6 +14,7 @@ from keras.layers import Masking
 from keras.layers import RepeatVector
 from keras.layers import Dropout
 from keras.constraints import maxnorm
+
 #import skfda
 import math
 import multiprocessing
@@ -1642,14 +1643,16 @@ class LSTM_model(DL):
         '''
         Termination can be with tolerance or with generations limit
         '''
+        ct = time.time()
         res = minimize(problem,
                        algorithm,
                        termination,
                        # ("n_gen", 20),
                        pf=True,
                        verbose=True,
+                       save_history=True,
                        seed=7)
-
+        ct_total = time.time()-ct
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
@@ -1691,13 +1694,44 @@ class LSTM_model(DL):
             obj = res.F
             struct = res.X
 
+        ret = [e.pop.get("F") for e in res.history]
+
+        # Estandarización
+        scalar1 = MinMaxScaler(feature_range=(0, 1))
+        scalar2 = MinMaxScaler(feature_range=(0, 1))
+        scalar3 = MinMaxScaler(feature_range=(0, 1))
+        scalar4 = MinMaxScaler(feature_range=(0, 1))
+        scalar1.fit(np.concatenate((ret[0][0], ret[1][0], ret[2][0])).reshape(-1, 1))
+        scalar2.fit(np.concatenate((ret[0][1], ret[1][1], ret[2][1])).reshape(-1, 1))
+        scalar3.fit(np.concatenate((ret[0][2], ret[1][2], ret[2][2])).reshape(-1, 1))
+        scalar4.fit(np.concatenate((ret[0][3], ret[1][3], ret[2][3])).reshape(-1, 1))
+
+        for i in range(3):
+            ret[i][0] = scalar1.transform(ret[i][0].reshape(-1, 1))[:, 0]
+            ret[i][1] = scalar2.transform(ret[i][1].reshape(-1, 1))[:, 0]
+            ret[i][2] = scalar3.transform(ret[i][2].reshape(-1, 1))[:, 0]
+            ret[i][3] = scalar4.transform(ret[i][3].reshape(-1, 1))[:, 0]
+
+        # Center distance
+        F3 = [0 for x in range(len(ret))]
+        for i in range(len(ret)):
+            F1 = ret[i]
+            F2 = np.sqrt(np.sum(F1 ** 2, axis=1))
+            F3[i] = np.sum(F2) / len(ret[0])
+
+        plt.figure()
+        plt.plot(np.arange(len(ret)), F3)
+        plt.xlabel("Generation")
+        plt.ylabel("Center distance")
+        plt.savefig("convergence1.png")
+
         print('The number of evaluations were:', contador)
         if n_processes>1:
             pool.close()
         else:
             pass
 
-        return (obj, struct,obj_T, struct_T,  res,contador)
+        return (obj, struct,obj_T, struct_T,  res,contador,ct_total)
 
     def optimal_search_nsga2(self,model,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights, n_last=5, nth_gen=5):
         '''
@@ -1720,7 +1754,7 @@ class LSTM_model(DL):
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
-        obj, x_obj, obj_total, x_obj_total,res,evaluations = self.nsga2_individual(model,mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
+        obj, x_obj, obj_total, x_obj_total,res,evaluations,tiempo = self.nsga2_individual(model,mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol, n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights)
 
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
@@ -1730,7 +1764,8 @@ class LSTM_model(DL):
 
         print('Process finished!!!')
         print('The selection is \n', x_obj, 'with a result of \n', obj)
-        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res,'evaluations':evaluations}
+        print('time spent: ', tiempo)
+        res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj':obj, 'res':res,'evaluations':evaluations, 'tiempo':tiempo}
         return res
 
 
