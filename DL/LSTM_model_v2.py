@@ -14,7 +14,7 @@ from keras.layers import Masking
 from keras.layers import RepeatVector
 from keras.layers import Dropout
 from keras.constraints import maxnorm
-
+import time
 #import skfda
 import math
 import multiprocessing
