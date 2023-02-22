@@ -1679,14 +1679,14 @@ class LSTM_model(DL):
             print(r_final.shape)
 
             plt.figure(figsize=(10, 7))
-            plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
+            plt.scatter(r_final[:, 0], r_final[:, 1], color='black',s=75)
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
             plt.ylabel('Normalised Complexity', fontsize=20, labelpad=10)
-            plt.scatter(r_final[I, 0], r_final[I, 1], s=200, color='red', alpha=1, marker='o', facecolors='none',
+            plt.scatter(r_final[I, 0], r_final[I, 1], s=200, color='red', alpha=1, marker='o', linewidth=2,facecolors='none',
                         label='Optimum')
             plt.xticks(fontsize=18)
             plt.yticks(fontsize=18)
-            plt.legend(borderpad=1, fontsize=15)
+            plt.legend(borderpad=1, fontsize=16)
             plt.savefig('optimisation_plot.png')
         else:
             obj_T = res.F
@@ -1719,10 +1719,12 @@ class LSTM_model(DL):
             F2 = np.sqrt(np.sum(F1 ** 2, axis=1))
             F3[i] = np.sum(F2) / len(ret[0])
 
-        plt.figure()
-        plt.plot(np.arange(len(ret)), F3)
-        plt.xlabel("Generation")
-        plt.ylabel("Center distance")
+        plt.figure(figsize=(10, 7))
+        plt.plot(np.arange(len(ret)), F3, color='black')
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
+        plt.xlabel("Generation",fontsize=20, labelpad=10)
+        plt.ylabel("Center distance",fontsize=20, labelpad=10)
         plt.savefig("convergence1.png")
 
         print('The number of evaluations were:', contador)
