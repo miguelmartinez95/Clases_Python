@@ -1617,6 +1617,7 @@ class LSTM_model(DL):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        weigths: se meten al reves 
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
         '''
 
