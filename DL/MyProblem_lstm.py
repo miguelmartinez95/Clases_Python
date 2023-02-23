@@ -413,6 +413,10 @@ class MyProblem_lstm(ElementwiseProblem):
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = x[len(x)-1]*20
 
+        print(
+            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
+            self.contador, '\n ######################### \n #####################################')
+
         f1, f2 = self.cv_opt(self.data,2,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
