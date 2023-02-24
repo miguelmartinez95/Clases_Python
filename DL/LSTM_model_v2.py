@@ -1696,7 +1696,8 @@ class LSTM_model(DL):
             struct = res.X
 
         ret = [e.pop.get("F") for e in res.history]
-
+        print('RET', len(ret))
+        print('RET2', ret[0].shape)
         # Estandarización
         scalar1 = MinMaxScaler(feature_range=(0, 1))
         scalar2 = MinMaxScaler(feature_range=(0, 1))
