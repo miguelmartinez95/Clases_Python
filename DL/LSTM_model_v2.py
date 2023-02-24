@@ -1569,8 +1569,8 @@ class LSTM_model(DL):
 
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
-        I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
-        #I = get_decomposition("pbi").do(r_final, weights).argmin()
+        #I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+        I = get_decomposition("pbi").do(r_final, weights).argmin()
 
         top_result = {'error': [], 'complexity': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
         top_result['error']=r1[I]
@@ -1718,7 +1718,7 @@ class LSTM_model(DL):
         for i in range(len(ret)):
             F1 = ret[i]
             F2 = np.sqrt(np.sum(F1 ** 2, axis=1))
-            F3[i] = np.sum(F2) / len(ret[0])
+            F3[i] = np.sum(F2) / len(ret[i])
 
         plt.figure(figsize=(10, 7))
         plt.plot(np.arange(len(ret)), F3, color='black')
@@ -1726,6 +1726,7 @@ class LSTM_model(DL):
         plt.yticks(fontsize=18)
         plt.xlabel("Generation",fontsize=20, labelpad=10)
         plt.ylabel("Center distance",fontsize=20, labelpad=10)
+        plt.show()
         plt.savefig("convergence1.png")
 
         print('The number of evaluations were:', contador)
