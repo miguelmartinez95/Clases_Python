@@ -1668,8 +1668,8 @@ class LSTM_model(DL):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
-            #I = get_decomposition("pbi").do(r_final, weights).argmin()
+            #I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -1835,8 +1835,8 @@ class LSTM_model(DL):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
-            #I = get_decomposition("pbi").do(r_final, weights).argmin()
+            #I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
