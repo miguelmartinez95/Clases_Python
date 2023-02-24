@@ -1696,39 +1696,38 @@ class LSTM_model(DL):
             struct = res.X
 
         ret = [e.pop.get("F") for e in res.history]
-        print('RET', len(ret))
-        print('RET2', ret[0].shape)
-        # Estandarización
-        scalar1 = MinMaxScaler(feature_range=(0, 1))
-        scalar2 = MinMaxScaler(feature_range=(0, 1))
-        scalar3 = MinMaxScaler(feature_range=(0, 1))
-        scalar4 = MinMaxScaler(feature_range=(0, 1))
-        scalar1.fit(np.concatenate((ret[0][0], ret[1][0], ret[2][0])).reshape(-1, 1))
-        scalar2.fit(np.concatenate((ret[0][1], ret[1][1], ret[2][1])).reshape(-1, 1))
-        scalar3.fit(np.concatenate((ret[0][2], ret[1][2], ret[2][2])).reshape(-1, 1))
-        scalar4.fit(np.concatenate((ret[0][3], ret[1][3], ret[2][3])).reshape(-1, 1))
-
-        for i in range(3):
-            ret[i][0] = scalar1.transform(ret[i][0].reshape(-1, 1))[:, 0]
-            ret[i][1] = scalar2.transform(ret[i][1].reshape(-1, 1))[:, 0]
-            ret[i][2] = scalar3.transform(ret[i][2].reshape(-1, 1))[:, 0]
-            ret[i][3] = scalar4.transform(ret[i][3].reshape(-1, 1))[:, 0]
-
-        # Center distance
-        F3 = [0 for x in range(len(ret))]
-        for i in range(len(ret)):
-            F1 = ret[i]
-            F2 = np.sqrt(np.sum(F1 ** 2, axis=1))
-            F3[i] = np.sum(F2) / len(ret[i])
-
-        plt.figure(figsize=(10, 7))
-        plt.plot(np.arange(len(ret)), F3, color='black')
-        plt.xticks(fontsize=18)
-        plt.yticks(fontsize=18)
-        plt.xlabel("Generation",fontsize=20, labelpad=10)
-        plt.ylabel("Center distance",fontsize=20, labelpad=10)
-        plt.show()
-        plt.savefig("convergence1.png")
+        #print('RET', len(ret))
+        #print('RET2', ret[0].shape)
+        ## Estandarización
+        #scalar1 = MinMaxScaler(feature_range=(0, 1))
+        #scalar2 = MinMaxScaler(feature_range=(0, 1))
+#
+        #scalar1.fit(np.concatenate((ret[0][0], ret[1][0], ret[2][0])).reshape(-1, 1))
+        #scalar2.fit(np.concatenate((ret[0][1], ret[1][1], ret[2][1])).reshape(-1, 1))
+        #scalar3.fit(np.concatenate((ret[0][2], ret[1][2], ret[2][2])).reshape(-1, 1))
+        #scalar4.fit(np.concatenate((ret[0][3], ret[1][3], ret[2][3])).reshape(-1, 1))
+#
+        #for i in range(3):
+        #    ret[i][0] = scalar1.transform(ret[i][0].reshape(-1, 1))[:, 0]
+        #    ret[i][1] = scalar2.transform(ret[i][1].reshape(-1, 1))[:, 0]
+        #    ret[i][2] = scalar3.transform(ret[i][2].reshape(-1, 1))[:, 0]
+        #    ret[i][3] = scalar4.transform(ret[i][3].reshape(-1, 1))[:, 0]
+#
+        ## Center distance
+        #F3 = [0 for x in range(len(ret))]
+        #for i in range(len(ret)):
+        #    F1 = ret[i]
+        #    F2 = np.sqrt(np.sum(F1 ** 2, axis=1))
+        #    F3[i] = np.sum(F2) / len(ret[i])
+#
+        #plt.figure(figsize=(10, 7))
+        #plt.plot(np.arange(len(ret)), F3, color='black')
+        #plt.xticks(fontsize=18)
+        #plt.yticks(fontsize=18)
+        #plt.xlabel("Generation",fontsize=20, labelpad=10)
+        #plt.ylabel("Center distance",fontsize=20, labelpad=10)
+        #plt.show()
+        #plt.savefig("convergence1.png")
 
         ###############################################################################
         X, F = res.opt.get("X", "F")
@@ -1765,11 +1764,12 @@ class LSTM_model(DL):
         hv = [metric.do(_F) for _F in hist_F]
 
         plt.figure(figsize=(10, 7))
-        plt.plot(n_evals, hv, color='black', lw=0.7, label="Avg. CV of Pop")
-        plt.scatter(n_evals, hv, facecolor="none", edgecolor='black', marker="p")
-        plt.title("Convergence")
-        plt.xlabel("Function Evaluations")
-        plt.ylabel("Hypervolume")
+        plt.plot(n_evals, hv, color='black', label="Avg. CV of Pop", linewidth=2)
+        plt.scatter(n_evals, hv, facecolor="none", edgecolor='black',linewidths=1.5, marker="o",s=40)
+        plt.xlabel("Function Evaluations",fontsize=20, labelpad=10)
+        plt.ylabel("Hypervolume",fontsize=20, labelpad=10)
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
         plt.show()
         plt.savefig("convergence_HV.png")
         ###############################################################################
