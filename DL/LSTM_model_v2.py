@@ -1491,7 +1491,7 @@ class LSTM_model(DL):
         options = {'neurons_dense': [], 'neurons_lstm': [], 'pacience': []}
         w = 0
         contador=len(neurons_lstm) * len(neurons_dense) * len(paciences)-1
-        ct = time.time()
+        ct = time()
         if parallel<2:
             for t in range(len(neurons_dense)):
                 print('##################### Option ####################', w)
@@ -1570,7 +1570,7 @@ class LSTM_model(DL):
         else:
             raise NameError('Option not considered')
 
-        ct_total = time.time()-ct
+        ct_total = time()-ct
         r1 = error.copy()
         d1 = complexity.copy()
         print('Resultados search', r1)
