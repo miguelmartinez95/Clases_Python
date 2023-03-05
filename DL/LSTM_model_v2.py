@@ -669,7 +669,6 @@ class LSTM_model(DL):
 
             else:
                 model1=model
-            # Train the model
             times = [0 for x in range(rep*2)]
             cv = [0 for x in range(rep*2)]
             rmse = [0 for x in range(rep*2)]
@@ -677,14 +676,30 @@ class LSTM_model(DL):
             zz= 0
             predictions = []
             reales = []
-            for z in range(len(x_train)):
+            if values:
+                stop = values[0]
+            else:
+                stop = len(x_train)
+            for z in range(stop):
+            # Train the model
+
+            #for z in range(len(x_train)):
                 print('Fold number', z)
                 for zz2 in range(rep):
+                    if len(y_train[z].shape) > 1:
+                        ytrain = y_train[z]
+                        ytest = y_test[z]
+                        yval = y_val[z]
+                    else:
+                        ytrain = y_train[z].reshape(len(y_train[z]), 1)
+                        ytest = y_test[z].reshape(len(y_test[z]), 1)
+                        yval = y_val[z].reshape(len(y_val[z]), 1)
+
                     modelF = model1
                     time_start = time()
                     if self.n_steps>1:
                         batch=1
-                    modelF, history = self.__class__.train_model(modelF,x_train[z], y_train[z], x_test[z], y_test[z], pacience, batch)
+                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch)
                     times[zz] = round(time() - time_start, 3)
 
                     res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, len(self.pos_y))
@@ -700,7 +715,7 @@ class LSTM_model(DL):
                             y_pred[upp, t] = self.sup_limit[t]
 
                     if len(y_val[z].shape)>1:
-                        y_real = y_val[z]
+                        y_real = yval
                     else:
                         y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
                     y_real = np.array(self.scalar_y.inverse_transform(y_real))
