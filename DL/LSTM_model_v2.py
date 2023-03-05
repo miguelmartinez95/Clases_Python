@@ -33,6 +33,7 @@ from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
 from DeepL_v2 import DL
 from MyRepair_lstm import MyRepair_lstm
+from time import time
 
 print('importa bien todo')
 
@@ -669,17 +670,18 @@ class LSTM_model(DL):
 
             else:
                 model1=model
-            times = [0 for x in range(rep*2)]
-            cv = [0 for x in range(rep*2)]
-            rmse = [0 for x in range(rep*2)]
-            nmbe = [0 for x in range(rep*2)]
-            zz= 0
-            predictions = []
-            reales = []
+
             if values:
                 stop = values[0]
             else:
                 stop = len(x_train)
+            times = [0 for x in range(rep*stop)]
+            cv = [0 for x in range(rep*stop)]
+            rmse = [0 for x in range(rep*stop)]
+            nmbe = [0 for x in range(rep*stop)]
+            zz= 0
+            predictions = []
+            reales = []
             for z in range(stop):
             # Train the model
 
