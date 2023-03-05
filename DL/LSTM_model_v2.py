@@ -657,8 +657,6 @@ class LSTM_model(DL):
 
         times_val = res['time_val']
 
-        print('Shape dates at beginning of cv_analysis',times_val[0].shape)
-        print('Shape y at beginning of cv_analysis', y_val[0].shape)
 
         if self.type=='regression':
             if isinstance(model, list):
