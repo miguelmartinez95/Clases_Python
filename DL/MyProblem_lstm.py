@@ -57,7 +57,7 @@ class MyProblem_lstm(ElementwiseProblem):
         self.learning_rate=learning_rate
         self.activation=activation
 
-    def cv_opt(self, data, fold, rep, neurons_lstm, neurons_dense, pacience, batch, mean_y, dictionary):
+    def cv_opt(self, data, fold, rep, neurons_lstm, neurons_dense, pacience, batch, mean_y):
         #from LSTM_model_v2 import LSTM_model
         '''
         :param fold:assumed division of the sample for cv
@@ -69,8 +69,8 @@ class MyProblem_lstm(ElementwiseProblem):
         '''
         name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, pacience)))
         try:
-            a0, a1,a2 = dictionary[name1]
-            return a0, a1,a2
+            a0, a1 = self.dictionary[name1]
+            return a0, a1
         except KeyError:
             pass
 
@@ -324,10 +324,10 @@ class MyProblem_lstm(ElementwiseProblem):
                 zz += 1
             #
             complexity = self.model.complex(neurons_lstm, neurons_dense, 2000, 12)
-            dictionary[name1] = np.mean(cvs), complexity
+            self.dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
-            return res_final['cvs'], res_final['complexity'], dictionary
+            return res_final['cvs'], res_final['complexity']
 
     #
     @staticmethod
@@ -416,21 +416,21 @@ class MyProblem_lstm(ElementwiseProblem):
         n_lstm = x[range(self.l_lstm)]*20
         n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
         n_pacience = np.array([x[len(x)-1]])*10
-
-        print(
-            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
-            self.contador, '\n ######################### \n #####################################')
-
-        f1, f2, dictionary = self.cv_opt(self.data,2,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
-        print(
-            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
-            self.contador, '\n ######################### \n #####################################')
-
-
-        print(dictionary.keys())
-        print('Option:', tuple(np.concatenate((n_lstm, n_dense, n_pacience))))
-        if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in dictionary.keys():
+        #print(self.dictionary.keys())
+        #print('Option:', tuple(np.concatenate((n_lstm, n_dense, n_pacience))))
+        if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in self.dictionary.keys():
             self.contador[0] += 1
+
+        print(
+            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
+            self.contador, '\n ######################### \n #####################################')
+
+        f1, f2 = self.cv_opt(self.data,2,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        print(
+            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
+            self.contador, '\n ######################### \n #####################################')
+
+
 
         print('F1:',f1)
         print('F2:',f2)
