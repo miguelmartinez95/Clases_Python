@@ -703,24 +703,41 @@ class LSTM_model(DL):
                         batch=1
                     modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch)
                     times[zz] = round(time() - time_start, 3)
-
-                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, len(self.pos_y))
+                    if isinstance(self.pos_y, collections.abc.Sized):
+                        outputs = len(self.pos_y)
+                    else:
+                        outputs = 1
+                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, outputs)
                     y_pred = res['y_pred']
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
-                    for t in range(y_pred.shape[1]):
-                        inf = np.where(y_pred[:,t] < self.inf_limit[t])[0]
-                        upp = np.where(y_pred[:,t] > self.sup_limit[t])[0]
-                        if len(inf) > 0:
-                            y_pred[inf, t] = self.inf_limit[t]
-                        if len(upp) > 0:
-                            y_pred[upp, t] = self.sup_limit[t]
-
-                    if len(y_val[z].shape)>1:
-                        y_real = yval
+                    y_real = np.array(self.scalar_y.inverse_transform(yval))
+                    #for t in range(y_pred.shape[1]):
+                    #    inf = np.where(y_pred[:,t] < self.inf_limit[t])[0]
+                    #    upp = np.where(y_pred[:,t] > self.sup_limit[t])[0]
+                    #    if len(inf) > 0:
+                    #        y_pred[inf, t] = self.inf_limit[t]
+                    #    if len(upp) > 0:
+                    #        y_pred[upp, t] = self.sup_limit[t]
+#
+                    #if len(y_val[z].shape)>1:
+                    #    y_real = yval
+                    #else:
+                    #    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
+                    #y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                    if isinstance(self.pos_y, collections.abc.Sized):
+                        for t in range(len(self.pos_y)):
+                            y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = np.repeat(self.inf_limit[t], len(
+                                np.where(y_pred[:, t] < self.inf_limit[t])[0]))
+                            y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = np.repeat(self.sup_limit[t], len(
+                                np.where(y_pred[:, t] > self.sup_limit[t])[0]))
+                        y_real = y_real
                     else:
-                        y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                    y_real = np.array(self.scalar_y.inverse_transform(y_real))
+                        y_pred[np.where(y_pred < self.inf_limit)[0]] = np.repeat(self.inf_limit, len(
+                            np.where(y_pred < self.inf_limit)[0]))
+                        y_pred[np.where(y_pred > self.sup_limit)[0]] = np.repeat(self.sup_limit, len(
+                            np.where(y_pred < self.sup_limit)[0]))
+                        y_real = y_real.reshape(-1, 1)
 
                     if plot == True:
 

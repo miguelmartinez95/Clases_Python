@@ -126,12 +126,12 @@ class MyProblem_lstm(ElementwiseProblem):
                 y_real = np.array(self.scalar_y.inverse_transform(yval))
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
-                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
-                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = self.sup_limit[t]
+                        y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = np.repeat(self.inf_limit[t],len(np.where(y_pred[:, t] < self.inf_limit[t])[0]))
+                        y_pred[np.where(y_pred[:, t] > self.sup_limit[t])[0], t] = np.repeat(self.sup_limit[t],len(np.where(y_pred[:, t] > self.sup_limit[t])[0]))
                     y_real = y_real
                 else:
-                    y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
-                    y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+                    y_pred[np.where(y_pred < self.inf_limit)[0]] = np.repeat(self.inf_limit,len(np.where(y_pred < self.inf_limit)[0]))
+                    y_pred[np.where(y_pred > self.sup_limit)[0]] = np.repeat(self.sup_limit,len(np.where(y_pred < self.sup_limit)[0]))
                     y_real = y_real.reshape(-1, 1)
                 print('Y_pred SHAPE in CV_OPT ', y_pred.shape)
                 y_predF = y_pred.copy()
@@ -422,7 +422,9 @@ class MyProblem_lstm(ElementwiseProblem):
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
             self.contador, '\n ######################### \n #####################################')
 
-        self.contador[0] += 1
+
+        if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in self.dictionary.keys():
+            self.contador[0] += 1
 
         print('F1:',f1)
         print('F2:',f2)
