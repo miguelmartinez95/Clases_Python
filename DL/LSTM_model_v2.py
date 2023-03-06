@@ -1679,7 +1679,7 @@ class LSTM_model(DL):
         '''
         Termination can be with tolerance or with generations limit
         '''
-        ct = time.time()
+        ct = time()
         res = minimize(problem,
                        algorithm,
                        termination,
@@ -1688,7 +1688,7 @@ class LSTM_model(DL):
                        verbose=True,
                        save_history=True,
                        seed=7)
-        ct_total = time.time()-ct
+        ct_total = time()-ct
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
