@@ -73,7 +73,11 @@ class MyProblem_lstm(ElementwiseProblem):
             return a0, a1
         except KeyError:
             pass
-        cvs = [0 for x in range(rep * 2)]
+
+        if self.values:
+            cvs=[0 for x in range(self.values[0])]
+        else:
+            cvs = [0 for x in range(rep * 2)]
         names = self.names
         names = np.delete(names, self.pos_y)
         res = self.model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.n_steps,
