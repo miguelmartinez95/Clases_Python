@@ -396,6 +396,8 @@ class LSTM_model(DL):
                             model.add(
                                 LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation=activation))
                             model.add(Dropout(dropout))
+                    elif k==layers_lstm-1:
+                        model.add(LSTM(neurons_lstm[k],activation=activation))
                     else:
                         model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
                         model.add(Dropout(dropout))
@@ -413,6 +415,18 @@ class LSTM_model(DL):
                         model.add(LSTM(neurons_lstm[k],activation=activation))
                     else:
                         model.add(LSTM(neurons_lstm[k],return_sequences=True,activation=activation))
+                elif dropout == 0 and repeat_vector == False:
+                    if k == 0:
+                        if mask == True:
+                            model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                            model.add(LSTM(neurons_lstm[k], activation=activation))
+                        else:
+                            model.add(
+                                LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation=activation))
+                    elif k == layers_lstm - 1:
+                        model.add(LSTM(neurons_lstm[k], activation=activation))
+                    else:
+                        model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
                 else:
                     raise (NameError('Dropout and Repeat vector together not considered'))
         if layers_neurons>0:
