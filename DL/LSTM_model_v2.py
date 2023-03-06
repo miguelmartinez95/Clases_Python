@@ -390,7 +390,7 @@ class LSTM_model(DL):
                     if k == 0:
                         if mask == True:
                             model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                            model.add(LSTM(neurons_lstm[k], activation=activation))
+                            model.add(LSTM(neurons_lstm[k], activation=activation,return_sequences=True,))
                             model.add(Dropout(dropout))
                         else:
                             model.add(
@@ -419,7 +419,7 @@ class LSTM_model(DL):
                     if k == 0:
                         if mask == True:
                             model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                            model.add(LSTM(neurons_lstm[k], activation=activation))
+                            model.add(LSTM(neurons_lstm[k], activation=activation,return_sequences=True,))
                         else:
                             model.add(
                                 LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation=activation))
