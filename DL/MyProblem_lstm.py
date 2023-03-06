@@ -67,10 +67,10 @@ class MyProblem_lstm(ElementwiseProblem):
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :return: cv(rmse) and complexity of the model tested
         '''
-        name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, np.array([pacience]))))
+        name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, pacience)))
         try:
-            a0, a1 = dictionary[name1]
-            return a0, a1
+            a0, a1,a2 = dictionary[name1]
+            return a0, a1,a2
         except KeyError:
             pass
 
@@ -327,7 +327,7 @@ class MyProblem_lstm(ElementwiseProblem):
             dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
             print(res_final)
-            return res_final['cvs'], res_final['complexity']
+            return res_final['cvs'], res_final['complexity'], dictionary
 
     #
     @staticmethod
@@ -421,7 +421,7 @@ class MyProblem_lstm(ElementwiseProblem):
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
             self.contador, '\n ######################### \n #####################################')
 
-        f1, f2 = self.cv_opt(self.data,2,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
+        f1, f2, dictionary = self.cv_opt(self.data,2,1, n_lstm, n_dense, n_pacience, self.batch, self.med,self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
             self.contador, '\n ######################### \n #####################################')
