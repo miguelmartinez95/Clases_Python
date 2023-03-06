@@ -427,7 +427,9 @@ class MyProblem_lstm(ElementwiseProblem):
             self.contador, '\n ######################### \n #####################################')
 
 
-        if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in self.dictionary.keys():
+        print(dictionary.keys())
+        print('Option:', tuple(np.concatenate((n_lstm, n_dense, n_pacience))))
+        if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in dictionary.keys():
             self.contador[0] += 1
 
         print('F1:',f1)
