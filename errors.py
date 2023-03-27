@@ -99,7 +99,7 @@ class Eval_metrics:
             y_true = y_true.reshape(len(y_true), 1)
             y_pred = y_pred.reshape(len(y_pred), 1)
             nmbe = np.mean(y_true - y_pred) / mean
-        return (nmbe)
+        return(nmbe)
 
     def nmbe_daily(self,mean,times):
         '''
