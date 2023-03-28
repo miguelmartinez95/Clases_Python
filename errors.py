@@ -81,25 +81,29 @@ class Eval_metrics:
         if len(self.real.shape) > 1:
             if self.real.shape[1] >= 2:
                 nmbe = [0 for x in range(self.real.shape[1])]
+                sd = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
                     y_true = np.array(self.real[:,i])
                     y_pred = np.array(self.predict[:,i])
                     y_true = y_true.reshape(len(y_true), 1)
                     y_pred = y_pred.reshape(len(y_pred), 1)
                     nmbe[i] = np.mean(y_true - y_pred) / mean[i]
+                    sd[i] = np.std(y_true - y_pred)
             else:
                 y_true = np.array(self.real)
                 y_pred = np.array(self.predict)
                 y_true = y_true.reshape(len(y_true), 1)
                 y_pred = y_pred.reshape(len(y_pred), 1)
                 nmbe = np.mean(y_true - y_pred) / mean
+                sd = np.std(y_true - y_pred)
         else:
             y_true = np.array(self.real)
             y_pred = np.array(self.predict)
             y_true = y_true.reshape(len(y_true), 1)
             y_pred = y_pred.reshape(len(y_pred), 1)
             nmbe = np.mean(y_true - y_pred) / mean
-        return(nmbe)
+            sd = np.std(y_true - y_pred)
+        return(nmbe,sd)
 
     def nmbe_daily(self,mean,times):
         '''
