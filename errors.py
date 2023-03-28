@@ -88,21 +88,21 @@ class Eval_metrics:
                     y_true = y_true.reshape(len(y_true), 1)
                     y_pred = y_pred.reshape(len(y_pred), 1)
                     nmbe[i] = np.mean(y_true - y_pred) / mean[i]
-                    sd[i] = np.std(y_true - y_pred)
+                    sd[i] = np.std((y_true - y_pred) / mean[i])
             else:
                 y_true = np.array(self.real)
                 y_pred = np.array(self.predict)
                 y_true = y_true.reshape(len(y_true), 1)
                 y_pred = y_pred.reshape(len(y_pred), 1)
                 nmbe = np.mean(y_true - y_pred) / mean
-                sd = np.std(y_true - y_pred)
+                sd = np.std((y_true - y_pred)/ mean)
         else:
             y_true = np.array(self.real)
             y_pred = np.array(self.predict)
             y_true = y_true.reshape(len(y_true), 1)
             y_pred = y_pred.reshape(len(y_pred), 1)
             nmbe = np.mean(y_true - y_pred) / mean
-            sd = np.std(y_true - y_pred)
+            sd = np.std((y_true - y_pred)/ mean)
         return(nmbe,sd)
 
     def nmbe_daily(self,mean,times):
