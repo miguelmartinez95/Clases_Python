@@ -82,7 +82,7 @@ class SVM(ML):
         'WORK IN PROGRESS'
 
     @staticmethod
-    def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[]):
+    def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[],loss_plot=False,metric_plot=False):
         now = str(datetime.now().microsecond)
         print(data_train)
 
@@ -104,6 +104,25 @@ class SVM(ML):
         if save_model==True:
             name='mlp'+now+'.h5'
             model.save(name, save_format='h5')
+        if loss_plot==True:
+            plt.figure()
+            plt.plot(history.history['loss'])
+            plt.plot(history.history['val_loss'])
+            plt.title('')
+            plt.ylabel('Loss')
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
+        if not metric_plot==False:
+            plt.figure()
+            val_name = 'val_'+metric_plot
+            plt.plot(history.history[metric_plot])
+            plt.plot(history.history[val_name])
+            plt.title('')
+            plt.ylabel(metric_plot)
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
         res = {'model':model,  'history':history}
         return(res)
 

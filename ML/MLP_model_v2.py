@@ -675,7 +675,7 @@ class MLP(ML):
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
 
-    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[]):
+    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[],loss_plot=False,metric_plot=False):
         '''
         :param x_train: x to train
         :param x_test: x to early stopping
@@ -719,6 +719,27 @@ class MLP(ML):
         if save_model==True:
             name='mlp'+now+'.h5'
             model.save(name, save_format='h5')
+
+        if loss_plot==True:
+            plt.figure()
+            plt.plot(history.history['loss'])
+            plt.plot(history.history['val_loss'])
+            plt.title('')
+            plt.ylabel('Loss')
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
+        if not metric_plot==False:
+            plt.figure()
+            val_name = 'val_'+metric_plot
+            plt.plot(history.history[metric_plot])
+            plt.plot(history.history[val_name])
+            plt.title('')
+            plt.ylabel(metric_plot)
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
+
         res = {'model':model, 'times':times, 'history':history}
         return(res)
 

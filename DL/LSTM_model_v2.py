@@ -479,6 +479,7 @@ class LSTM_model(DL):
         history = model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
                            callbacks=[es, mc])
         if loss_plot==True:
+            plt.figure()
             plt.plot(history.history['loss'])
             plt.plot(history.history['val_loss'])
             plt.title('')
@@ -487,6 +488,7 @@ class LSTM_model(DL):
             plt.legend(['Train', 'Test'], loc='upper left')
             plt.show()
         if not metric_plot==False:
+            plt.figure()
             val_name = 'val_'+metric_plot
             plt.plot(history.history[metric_plot])
             plt.plot(history.history[val_name])
@@ -741,7 +743,7 @@ class LSTM_model(DL):
                     time_start = time()
                     if self.n_steps>1:
                         batch=1
-                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch, loss_plot,metric_plot)
+                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch)
                     times[zz] = round(time() - time_start, 3)
                     if isinstance(self.pos_y, collections.abc.Sized):
                         outputs = len(self.pos_y)
