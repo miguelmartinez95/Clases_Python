@@ -495,7 +495,7 @@ class LSTM_model(DL):
             plt.title('')
             plt.ylabel(metric_plot, fontsize=20)
             plt.xlabel('Epoch',fontsize=20)
-            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.legend(['Train', 'Test'], loc='upper right')
             plt.show()
 
         return model, history
