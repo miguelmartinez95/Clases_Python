@@ -490,13 +490,13 @@ class LSTM_model(DL):
         if not metric_plot==False:
             plt.figure()
             val_name = 'val_'+metric_plot
-            plt.plot(history.history[metric_plot])
-            plt.plot(history.history[val_name])
+            plt.plot(history.history[metric_plot],linewidth=2)
+            plt.plot(history.history[val_name],linewidth=2)
             plt.title('')
-            plt.ylabel(metric_plot, fontsize=19,labelpad=10)
-            plt.xlabel('Epoch',fontsize=19,labelpad=10)
-            plt.xticks(fontsize=15)
-            plt.yticks(fontsize=15)
+            plt.ylabel(metric_plot, fontsize=21,labelpad=13)
+            plt.xlabel('Epoch',fontsize=21,labelpad=13)
+            plt.xticks(fontsize=17)
+            plt.yticks(fontsize=17)
             plt.legend(['Train', 'Test'], loc='upper right', fontsize=19)
             plt.show()
 
