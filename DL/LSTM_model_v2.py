@@ -453,7 +453,7 @@ class LSTM_model(DL):
         return model
 
     @staticmethod
-    def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch, loss_plot, metric_plot=False):
+    def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch, loss_plot, metric_plot):
         '''
         :param
         train: train data set
@@ -481,19 +481,20 @@ class LSTM_model(DL):
         if loss_plot==True:
             plt.plot(history.history['loss'])
             plt.plot(history.history['val_loss'])
-            plt.title('model loss')
+            plt.title('')
             plt.ylabel('Loss')
             plt.xlabel('Epoch')
             plt.legend(['Train', 'Test'], loc='upper left')
             plt.show()
-#        if not metric_plot==False:
-#            plt.plot(history.history[metric_plot])
-#            plt.plot(history.history['val_loss'])
-#            plt.title('model loss')
-#            plt.ylabel('Loss')
-#            plt.xlabel('Epoch')
-#            plt.legend(['Train', 'Test'], loc='upper left')
-#            plt.show()
+        if not metric_plot==False:
+            val_name = 'val_'+metric_plot
+            plt.plot(history.history[metric_plot])
+            plt.plot(history.history[val_name])
+            plt.title('')
+            plt.ylabel(metric_plot)
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
 
         return model, history
 
@@ -740,7 +741,7 @@ class LSTM_model(DL):
                     time_start = time()
                     if self.n_steps>1:
                         batch=1
-                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch, loss_plot)
+                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch, loss_plot,metric_plot)
                     times[zz] = round(time() - time_start, 3)
                     if isinstance(self.pos_y, collections.abc.Sized):
                         outputs = len(self.pos_y)
@@ -1095,7 +1096,7 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False, testing=False):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=False, testing=False):
         '''
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         if model we have a pretrained model
@@ -1130,16 +1131,16 @@ class LSTM_model(DL):
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout,self.optimizer, self.learning_rate, self.activation)
                 time_start = time()
 
-                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot)
+                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot, metric_plot)
                 times = round(time() - time_start, 3)
             else:
                 model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout, self.optimizer, self.learning_rate, self.activation)
                 time_start = time()
-                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot)
+                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot,metric_plot)
                 times = round(time() - time_start, 3)
         else:
             time_start = time()
-            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,batch, loss_plot)
+            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,batch, loss_plot,metric_plot)
             times = round(time() - time_start, 3)
 
         if save_model==True:
