@@ -82,7 +82,7 @@ class SVM(ML):
         'WORK IN PROGRESS'
 
     @staticmethod
-    def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[],loss_plot=False,metric_plot=False):
+    def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[]):
         now = str(datetime.now().microsecond)
         print(data_train)
 
@@ -104,29 +104,11 @@ class SVM(ML):
         if save_model==True:
             name='mlp'+now+'.h5'
             model.save(name, save_format='h5')
-        if loss_plot==True:
-            plt.figure()
-            plt.plot(history.history['loss'])
-            plt.plot(history.history['val_loss'])
-            plt.title('')
-            plt.ylabel('Loss')
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
-            plt.show()
-        if not metric_plot==False:
-            plt.figure()
-            val_name = 'val_'+metric_plot
-            plt.plot(history.history[metric_plot])
-            plt.plot(history.history[val_name])
-            plt.title('')
-            plt.ylabel(metric_plot)
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
-            plt.show()
+
         res = {'model':model,  'history':history}
         return(res)
 
-    def predict(self, model,val,mean_y, times,plotting):
+    def predict(self, model,x_train,y_train,val,mean_y, times,times_train,plotting, overfitting_test = False):
         '''
         :param model: trained model
         :param x_val: x to predict
@@ -140,20 +122,29 @@ class SVM(ML):
 
         x_val=x_val.reset_index(drop=True)
         y_val=y_val.reset_index(drop=True)
+        y_train = y_train.reset_index(drop=True)
         y_pred = model.predict(pd.DataFrame(x_val))
+        #if overfitting_test == True:
+        y_pred_t = model.predict(x_train)
+
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
+        y_real_t = np.array(self.scalar_y.inverse_transform(y_train))
 
         if len(self.pos_y)>1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
                 y_pred[np.where(y_pred[:,t] > self.sup_limit[t])[0],t] = self.sup_limit[t]
+                y_pred_t[np.where(y_pred_t[:,t] < self.inf_limit[t])[0],t] = self.inf_limit[t]
+                y_pred_t[np.where(y_pred_t[:,t] > self.sup_limit[t])[0],t] = self.sup_limit[t]
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
         else:
             y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
             y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+            y_pred_t[np.where(y_pred_t < self.inf_limit)[0]] = self.inf_limit
+            y_pred_t[np.where(y_pred_t > self.sup_limit)[0]] = self.sup_limit
             y_predF = pd.DataFrame(y_pred.copy())
             y_realF = pd.DataFrame(y_real).copy()
 
@@ -163,75 +154,118 @@ class SVM(ML):
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
             res = super().fix_values_0(times,  self.zero_problem, self.limits)
+            res2 = super().fix_values_0(times_train,  self.zero_problem, self.limits)
             index_hour = res['indexes_out']
+            index_hourt = res2['indexes_out']
 
             if len(y_pred)<=1:
                 y_pred1= np.nan
                 y_real1=y_real
+                y_realt1=y_real_t
             else:
                 if len(index_hour) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_hour, 0)
+                    y_predt1 = np.delete(y_pred_t, index_hourt, 0)
                     y_real1 = np.delete(y_real, index_hour, 0)
+                    y_realt1 = np.delete(y_real_t, index_hourt, 0)
                 elif len(index_hour) > 0 and self.horizont > 0:
                     y_pred1 = np.delete(y_pred, index_hour - self.horizont, 0)
+                    y_predt1 = np.delete(y_pred_t, index_hourt - self.horizont, 0)
                     y_real1 = np.delete(y_real, index_hour - self.horizont, 0)
+                    y_realt1 = np.delete(y_real_t, index_hourt - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
+                    y_predt1 = y_pred_t
                     y_real1 = y_real
+                    y_realt1 = y_real_t
 
                 if self.mask == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 < self.inf_limit)[0]
+                        o2 = np.where(y_realt1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
+                        if len(o2) > 0:
+                            y_predt1 = np.delete(y_predt1, o2, 0)
+                            y_realt1 = np.delete(y_realt1, o2, 0)
                     else:
                         o = list()
+                        o2 = list()
                         for t in range(len(mean_y)):
                             o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+                            o2.append(np.where(y_realt1[:, t] < self.inf_limit[t])[0])
 
                         oT = np.unique(np.concatenate(o))
+                        oT2 = np.unique(np.concatenate(o2))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
+                        y_predt1 = np.delete(y_predt1, oT2, 0)
+                        y_realt1 = np.delete(y_realt1, oT2, 0)
 
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 == 0)[0]
+                        o2 = np.where(y_realt1 == 0)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
+                        if len(o2) > 0:
+                            y_predt1 = np.delete(y_predt1, o2, 0)
+                            y_realt1 = np.delete(y_realt1, o2, 0)
                     else:
                         o = list()
+                        o2 = list()
                         for t in range(len(mean_y)):
                             o.append(np.where(y_real1[:, t] == 0)[0])
+                            o2.append(np.where(y_realt1[:, t] == 0)[0])
 
                         oT = np.unique(np.concatenate(o))
+                        oT2 = np.unique(np.concatenate(o2))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
+                        y_predt1 = np.delete(y_predt1, oT2, 0)
+                        y_realt1 = np.delete(y_realt1, oT2, 0)
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
                         e = evals(y_pred1, y_real1).variation_rate()
+                        et = evals(y_predt1, y_realt1).variation_rate()
                         if isinstance(self.weights, list):
                             cv = np.mean(e)
+                            cvt = np.mean(et)
                         else:
                             cv = np.sum(e * self.weights)
+                            cvt = np.sum(et * self.weights)
                         rmse = np.nan
                         nmbe = np.nan
                     else:
                         e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        e_cvt = evals(y_predt1, y_realt1).cv_rmse(mean_y)
                         e_r = evals(y_pred1, y_real1).rmse()
+                        e_rt = evals(y_predt1, y_realt1).rmse()
                         e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                        e_nt = evals(y_predt1, y_realt1).nmbe(mean_y)
                         r2 = evals(y_pred1, y_real1).r2()
+
                         if isinstance(self.weights, list):
                             cv = np.mean(e_cv)
+                            cvt = np.mean(e_cvt)
                             rmse = np.mean(e_r)
+                            rmset = np.mean(e_rt)
                             nmbe = np.mean(e_n)
+                            nmbet = np.mean(e_nt)
                         else:
                             cv = np.sum(e_cv * self.weights)
+                            cvt = np.sum(e_cvt * self.weights)
                             rmse = np.sum(e_r * self.weights)
+                            rmset = np.sum(e_rt * self.weights)
                             nmbe = np.sum(e_n * self.weights)
+                            nmbet = np.sum(e_nt * self.weights)
+
+                    print('ERROR TRAINING CV, RMSE,NMBE:', [cvt,rmset, nmbet])
+                    print('ERROR TEST CV, RMSE,NMBE:', [cv,rmse, nmbe])
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
@@ -249,77 +283,122 @@ class SVM(ML):
             scalar_rad = scalar_x['radiation']
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
                                           self.zero_problem, self.limits)
+            res2 = super().fix_values_0(scalar_rad.inverse_transform(x_train.iloc[:, place]),
+                                          self.zero_problem, self.limits)
             index_rad = res['indexes_out']
+            index_radt = res2['indexes_out']
             index_rad2 = np.where(y_real <= self.inf_limit)[0]
+            index_rad2t = np.where(y_real_t <= self.inf_limit)[0]
             index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+            index_radt = np.union1d(np.array(index_radt), np.array(index_rad2t))
 
             if len(y_pred)<=1:
-                y_pred1 = np.nan
-                y_real1 = y_real
+                y_pred1= np.nan
+                y_real1=y_real
+                y_realt1=y_real_t
             else:
                 if len(index_rad) > 0 and self.horizont == 0:
                     y_pred1 = np.delete(y_pred, index_rad, 0)
+                    y_predt1 = np.delete(y_pred_t, index_radt, 0)
                     y_real1 = np.delete(y_real, index_rad, 0)
+                    y_realt1 = np.delete(y_real_t, index_radt, 0)
                 elif len(index_rad) > 0 and self.horizont > 0:
                     y_pred1 = np.delete(y_pred, np.array(index_rad) - self.horizont, 0)
+                    y_predt1 = np.delete(y_pred_t, np.array(index_radt) - self.horizont, 0)
                     y_real1 = np.delete(y_real, np.array(index_rad) - self.horizont, 0)
+                    y_realt1 = np.delete(y_real_t, np.array(index_radt) - self.horizont, 0)
                 else:
                     y_pred1 = y_pred
+                    y_predt1 = y_pred_t
                     y_real1 = y_real
+                    y_realt1 = y_real_t
 
                 if self.mask == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 < self.inf_limit)[0]
+                        o2 = np.where(y_realt1 < self.inf_limit)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
+                        if len(o2) > 0:
+                            y_predt1 = np.delete(y_predt1, o2, 0)
+                            y_realt1 = np.delete(y_realt1, o2, 0)
                     else:
                         o = list()
+                        o2 = list()
                         for t in range(len(mean_y)):
                             o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+                            o2.append(np.where(y_realt1[:, t] < self.inf_limit[t])[0])
 
                         oT = np.unique(np.concatenate(o))
+                        oT2 = np.unique(np.concatenate(o2))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
+                        y_predt1 = np.delete(y_predt1, oT2, 0)
+                        y_realt1 = np.delete(y_realt1, oT2, 0)
 
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 == 0)[0]
+                        o2 = np.where(y_realt1 == 0)[0]
                         if len(o) > 0:
                             y_pred1 = np.delete(y_pred1, o, 0)
                             y_real1 = np.delete(y_real1, o, 0)
+                        if len(o2) > 0:
+                            y_predt1 = np.delete(y_predt1, o2, 0)
+                            y_realt1 = np.delete(y_realt1, o2, 0)
                     else:
                         o = list()
+                        o2 = list()
                         for t in range(len(mean_y)):
                             o.append(np.where(y_real1[:, t] == 0)[0])
+                            o2.append(np.where(y_realt1[:, t] == 0)[0])
 
                         oT = np.unique(np.concatenate(o))
+                        oT2 = np.unique(np.concatenate(o2))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
+                        y_predt1 = np.delete(y_predt1, oT2, 0)
+                        y_realt1 = np.delete(y_realt1, oT2, 0)
 
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
                         e = evals(y_pred1, y_real1).variation_rate()
+                        et = evals(y_predt1, y_realt1).variation_rate()
                         if isinstance(self.weights, list):
                             cv = np.mean(e)
+                            cvt = np.mean(et)
                         else:
                             cv = np.sum(e * self.weights)
+                            cvt = np.sum(et * self.weights)
                         rmse = np.nan
                         nmbe = np.nan
                     else:
                         e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
+                        e_cvt = evals(y_predt1, y_realt1).cv_rmse(mean_y)
                         e_r = evals(y_pred1, y_real1).rmse()
+                        e_rt = evals(y_predt1, y_realt1).rmse()
                         e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                        e_nt = evals(y_predt1, y_realt1).nmbe(mean_y)
                         r2 = evals(y_pred1, y_real1).r2()
+
                         if isinstance(self.weights, list):
                             cv = np.mean(e_cv)
+                            cvt = np.mean(e_cvt)
                             rmse = np.mean(e_r)
+                            rmset = np.mean(e_rt)
                             nmbe = np.mean(e_n)
+                            nmbet = np.mean(e_nt)
                         else:
                             cv = np.sum(e_cv * self.weights)
+                            cvt = np.sum(e_cvt * self.weights)
                             rmse = np.sum(e_r * self.weights)
+                            rmset = np.sum(e_rt * self.weights)
                             nmbe = np.sum(e_n * self.weights)
+                            nmbet = np.sum(e_nt * self.weights)
+                    print('ERROR TRAINING CV, RMSE,NMBE:', [cvt,rmset, nmbet])
+                    print('ERROR TEST CV, RMSE,NMBE:', [cv,rmse, nmbe])
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
@@ -335,57 +414,90 @@ class SVM(ML):
             if self.mask == True and len(y_pred) > 0:
                 if mean_y.size == 0:
                     o = np.where(y_real < self.inf_limit)[0]
+                    o2 = np.where(y_real_t < self.inf_limit)[0]
                     if len(o) > 0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
+                    if len(o2) > 0:
+                        y_pred_t = np.delete(y_pred_t, o2, 0)
+                        y_real_t = np.delete(y_real_t, o2, 0)
                 else:
                     o = list()
+                    o2 = list()
                     for t in range(len(mean_y)):
                         o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+                        o2.append(np.where(y_real_t[:, t] < self.inf_limit[t])[0])
 
                     oT = np.unique(np.concatenate(o))
+                    oT2 = np.unique(np.concatenate(o2))
                     y_pred = np.delete(y_pred, oT, 0)
+                    y_pred_t = np.delete(y_pred_t, oT2, 0)
                     y_real = np.delete(y_real, oT, 0)
+                    y_real_t = np.delete(y_real_t, oT2, 0)
 
             if self.extract_cero == True and len(y_pred) > 0:
                 if mean_y.size == 0:
                     o = np.where(y_real == 0)[0]
+                    o2 = np.where(y_real_t == 0)[0]
                     if len(o) > 0:
                         y_pred = np.delete(y_pred, o, 0)
                         y_real = np.delete(y_real, o, 0)
+                    if len(o2) > 0:
+                        y_pred_t = np.delete(y_pred_t, o2, 0)
+                        y_real_t = np.delete(y_real_t, o2, 0)
                 else:
                     o = list()
+                    o2 = list()
                     for t in range(len(mean_y)):
                         o.append(np.where(y_real[:, t] == 0)[0])
+                        o2.append(np.where(y_real_t[:, t] == 0)[0])
 
                     oT = np.unique(np.concatenate(o))
+                    oT2 = np.unique(np.concatenate(o2))
                     y_pred = np.delete(y_pred, oT, 0)
+                    y_pred_t = np.delete(y_pred_t, oT2, 0)
                     y_real = np.delete(y_real, oT, 0)
+                    y_real_t = np.delete(y_real_t, oT2, 0)
 
             if len(y_pred)>1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     if mean_y.size == 0:
                         e = evals(y_pred, y_real).variation_rate()
+                        et = evals(y_pred_t, y_real_t).variation_rate()
                         if isinstance(self.weights, list):
                             cv = np.mean(e)
+                            cvt = np.mean(et)
                         else:
                             cv = np.sum(e * self.weights)
+                            cvt = np.sum(et * self.weights)
                         rmse = np.nan
                         nmbe = np.nan
                         r2 = np.nan
                     else:
                         e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
+                        e_cvt = evals(y_pred_t, y_real_t).cv_rmse(mean_y)
                         e_r = evals(y_pred, y_real).rmse()
+                        e_rt = evals(y_pred_t, y_real_t).rmse()
                         e_n = evals(y_pred, y_real).nmbe(mean_y)
+                        e_nt = evals(y_pred_t, y_real_t).nmbe(mean_y)
                         r2 = evals(y_pred, y_real).r2()
                         if isinstance(self.weights, list):
                             cv = np.mean(e_cv)
+                            cvt = np.mean(e_cvt)
                             rmse = np.mean(e_r)
+                            rmset = np.mean(e_rt)
                             nmbe = np.mean(e_n)
+                            nmbet = np.mean(e_nt)
                         else:
                             cv = np.sum(e_cv * self.weights)
+                            cvt = np.sum(e_cvt * self.weights)
                             rmse = np.sum(e_r * self.weights)
+                            rmset = np.sum(e_rt * self.weights)
                             nmbe = np.sum(e_n * self.weights)
+                            nmbet = np.sum(e_nt * self.weights)
+
+                    print('ERROR TRAINING CV, RMSE,NMBE:', [cvt,rmset, nmbet])
+                    print('ERROR TEST CV, RMSE,NMBE:', [cv,rmse, nmbe])
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
