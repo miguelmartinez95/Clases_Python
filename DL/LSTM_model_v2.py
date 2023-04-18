@@ -493,15 +493,15 @@ class LSTM_model(DL):
             plt.plot(history.history[metric_plot],linewidth=2)
             plt.plot(history.history[val_name],linewidth=2)
             plt.title('')
-            plt.ylabel(metric_plot, fontsize=36,labelpad=13)
-            plt.xlabel('Epoch',fontsize=31,labelpad=13)
-            plt.xticks(fontsize=28)
-            plt.yticks(fontsize=28)
-            leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=30)
+            plt.ylabel(metric_plot, fontsize=40,labelpad=13)
+            plt.xlabel('Epoch',fontsize=31,labelpad=16)
+            plt.xticks(fontsize=31)
+            plt.yticks(fontsize=31)
+            leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=33)
             for line in leg.get_lines():
                 line.set_linewidth(5.0)
-            plt.tight_layout()
             plt.show()
+            plt.tight_layout()
 
         return model, history
 
