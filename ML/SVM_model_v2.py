@@ -91,10 +91,10 @@ class SVM(ML):
 
         if isinstance(model, list):
             if len(pos_y)>1:
-                model=MultiOutputRegressor(svm.LinearSVR(random_state=None, dual=False, C=C, tol=tol, epsilon=epsilon)
+                model=MultiOutputRegressor(svm.LinearSVR(random_state=None, dual=False, loss='squared_epsilon_insensitive',C=C, tol=tol, epsilon=epsilon)
 )
             else:
-                model = svm.LinearSVR(random_state=None, dual=False, C=C, tol=tol, epsilon=epsilon)
+                model = svm.LinearSVR(random_state=None, dual=False,loss='squared_epsilon_insensitive', C=C, tol=tol, epsilon=epsilon)
         else:
             model = model
 
