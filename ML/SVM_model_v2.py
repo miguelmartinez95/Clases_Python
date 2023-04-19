@@ -108,7 +108,7 @@ class SVM(ML):
         res = {'model':model,  'history':history}
         return(res)
 
-    def predict(self, model,x_train,y_train,val,mean_y, times,times_train,plotting, overfitting_test = False):
+    def predict(self, model,train,val,mean_y, times,times_train,plotting):
         '''
         :param model: trained model
         :param x_val: x to predict
@@ -117,6 +117,8 @@ class SVM(ML):
         :return: predictions with the errors depending of zero_problem
         '''
 
+        y_train = train.iloc[:,self.pos_y]
+        x_train = train.drop(val.columns[self.pos_y], axis=1)
         y_val = val.iloc[:,self.pos_y]
         x_val = val.drop(val.columns[self.pos_y], axis=1)
 
@@ -124,7 +126,6 @@ class SVM(ML):
         y_val=y_val.reset_index(drop=True)
         y_train = y_train.reset_index(drop=True)
         y_pred = model.predict(pd.DataFrame(x_val))
-        #if overfitting_test == True:
         y_pred_t = model.predict(x_train)
 
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
