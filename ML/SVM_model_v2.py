@@ -84,7 +84,6 @@ class SVM(ML):
     @staticmethod
     def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[]):
         now = str(datetime.now().microsecond)
-        print(data_train)
 
         data_train = pd.DataFrame(data_train)
         x_train = data_train.drop(data_train.columns[pos_y], axis=1)
@@ -92,10 +91,10 @@ class SVM(ML):
 
         if isinstance(model, list):
             if len(pos_y)>1:
-                model=MultiOutputRegressor(svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
+                model=MultiOutputRegressor(svm.LinearSVR(random_state=None, dual=False, C=C, tol=tol, epsilon=epsilon)
 )
             else:
-                model = svm.LinearSVR(random_state=None, dual=True, C=C, tol=tol, epsilon=epsilon)
+                model = svm.LinearSVR(random_state=None, dual=False, C=C, tol=tol, epsilon=epsilon)
         else:
             model = model
 
