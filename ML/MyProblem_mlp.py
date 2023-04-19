@@ -322,7 +322,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
 
-            complexity = MLP.complex_mlp(neurons, 2000, 8)
+            complexity = self.model.complex_mlp(neurons, 2000, 8)
             dictionary[name1] = np.mean(cvs), complexity
             print(dictionary[name1])
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}

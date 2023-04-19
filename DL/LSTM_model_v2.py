@@ -487,7 +487,7 @@ class LSTM_model(DL):
             plt.xlabel('Epoch')
             plt.legend(['Train', 'Test'], loc='upper left')
             plt.show()
-        if not metric_plot==False:
+        if not metric_plot[0]==False:
             plt.figure(figsize=(12,9))
             val_name = 'val_'+metric_plot
             plt.plot(history.history[metric_plot],linewidth=2)
@@ -500,6 +500,7 @@ class LSTM_model(DL):
             leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=36)
             for line in leg.get_lines():
                 line.set_linewidth(5.0)
+            plt.title(metric_plot[1])
             plt.show()
             plt.tight_layout()
 
@@ -1103,7 +1104,7 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=False, testing=False):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=[False,False], testing=False):
         '''
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         if model we have a pretrained model
