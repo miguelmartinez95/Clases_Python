@@ -118,12 +118,14 @@ class SVM(ML):
         '''
 
         y_train = train.iloc[:,self.pos_y]
-        x_train = train.drop(val.columns[self.pos_y], axis=1)
+        x_train = train.drop(train.columns[self.pos_y], axis=1)
         y_val = val.iloc[:,self.pos_y]
         x_val = val.drop(val.columns[self.pos_y], axis=1)
 
         x_val=x_val.reset_index(drop=True)
         y_val=y_val.reset_index(drop=True)
+        x_train=x_train.reset_index(drop=True)
+        y_train=y_train.reset_index(drop=True)
         y_train = y_train.reset_index(drop=True)
         y_pred = model.predict(pd.DataFrame(x_val))
         y_pred_t = model.predict(pd.DataFrame(x_train))
