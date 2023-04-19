@@ -500,7 +500,7 @@ class LSTM_model(DL):
             leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=36)
             for line in leg.get_lines():
                 line.set_linewidth(5.0)
-            plt.title(str(metric_plot[1]))
+            plt.title(str(metric_plot[1]), fontsize=40)
             plt.show()
             plt.tight_layout()
 
