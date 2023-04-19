@@ -729,16 +729,22 @@ class MLP(ML):
             plt.xlabel('Epoch')
             plt.legend(['Train', 'Test'], loc='upper left')
             plt.show()
-        if not metric_plot==False:
-            plt.figure()
-            val_name = 'val_'+metric_plot
-            plt.plot(history.history[metric_plot])
-            plt.plot(history.history[val_name])
+        if not metric_plot[0]==False:
+            plt.figure(figsize=(12,9))
+            val_name = 'val_'+ str(metric_plot[0])
+            plt.plot(history.history[str(metric_plot[0])],linewidth=2)
+            plt.plot(history.history[val_name],linewidth=2)
             plt.title('')
-            plt.ylabel(metric_plot)
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.ylabel(str(metric_plot[0]), fontsize=47,labelpad=13)
+            plt.xlabel('Epoch',fontsize=38,labelpad=16)
+            plt.xticks(fontsize=35)
+            plt.yticks(fontsize=35)
+            leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=36)
+            for line in leg.get_lines():
+                line.set_linewidth(5.0)
+            plt.title(str(metric_plot[1]), fontsize=50)
             plt.show()
+            plt.tight_layout()
 
         res = {'model':model, 'times':times, 'history':history}
         return(res)
