@@ -675,7 +675,7 @@ class MLP(ML):
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
 
-    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[],loss_plot=False,metric_plot=False):
+    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[],loss_plot=False,metric_plot=[False,False]):
         '''
         :param x_train: x to train
         :param x_test: x to early stopping
