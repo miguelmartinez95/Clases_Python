@@ -161,6 +161,7 @@ class SVM(ML):
 
             if len(y_pred)<=1:
                 y_pred1= np.nan
+                y_predt1=np.nan
                 y_real1=y_real
                 y_realt1=y_real_t
             else:
