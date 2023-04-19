@@ -126,7 +126,7 @@ class SVM(ML):
         y_val=y_val.reset_index(drop=True)
         y_train = y_train.reset_index(drop=True)
         y_pred = model.predict(pd.DataFrame(x_val))
-        y_pred_t = model.predict(x_train)
+        y_pred_t = model.predict(pd.DataFrame(x_train))
 
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
