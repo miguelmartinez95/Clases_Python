@@ -164,7 +164,7 @@ class MLP(ML):
             # The Output Layer :
             ANN_model.add(Dense(n_steps, kernel_initializer='normal', activation='linear'))
             # Compile the network :
-            ANN_model.compile(loss='mse', optimizer=optimizer, metrics=['mean_squared_error'])
+            ANN_model.compile(loss='mse', optimizer=optimizer, metrics=['mse'])
             K.set_value(ANN_model.optimizer.learning_rate, learning_rate)
             # ANN_model.summary()
             return(ANN_model)
