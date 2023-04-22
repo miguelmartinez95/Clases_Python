@@ -55,8 +55,8 @@ class MyThresholdCallback(tf.keras.callbacks.Callback):
         super(MyThresholdCallback, self).__init__()
         self.threshold = threshold
     def on_epoch_end(self, epoch, logs=None):
-        val_acc = logs["val_acc"]
-        if val_acc >= self.threshold:
+        val_loss = logs["mse"]
+        if val_loss >= self.threshold:
             self.model.stop_training = True
 
 class LSTM_model(DL):
