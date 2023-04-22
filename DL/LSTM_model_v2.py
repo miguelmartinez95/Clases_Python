@@ -4,6 +4,16 @@ print('importa bien')
 from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
+import keras
+class MyThresholdCallback(keras.callbacks.Callback):
+    def __init__(self, threshold):
+        super(MyThresholdCallback, self).__init__()
+        self.threshold = threshold
+    def on_epoch_end(self, epoch, logs=None):
+        val_loss = logs["va_mse"]
+        if val_loss <= self.threshold:
+            self.model.stop_training = True
+
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping
@@ -50,14 +60,7 @@ if gpus:
   except RuntimeError as e:
     print(e)
 
-class MyThresholdCallback(tf.keras.callbacks.Callback):
-    def __init__(self, threshold):
-        super(MyThresholdCallback, self).__init__()
-        self.threshold = threshold
-    def on_epoch_end(self, epoch, logs=None):
-        val_loss = logs["mse"]
-        if val_loss >= self.threshold:
-            self.model.stop_training = True
+
 
 class LSTM_model(DL):
     def info(self):
