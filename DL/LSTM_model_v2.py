@@ -10,7 +10,7 @@ class MyThresholdCallback(keras.callbacks.Callback):
         super(MyThresholdCallback, self).__init__()
         self.threshold = threshold
     def on_epoch_end(self, epoch, logs=None):
-        val_loss = logs["va_mse"]
+        val_loss = logs["val_mse"]
         if val_loss <= self.threshold:
             self.model.stop_training = True
 
