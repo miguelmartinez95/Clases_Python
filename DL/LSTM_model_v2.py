@@ -50,6 +50,14 @@ if gpus:
   except RuntimeError as e:
     print(e)
 
+class MyThresholdCallback(tf.keras.callbacks.Callback):
+    def __init__(self, threshold):
+        super(MyThresholdCallback, self).__init__()
+        self.threshold = threshold
+    def on_epoch_end(self, epoch, logs=None):
+        val_acc = logs["val_acc"]
+        if val_acc >= self.threshold:
+            self.model.stop_training = True
 
 class LSTM_model(DL):
     def info(self):
@@ -453,7 +461,7 @@ class LSTM_model(DL):
         return model
 
     @staticmethod
-    def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch, loss_plot, metric_plot):
+    def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch, loss_plot, metric_plot, limite):
         '''
         :param
         train: train data set
@@ -473,11 +481,17 @@ class LSTM_model(DL):
         h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
 
         # Checkpoitn callback
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-        mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
-        # Train the model
-        history = model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
+        if limite==False:
+            es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+            mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            # Train the model
+            history = model.fit(train_x1, train_y1, epochs=2000, validation_data=(test_x1, test_y1), batch_size=batch,
                            callbacks=[es, mc])
+        else:
+            my_callback= MyThresholdCallback(threshold=limite)
+            history = model.fit(train_x1, train_y1, epochs=200, validation_data=(test_x1, test_y1), batch_size=batch,
+                           callbacks=[my_callback])
+
         if loss_plot==True:
             plt.figure()
             plt.plot(history.history['loss'])
@@ -675,7 +689,7 @@ class LSTM_model(DL):
         res = {'x_test': X_test, 'x_train': X_train, 'x_val':X_val, 'y_test': Y_test, 'y_train': Y_train, 'y_val':Y_val,  'time_val':times_val}
         return res
 
-    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,values,plot, q=[], model=[]):
+    def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,values,plot,loss_plot=False,metric_plot=[False,False],limite=False, q=[], model=[]):
         '''
         :param fold: the assumed size of divisions
         :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
@@ -749,7 +763,7 @@ class LSTM_model(DL):
                     time_start = time()
                     if self.n_steps>1:
                         batch=1
-                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch)
+                    modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch,loss_plot, metric_plot, limite)
                     times[zz] = round(time() - time_start, 3)
                     if isinstance(self.pos_y, collections.abc.Sized):
                         outputs = len(self.pos_y)
@@ -1104,7 +1118,7 @@ class LSTM_model(DL):
         ###################################################################################################
 
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=[False,False], testing=False):
+    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=[False,False],limite=False, testing=False):
         '''
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         if model we have a pretrained model
@@ -1139,16 +1153,16 @@ class LSTM_model(DL):
                 model = self.__class__.built_model_regression(x_train, y_train,neurons_lstm, neurons_dense, self.mask, self.mask_value, self.repeat_vector, self.dropout,self.optimizer, self.learning_rate, self.activation)
                 time_start = time()
 
-                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot, metric_plot)
+                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot, metric_plot,limite)
                 times = round(time() - time_start, 3)
             else:
                 model = self.__class__.built_model_classification(x_train, y_train,neurons_lstm, neurons_dense,self.mask, self.mask_value, self.repeat_vector, self.dropout, self.optimizer, self.learning_rate, self.activation)
                 time_start = time()
-                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot,metric_plot)
+                model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience, batch, loss_plot,metric_plot,limite)
                 times = round(time() - time_start, 3)
         else:
             time_start = time()
-            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,batch, loss_plot,metric_plot)
+            model_trained, history = self.__class__.train_model(model, x_train, y_train, x_test, y_test, pacience,batch, loss_plot,metric_plot,limite)
             times = round(time() - time_start, 3)
 
         if save_model==True:
