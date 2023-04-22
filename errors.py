@@ -23,6 +23,17 @@ class Eval_metrics:
     #def cv_rmse(self, mean):
     #    cv = 100 * (np.sqrt(metrics.mean_squared_error(self.real, self.predict)) / mean)
     #    return(cv)
+    def mae(self):
+        if len(self.real.shape) > 1:
+            if self.real.shape[1] >= 2:
+                mae = [0 for x in range(self.real.shape[1])]
+                for i in range(self.real.shape[1]):
+                    mae[i] = 100 * (metrics.mean_absolute_error(self.real[:, i], self.predict[:, i]))
+            else:
+                mae = 100*metrics.mean_absolute_error(self.real, self.predict)
+        else:
+            mae = 100 * metrics.mean_squared_error(self.real, self.predict)
+        return(mae)
 
     def cv_rmse(self, mean):
         if len(self.real.shape) > 1:
@@ -57,7 +68,7 @@ class Eval_metrics:
             if self.real.shape[1] >= 2:
                 rmse = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
-                    rmse[i] = 100 * (np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i])))
+                    rmse[i] = np.sqrt(metrics.mean_squared_error(self.real[:, i], self.predict[:, i]))
             else:
                 rmse = np.sqrt(metrics.mean_squared_error(self.real, self.predict))
         else:
