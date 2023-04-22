@@ -492,6 +492,7 @@ class LSTM_model(DL):
             history = model.fit(train_x1, train_y1, epochs=200, validation_data=(test_x1, test_y1), batch_size=batch,
                            callbacks=[my_callback])
 
+
         if loss_plot==True:
             plt.figure()
             plt.plot(history.history['loss'])
