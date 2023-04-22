@@ -1145,7 +1145,7 @@ class LSTM_model(DL):
         print(y_test.shape)
         if self.n_steps > 1:
             batch = 1
-        elif self.n_steps==1 and len(self.pos_y)==1:
+        elif self.n_steps==1 and not isinstance(self.pos_y, collections.abc.Sized):
             y_train = y_train.reshape(-1,1)
             y_test = y_test.reshape(-1,1)
 
