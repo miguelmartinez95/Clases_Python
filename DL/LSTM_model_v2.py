@@ -1318,7 +1318,7 @@ class LSTM_model(DL):
                         r2 = evals(y_pred1, y_real1).r2()
                         cv = np.mean(cv)
                         nmbe=np.mean(nmbe)
-                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'std_cv': std_cv, 'nmbe': nmbe,'std_nmbe': std_nmbe, 'rmse': rmse,'std_rmse': std_rmse, 'r2': r2}
+                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'std_cv': std_cv, 'nmbe': nmbe,'mae':np.nan, 'std_mae':np.nan,'std_nmbe': std_nmbe, 'rmse': rmse,'std_rmse': std_rmse, 'r2': r2}
                     else:
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
@@ -1334,17 +1334,20 @@ class LSTM_model(DL):
                             e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             e_r = evals(y_pred1, y_real1).rmse()
                             e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                            e_mae = evals(y_pred1, y_real1).mae()
                             r2 = evals(y_pred1, y_real1).r2()
                             if isinstance(self.weights, list):
                                 cv = np.mean(e_cv)
                                 rmse = np.mean(e_r)
                                 nmbe = np.mean(e_n)
+                                mae = np.mean(e_mae)
                             else:
                                 cv= np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
                                 nmbe= np.sum(e_n * self.weights)
+                                mae= np.sum(e_mae * self.weights)
 
-                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
+                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'mae':mae, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2, 'ind_out':i_out}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1439,16 +1442,19 @@ class LSTM_model(DL):
                             e_cv = evals(y_pred1, y_real1).cv_rmse(mean_y)
                             e_r = evals(y_pred1, y_real1).rmse()
                             e_n = evals(y_pred1, y_real1).nmbe(mean_y)
+                            e_mae = evals(y_pred1, y_real1).mae()
                             r2 = evals(y_pred1, y_real1).r2()
                             if isinstance(self.weights, list):
                                 cv = np.mean(e_cv)
                                 rmse = np.mean(e_r)
                                 nmbe = np.mean(e_n)
+                                mae=np.mean(e_mae)
                             else:
                                 cv = np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
                                 nmbe = np.sum(e_n * self.weights)
-                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
+                                mae = np.sum(e_mae * self.weights)
+                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'mae':mae, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2,'ind_out':i_out}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1517,16 +1523,19 @@ class LSTM_model(DL):
                             e_cv = evals(y_pred, y_real).cv_rmse(mean_y)
                             e_r = evals(y_pred, y_real).rmse()
                             e_n = evals(y_pred, y_real).nmbe(mean_y)
+                            e_mae = evals(y_pred, y_real).mae()
                             r2 = evals(y_pred, y_real).r2()
                             if isinstance(self.weights, list):
                                 cv = np.mean(e_cv)
                                 rmse = np.mean(e_r)
                                 nmbe = np.mean(e_n)
+                                mae = np.mean(e_mae)
                             else:
                                 cv = np.sum(e_cv * self.weights)
                                 rmse = np.sum(e_r * self.weights)
                                 nmbe = np.sum(e_n * self.weights)
-                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
+                                mae = np.sum(e_mae * self.weights)
+                        res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'mae':mae, 'nmbe': nmbe,
                                'rmse': rmse, 'r2': r2,'ind_out':i_out}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
@@ -1534,7 +1543,8 @@ class LSTM_model(DL):
                     nmbe = 9999
                     rmse = 9999
                     r2 = -9999
-                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
+                    mae=99999
+                    res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'mae':mae, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2,'ind_out':i_out}
             else:
                 raise NameError('Empty prediction')

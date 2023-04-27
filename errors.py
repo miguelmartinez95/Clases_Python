@@ -32,7 +32,7 @@ class Eval_metrics:
             else:
                 mae = 100*metrics.mean_absolute_error(self.real, self.predict)
         else:
-            mae = 100 * metrics.mean_squared_error(self.real, self.predict)
+            mae = 100 * metrics.mean_absolute_error(self.real, self.predict)
         return(mae)
 
     def cv_rmse(self, mean):
