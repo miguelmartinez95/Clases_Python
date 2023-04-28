@@ -28,11 +28,11 @@ class Eval_metrics:
             if self.real.shape[1] >= 2:
                 mae = [0 for x in range(self.real.shape[1])]
                 for i in range(self.real.shape[1]):
-                    mae[i] = 100 * (metrics.mean_absolute_error(self.real[:, i], self.predict[:, i]))
+                    mae[i] = (metrics.mean_absolute_error(self.real[:, i], self.predict[:, i]))
             else:
-                mae = 100*metrics.mean_absolute_error(self.real, self.predict)
+                mae = metrics.mean_absolute_error(self.real, self.predict)
         else:
-            mae = 100 * metrics.mean_absolute_error(self.real, self.predict)
+            mae = metrics.mean_absolute_error(self.real, self.predict)
         return(mae)
 
     def cv_rmse(self, mean):
