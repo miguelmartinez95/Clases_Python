@@ -234,12 +234,12 @@ class DL:
                 if len(sup) > 0:
                     self.data.iloc[sup, self.pos_y[t]] = np.repeat(self.sup_limit[t], len(sup))
         else:
-            inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit)[0]
-            sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit)[0]
+            inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit[0])[0]
+            sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit[0])[0]
             if len(inf)>0:
-                self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit, len(inf))
+                self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit[0], len(inf))
             if len(sup)>0:
-                self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
+                self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit[0], len(sup))
 
     def adapt_horizont(self, onebyone):
         '''
