@@ -72,7 +72,7 @@ class LSTM_model(DL):
         randomly. This means that their contribution to the activation of downstream neurons is temporally removed.
         type: regression or classification
         weights: weights for the outputs. mainly for multivriate output
-        n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered)
+        n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered) how much estimations want to do in line
         '''
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type,
@@ -193,7 +193,6 @@ class LSTM_model(DL):
         if onebyone[0]==True:
             #if n_steps==1:
             for _ in range(len(data)-(n_lags + horizont+(n_steps-1))):
-                #timesF.append(data.index[_ + n_lags-1+horizont])
                 if n_steps>1:
                     timesF.append(data.index[range(_ + n_lags+horizont,_ + n_lags+horizont+n_steps-1)])
                 else:
@@ -207,21 +206,13 @@ class LSTM_model(DL):
                 if (out_end-1+(n_steps))<= len(data):
                     x_input = xx.iloc[in_start:in_end,:]
                     X.append(x_input)
-                    #if horizont==0:
                     if n_steps==1:
                         y.append(yy.iloc[out_end-1])
                     else:
                         y.append(yy.iloc[range(out_end-1,out_end-1+(n_steps-1))])
-                    #else:
-                    #    y.append(yy.iloc[#out_end])
-                    #se selecciona uno
                 # move along one time step
                 in_start += 1
             dd=len(data)-len(data)-(n_lags + horizont)+1
-            #else:
-            #    print('With n_steps > 1 it is not feasible go 1 by 1')
-            #    raise NameError('Problems with n_steps and onebyone')
-
         else:
             if onebyone[1]==True:
                 while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
@@ -239,12 +230,6 @@ class LSTM_model(DL):
                     if out_end <= len(data):
                         x_input = xx.iloc[in_start:in_end, :]
                         X.append(x_input)
-                        #if horizont == 0 and n_steps == 1:
-                        #    y.append(yy.iloc[out_end - 1])
-                        #elif horizont == 0 and n_steps > 1:
-                        #    y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
-                        #else:
-                        #    y.append(yy.iloc[in_end:out_end])
                         if n_steps == 1:
                             y.append(yy.iloc[out_end - 1])
                         else:
@@ -271,12 +256,6 @@ class LSTM_model(DL):
                     if out_end <= len(data):
                         x_input = xx.iloc[in_start:in_end, :]
                         X.append(x_input)
-                        #if horizont == 0 and n_steps == 1:
-                        #    y.append(yy.iloc[out_end - 1])
-                        #elif horizont == 0 and n_steps > 1:
-                        #    y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
-                        #else:
-                        #    y.append(yy.iloc[in_end:out_end])
                         if n_steps == 1:
                             y.append(yy.iloc[out_end - 1])
                         else:
@@ -750,8 +729,6 @@ class LSTM_model(DL):
             reales = []
             for z in range(stop):
             # Train the model
-
-            #for z in range(len(x_train)):
                 print('Fold number', z)
                 for zz2 in range(rep):
                     if len(y_train[z].shape) > 1:
@@ -778,19 +755,6 @@ class LSTM_model(DL):
 
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                     y_real = np.array(self.scalar_y.inverse_transform(yval))
-                    #for t in range(y_pred.shape[1]):
-                    #    inf = np.where(y_pred[:,t] < self.inf_limit[t])[0]
-                    #    upp = np.where(y_pred[:,t] > self.sup_limit[t])[0]
-                    #    if len(inf) > 0:
-                    #        y_pred[inf, t] = self.inf_limit[t]
-                    #    if len(upp) > 0:
-                    #        y_pred[upp, t] = self.sup_limit[t]
-#
-                    #if len(y_val[z].shape)>1:
-                    #    y_real = yval
-                    #else:
-                    #    y_real = y_val[z].reshape((y_val[z].shape[0] * y_val[z].shape[1], 1))
-                    #y_real = np.array(self.scalar_y.inverse_transform(y_real))
                     if isinstance(self.pos_y, collections.abc.Sized):
                         for t in range(len(self.pos_y)):
                             y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = np.repeat(self.inf_limit[t], len(
@@ -902,9 +866,9 @@ class LSTM_model(DL):
                                 y_pred1 = np.delete(y_pred1, oT, 0)
                                 y_real1 = np.delete(y_real1, oT, 0)
 
-                        #After  checking we have data to evaluate:
+                        '''After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
-                        # on the other hand, we compute the classic error metrics
+                        # on the other hand, we compute the classic error metrics'''
 
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
@@ -997,9 +961,9 @@ class LSTM_model(DL):
                                 y_pred1 = np.delete(y_pred1, oT, 0)
                                 y_real1 = np.delete(y_real1, oT, 0)
 
-                        #After  checking we have data to evaluate:
+                        '''After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
-                        # on the other hand, we compute the classic error metrics
+                        # on the other hand, we compute the classic error metrics'''
 
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
@@ -1065,9 +1029,9 @@ class LSTM_model(DL):
                                 y_pred = np.delete(y_pred, oT, 0)
                                 y_real = np.delete(y_real, oT, 0)
 
-                        #After  checking we have data to evaluate:
+                        '''After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
-                        # on the other hand, we compute the classic error metrics
+                        # on the other hand, we compute the classic error metrics'''
 
                         if len(y_pred) > 0:
                             if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0 and len(y_pred)>0 and len(y_real)>0:
