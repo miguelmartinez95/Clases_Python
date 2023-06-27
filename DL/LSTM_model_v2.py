@@ -18,14 +18,12 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
-from time import time
 from keras.layers import LSTM
 from keras.layers import Masking
 from keras.layers import RepeatVector
 from keras.layers import Dropout
 from keras.constraints import maxnorm
 import time
-#import skfda
 import math
 import multiprocessing
 from multiprocessing import Process,Manager,Queue
@@ -59,7 +57,6 @@ if gpus:
         gpus[0],[tf.config.experimental.VirtualDeviceConfiguration(memory_limit=5120)])
   except RuntimeError as e:
     print(e)
-
 
 
 class LSTM_model(DL):
@@ -99,9 +96,7 @@ class LSTM_model(DL):
             neurons_lstm = neurons_lstm[neurons_lstm > 0]
         if any(neurons_dense == 0):
             neurons_dense = neurons_dense[neurons_dense > 0]
-
         u = len(neurons_lstm) + len(neurons_dense)
-
         F = 0.25 * (u / max_H) + 0.75 * np.sum(np.concatenate((neurons_lstm, neurons_dense))) / max_N
 
         return F
@@ -158,13 +153,11 @@ class LSTM_model(DL):
        ind_out = 0
        while rest2 != 0:
            test = test.drop(test.index[0], axis=0)
+           index_test = np.delete(index_test,0 , axis=0)
            rest2 = test.shape[0] % n_inputs
            ind_out+=1
 
        ###################################################################################
-       if ind_out>0:
-            index_test=np.delete(index_test, range(ind_out), axis=0)
-
        # restructure into windows of  data
        train1 = np.array(np.split(train, len(train) / n_inputs))
        test1 = np.array(np.split(test, len(test) / n_inputs))
