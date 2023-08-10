@@ -475,7 +475,7 @@ class LSTM_model(DL):
             plt.title('')
             plt.ylabel('Loss')
             plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.legend(['Train', 'Val'], loc='upper left')
             plt.show()
         if not metric_plot[0]==False:
             plt.figure(figsize=(12,9))
@@ -487,7 +487,7 @@ class LSTM_model(DL):
             plt.xlabel('Epoch',fontsize=38,labelpad=16)
             plt.xticks(fontsize=35)
             plt.yticks(fontsize=35)
-            leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=36)
+            leg=plt.legend(['Train', 'Val'], loc='upper right', fontsize=36)
             for line in leg.get_lines():
                 line.set_linewidth(5.0)
             plt.title(str(metric_plot[1]), fontsize=50)

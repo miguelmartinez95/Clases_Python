@@ -100,7 +100,6 @@ class MLP(ML):
                 ANN_model.add(Masking(mask_value=mask_value, input_shape=np.array([inputs])))
                 ANN_model.add(Dense(inputs,kernel_initializer='normal', input_dim=inputs,
                                 activation=activation))
-                ANN_model.add(Dropout(dropout))
             elif mask==False and dropout>0:
                 ANN_model.add(Dense(inputs, kernel_initializer='normal', input_dim=inputs,
                                 activation=activation))
@@ -727,7 +726,7 @@ class MLP(ML):
             plt.title('')
             plt.ylabel('Loss')
             plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.legend(['Train', 'Val'], loc='upper left')
             plt.show()
         if not metric_plot[0]==False:
             plt.figure(figsize=(12,9))
@@ -739,7 +738,7 @@ class MLP(ML):
             plt.xlabel('Epoch',fontsize=38,labelpad=16)
             plt.xticks(fontsize=35)
             plt.yticks(fontsize=35)
-            leg=plt.legend(['Train', 'Test'], loc='upper right', fontsize=36)
+            leg=plt.legend(['Train', 'Val'], loc='upper right', fontsize=36)
             for line in leg.get_lines():
                 line.set_linewidth(5.0)
             plt.title(str(metric_plot[1]), fontsize=50)

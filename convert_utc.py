@@ -32,7 +32,6 @@ class Solving_utc:
            '2:UTC+2'))
 
 
-
     def __init__(self,case,origin, freq,freq_n, start, end):
         self.case = case
         self.origin=origin

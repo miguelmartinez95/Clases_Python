@@ -7,6 +7,8 @@ import tensorflow as tf
 '''
 Conecting with GUPs
 '''
+
+
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
