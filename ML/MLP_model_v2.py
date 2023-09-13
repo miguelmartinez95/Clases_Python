@@ -43,7 +43,7 @@ class MLP(ML):
         scalar_y, scalar_x: empty lists to save the object fit to the data
         zero_problem: schedule, radiation o else. Adjust the result to the constraints
         limits: limits based on the zero problems (hours, radiation limits, etc)
-        extracted_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
         times: dates
         pos_y: column or columns where the y is located
         n_lags: times that the variables must be lagged

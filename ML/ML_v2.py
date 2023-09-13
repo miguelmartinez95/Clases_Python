@@ -8,7 +8,6 @@ import tensorflow as tf
 Conecting with GUPs
 '''
 
-
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
@@ -44,6 +43,16 @@ class ML:
         self.sup_limit = sup_limit
         self.inf_limit = inf_limit
 
+        '''
+        zero_problem: what limitation is considered in the result values (schedule, radiation o nothing)
+        limits: limits based on the zer_problem (hours, radiation, etc)
+        extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        n_lags: times that the variables must be lagged
+        inf_limit: lower accepted limits for the estimated values
+        sup_limits: upper accepted limits for the estimated values
+
+        '''
+
     @staticmethod
     def cv_division(x,y, fold):
         '''
@@ -60,12 +69,15 @@ class ML:
         Y_test = []
         Y_train = []
         Y_val = []
+
+        #Operator defining how long will be the slices of data
         step = int(x.shape[0]/fold)
         w = 0
         w2 = step
         indexes = []
         try:
             while w2 < x.shape[0]:
+                #Dividing the sample into val and train (and val into test and val)
                 a = x.iloc[range(w,w2)]
                 X_val.append(a.iloc[range(len(a)-math.ceil(len(a)/2), len(a)-1)])
                 X_test.append(a.drop(a.index[range(len(a)-math.floor(len(a)/2), len(a))]))
@@ -100,9 +112,11 @@ class ML:
         '''
         if zero_problem == 'schedule':
             try:
+                #Limits based on hours
                 limit1 = int(limit[0])
                 limit2 = int(limit[1])
 
+                #If third value is weekend the weekend are eliminated for subsequent evaluation
                 if limit[2] == 'weekend':
                     wday = pd.Series(restriction).dt.weekday
                     ii1 = np.where(wday > 4)[0]
@@ -119,6 +133,7 @@ class ML:
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
+            #If radiation is the one, only the values where the radiation is less than the limit are considered
             try:
                 rad = np.array([restriction])
                 ii = np.where(rad <= limit)[0]
@@ -145,6 +160,7 @@ class ML:
         s = 0
         gap=0
         while i <= D:
+            #If we are very close to the final, we delete the final empty column (and measure the gap)
             if D - i < lim:
                 Y = np.delete(Y, s-1, 1)
                 gap = D - i
@@ -166,6 +182,7 @@ class ML:
         :param D: length of data
         :param lim: dimension of the curves
         :return: data divided in curves of specific length but one by one time step
+        The same as cortes but we move one step at a time
         '''
 
         Y = np.zeros((lim, D-(lim-1)))
@@ -199,9 +216,11 @@ class ML:
         '''
         t = new_data.copy()
         t['id'] = range(0, len(t))
+        #We select the data without the required rows in the beginning
         t = t.iloc[look_back:, :]
         t.set_index('id', inplace=True)
         pred_value = new_data.copy()
+        #We select the data without the required rows at the end
         pred_value = pred_value.iloc[:-look_back, pred_col]
         names_lag = [0 for x in range(len(pred_col))]
         for i in range(len(pred_col)):
@@ -257,7 +276,8 @@ class ML:
         Move the data sample to connected the y with the x based on the future selected
         Adapt to series data!!
         After introduce_lags
-        n_steps=0 one by one
+        n_steps=step in the future for predicting
+        onebyone: although we want to predict 5 steps in the future (we move the sampke one by one)
         Consideration of horizont 0 o 1
         '''
         if self.horizont==0:
