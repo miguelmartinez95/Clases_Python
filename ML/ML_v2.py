@@ -215,7 +215,7 @@ class ML:
 
     def introduce_lags(self, lags, var_lag):
         '''
-        Introduction of lags moving the sample
+        Introduction of lags moving the sample (***Data for be lagged at the end of the columns)
 
         :param lags: amount of lags for each n_lags selected in MLP
         :param var_lag: label of lagged variables. Amount of variables starting by the end
