@@ -567,23 +567,41 @@ class MLP(ML):
 
                 #Plotting the results for each slice (depending of output variables)
                 if plot == True and len(y_realF.shape) > 1:
-                    s = np.max(y_realF.iloc[:, 0]).astype(int) + 15
-                    i = np.min(y_realF.iloc[:, 0]).astype(int) - 15
-                    a = np.round(cv[z], 2)
-                    plt.figure()
-                    plt.ylim(i, s)
-                    plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
-                    plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
-                    plt.legend()
-                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
-                    a = 'Subsample-'
-                    b = str(z) + '.png'
-                    plot_name = a + b
-                    plt.show()
-                    plt.savefig(plot_name)
+                    if y_realF.shape[1] > 1:
+                        for t in range(y_realF.shape[1]):
+                            s = np.max(y_realF.iloc[:, t]).astype(int) + 2
+                            i = np.min(y_realF.iloc[:, t]).astype(int) - 2
+                            a = np.round(cv[z], 2)
+                            plt.figure()
+                            plt.ylim(i, s)
+                            plt.plot(y_realF.iloc[:, t], color='black', label='Real')
+                            plt.plot(y_predF.iloc[:, t], color='blue', label='Prediction')
+                            plt.legend()
+                            plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                            a = 'Subsample-'
+                            b = str(z) + '.png'
+                            plot_name = a + b
+                            plot_name = plot_name + '- Var' + str(t)
+                            plt.show()
+                            plt.savefig(plot_name)
+                    else:
+                        s = np.max(y_realF.iloc[:, 0]).astype(int) + 2
+                        i = np.min(y_realF.iloc[:, 0]).astype(int) - 2
+                        a = np.round(cv[z], 2)
+                        plt.figure()
+                        plt.ylim(i, s)
+                        plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+                        plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
+                        plt.legend()
+                        plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                        a = 'Subsample-'
+                        b = str(z) + '.png'
+                        plot_name = a + b
+                        plt.show()
+                        plt.savefig(plot_name)
                 elif plot == True and len(y_realF.shape) < 2:
-                    s = np.max(y_realF).astype(int) + 15
-                    i = np.min(y_realF).astype(int) - 15
+                    s = np.max(y_realF).astype(int) + 2
+                    i = np.min(y_realF).astype(int) - 2
                     a = np.round(cv[z], 2)
                     plt.figure()
                     plt.ylim(i, s)
@@ -1135,7 +1153,34 @@ class MLP(ML):
             else:
                 raise NameError('Empty prediction')
 
-        if plotting == True:
+        if plotting == True and len(y_realF.shape) > 1:
+            if y_realF.shape[1]>1:
+                for t in range(y_realF.shape[1]):
+                    a = np.round(cv, 2)
+                    up = int(np.max(y_realF.iloc[:, t])) + int(np.max(y_realF.iloc[:, t]) / 4)
+                    low = int(np.min(y_realF.iloc[:, t])) - int(np.min(y_realF.iloc[:, t]) / 4)
+                    plt.figure()
+                    plt.ylim(low, up)
+                    plt.plot(y_realF.iloc[:, t], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:, t], color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("CV(RMSE)={}".format(str(a)))
+                    a = 'Var-'
+                    b = str(t) + '.png'
+                    plot_name = a + b
+                    plt.savefig(plot_name)
+            else:
+                a = np.round(cv, 2)
+                up = int(np.max(y_realF.iloc[:, 0])) + int(np.max(y_realF.iloc[:, 0]) / 4)
+                low = int(np.min(y_realF.iloc[:, 0])) - int(np.min(y_realF.iloc[:, 0]) / 4)
+                plt.figure()
+                plt.ylim(low, up)
+                plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+                plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
+                plt.legend()
+                plt.title("CV(RMSE)={}".format(str(a)))
+                plt.savefig('plot1.png')
+        elif plotting == True and len(y_realF.shape) < 2:
             a = np.round(cv, 2)
             up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
             low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
@@ -1146,6 +1191,16 @@ class MLP(ML):
             plt.legend()
             plt.title("CV(RMSE)={}".format(str(a)))
             plt.savefig('plot1.png')
+
+            plt.figure()
+            plt.ylim(i, s)
+            plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+            plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
+            plt.legend()
+            plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+            plot_name = a + b
+            plt.show()
+            plt.savefig(plot_name)
 
         return res
 
