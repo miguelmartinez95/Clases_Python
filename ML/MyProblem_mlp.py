@@ -50,11 +50,36 @@ class MyProblem_mlp(ElementwiseProblem):
         self.dictionary = dictionary
         self.weights = weights
 
+        '''
+        model: object of a class ML
+        horizont: distance to the present: I want to predict the moment four steps in future
+        scalar_y, scalar_x: scalars fitted
+        zero_problem: schedule, radiation o else. Adjust the result to the constraints
+        limits: limits based on the zero problems (hours, radiation limits, etc)
+        extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        times: dates
+        pos_y: column or columns where the y is located
+        n_lags: times that the variables must be lagged
+        mask: logic if we want to mask the missing values
+        mask_value: specific value for the masking
+        inf_limit: lower accepted limits for the estimated values
+        sup_limits: upper accepted limits for the estimated values
+        weights: weights based on the error in mutivariable case (some error must be more weighted)
+        type: regression or classification
+        dictionary: where the different option tested are kept
+        n_var: number of inputs
+        dropout: percentage for NN
+        l_dense = maximum number for layers
+        batch = size of the slices in training
+        '''
+
     def cv_opt(self, data, fold, neurons, pacience, batch, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
+        :param neurons: list of the different options of structures
         :param dictionary: dictionary to fill with the options tested
-        :param q:operator to differentiate when there is parallelisation and the results must be a queue
+        :param mean_y: vector of means
+        :param pacience: limits for epochs without improvement in training
         :return: cv(rmse) and complexity of the model tested
         if mean_y is empty a variation rate will be applied
         '''
@@ -111,7 +136,8 @@ class MyProblem_mlp(ElementwiseProblem):
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
-            # Train the model
+
+            # Train the model through a CV process
             for z in range(fold):
                 print('Fold number', z)
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
@@ -120,11 +146,13 @@ class MyProblem_mlp(ElementwiseProblem):
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
                 val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
+
                 model.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc], batch_size=batch)
                 y_pred = model.predict(val_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = val_y
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
+
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
@@ -141,6 +169,8 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_realF = y_real.copy()
                 y_realF = pd.DataFrame(y_realF)
                 y_realF.index = times_test[z]
+
+                #Checking the contrainst of the problem and correcting the results
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
                     res = ML.fix_values_0(times_test[z],
@@ -331,13 +361,15 @@ class MyProblem_mlp(ElementwiseProblem):
     @staticmethod
     def bool4(x, l_dense):
         '''
-        :x: neurons options
+        :x: specific neurons option
         l_dense: number of values that represent dense neurons
-        :return: 0 if the constraint is fulfilled
+        :return: 0 if the constraint is fulfilled and 1 if not
+        It can not be a layer without neuron previous to another layer with neurons
         '''
         #
         x2 = x[range(l_dense)]
-        #
+
+        #Depending of the length anf checking if there a layer with 0 neurons and then another layer with neurons
         if len(x2) == 2:
             if x2[0] == 0 and x2[1] > 0:
                 a_dense = np.array([1])
@@ -378,11 +410,20 @@ class MyProblem_mlp(ElementwiseProblem):
 
     #
     def _evaluate(self, x, out, *args, **kwargs):
+        '''
+
+        :param x: option considered
+        :param out: dictionary where kept the results
+
+        :return: the results according the constrains (G) and the results fo the objective functions (F), which are gotten from cv_opt function
+        '''
         g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1), self.l_dense)
         out["G"] = g1
         print(x)
-        n_dense = x[range(self.l_dense)] * 20
-        n_pacience = x[len(x) - 1] * 20
+
+        #Modify the vector defined for values more real
+        n_dense = x[range(self.l_dense)] * 20 #neurons options
+        n_pacience = x[len(x) - 1] * 20 #patience options
         f1, f2 = self.cv_opt(self.data, 3, n_dense, n_pacience, self.batch, self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
