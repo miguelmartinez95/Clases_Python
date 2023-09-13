@@ -19,8 +19,8 @@ from ML_v2 import ML
 from MyProblem_mlp import MyProblem_mlp
 from MyRepair_mlp import MyRepair_mlp
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.factory import get_problem, get_visualization, get_decomposition
-from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
+from pymoo.factory import get_decomposition
+from pymoo.factory import get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
@@ -37,14 +37,30 @@ class MLP(ML):
         self.activation = activation
         self.learning_rate = learning_rate
         self.optimizer = optimizer
+
         '''
-        horizont: distance to the present
-        I want to predict the moment four steps in future
+        horizont: distance to the present: I want to predict the moment four steps in future
+        scalar_y, scalar_x: empty lists to save the object fit to the data
+        zero_problem: schedule, radiation o else. Adjust the result to the constraints
+        limits: limits based on the zero problems (hours, radiation limits, etc)
+        extracted_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        times: dates
+        pos_y: column or columns where the y is located
+        n_lags: times that the variables must be lagged
+        n_steps: amount of steps estimated simultaneously
+        mask: logic if we want to mask the missing values
+        mask_value: specific value for the masking
+        inf_limit: lower accepted limits for the estimated values
+        sup_limits: upper accepted limits for the estimated values
+        weights: weights based on the error in mutivariable case (some error must be more weighted)
+        type: regression or classification
+        optimizer: optimizer used in the training
         '''
 
     @staticmethod
     def complex_mlp(neurons, max_N, max_H):
         '''
+        :param neurons: structure in neurons of the NN
         :param max_N: maximun neurons in the network
         :param max_H: maximum hidden layers in the network
         :return: complexity of the model
@@ -58,6 +74,10 @@ class MLP(ML):
     @staticmethod
     def mlp_classification(layers, neurons, inputs, outputs, mask, mask__value, optimizer,learning_rate, activation):
         '''
+
+        ***IN PROGRESS****
+
+
         :param inputs: amount of inputs
         :param outputs: amount of outputs
         :param mask: True or false
@@ -84,8 +104,16 @@ class MLP(ML):
     @staticmethod
     def mlp_regression(layers, neurons,  inputs,mask, mask_value, dropout, outputs, optimizer, learning_rate, activation):
         '''
+        :param layers: number of layers considered
+        :param neurons: structure in number of neurons by layer
         :param inputs:amount of inputs
         :param mask:True or false
+        :param mask_value: the specific value for masking
+        :param dropout: percentage of dropout considered
+        :param outputs: number of inputs
+        :param optimizer: optimizer considered
+        :param learning_rate: rate considered
+        :param activation: activation function considered
         :return: the MLP architecture
         '''
         from keras import backend as K
@@ -119,7 +147,7 @@ class MLP(ML):
             # Compile the network :
             ANN_model.compile(loss='mse', optimizer=optimizer, metrics=['mse'])
             K.set_value(ANN_model.optimizer.learning_rate, learning_rate)
-            # ANN_model.summary()
+            print(ANN_model.summary())
             return(ANN_model)
         except:
             raise NameError('Problems building the MLP')
@@ -173,25 +201,36 @@ class MLP(ML):
     def cv_analysis(self, fold, neurons, pacience, batch, mean_y, dropout, plot, q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
-        :param q: a Queue to paralelyse or empty list to do not paralyse
+        :param neurons: structure in number of neurons by layer
+        :param pacience: number of epochs without improvement for stop training
+        :param batch: batch size
+        :param mean_y: mean of y values for error calculations
+        :param dropout: percentage of dropout considered
         :param plot: True plots
+        :param q: a Queue to paralelyse or empty list to do not paralyse
+        :param model: if model is not empty a pretrained model is considered
         :return: predictions, real values, errors and the times needed to train
         '''
 
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
-        print('##########################'
-              '################################'
+        print('*******************************'
+              '*******************************'
               'CROSS-VALIDATION'
-              '#################################'
-              '################################')
+              '*******************************'
+              '*******************************')
         layers = len(neurons)
+
+        #Separate y and x
         x = pd.DataFrame(self.data.drop(self.data.columns[self.pos_y], axis=1))
         if self.type == 'series':
             y = pd.DataFrame(self.data.iloc[:, range(self.n_steps)])
         else:
             y = pd.DataFrame(self.data.iloc[:, self.pos_y])
+
         x = x.reset_index(drop=True)
         y = y.reset_index(drop=True)
+
+        #Division of the data for a CV analysis
         res = super().cv_division(x, y, fold)
         x_test = res['x_test']
         x_train = res['x_train']
@@ -199,11 +238,14 @@ class MLP(ML):
         y_test = res['y_test']
         y_train = res['y_train']
         y_val = res['y_val']
+
+        #Trying to save all the dates in each slice considered
         indexes = res['indexes']
         times_test = []
         tt = self.times
         for t in range(len(indexes)):
             times_test.append(tt[indexes[t][0]:indexes[t][1]])
+
         if self.type == 'classification':
             data2 = self.data
             yy = data2.iloc[:, self.pos_y]
@@ -227,6 +269,7 @@ class MLP(ML):
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
                 if isinstance(model, list):
+                    # Create the model
                     if self.type == 'regression':
                         model1 = self.__class__.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask,
                                                                self.mask_value, dropout, len(self.pos_y),self.optimizer, self.learning_rate, self.activation)
@@ -240,10 +283,12 @@ class MLP(ML):
                         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                         mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
                 else:
+                    #Get the pretrained model
                     model1 = model
                     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
                     mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
                 modelF = model1
+
                 print('Fold number', z)
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)
@@ -251,13 +296,19 @@ class MLP(ML):
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
                 val_x = pd.DataFrame(x_val[z]).reset_index(drop=True)
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
+
+                #Training
                 time_start = time()
                 modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],
                            batch_size=batch)
                 times[z] = round(time() - time_start, 3)
+
+                #Predicting
                 y_pred = modelF.predict(val_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(val_y))
+
+                #Check the limits
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
@@ -265,6 +316,7 @@ class MLP(ML):
                 else:
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = self.inf_limit
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = self.sup_limit
+
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
                 y_predF.index = times_test[z]
@@ -275,8 +327,11 @@ class MLP(ML):
                 reales.append(y_realF)
                 predictions.append(y_predF)
                 reales.append(y_realF)
+
+                #Error calculation based on the limits (schedule, radiation)
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
+                    #Indexes out due to the zero_problem
                     res = super().fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
@@ -292,6 +347,8 @@ class MLP(ML):
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
+
+                    #Indexes for values out of limits
                     if self.mask == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 < self.inf_limit)[0]
@@ -306,7 +363,7 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-
+                    #Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -321,7 +378,7 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-
+                    #Errors calculation based on mean values, weights...
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
@@ -355,6 +412,7 @@ class MLP(ML):
                         raise NameError('Empty prediction')
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
+                    # Indexes out due to the zero_problem
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
                     res = super().fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
@@ -371,11 +429,11 @@ class MLP(ML):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-                    #
+
                     if self.type == 'series':
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
-                    #
+                    # Indexes for values out of limits
                     if self.mask == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 < self.inf_limit)[0]
@@ -390,7 +448,7 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -405,7 +463,7 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Errors calculation based on mean values, weights...
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
@@ -457,7 +515,7 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real == 0)[0]
@@ -473,7 +531,7 @@ class MLP(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-
+                    # Errors calculation based on mean values, weights...
                     if len(y_pred) > 0:
                         if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                             if mean_y.size == 0:
@@ -505,6 +563,8 @@ class MLP(ML):
                             nmbe[z] = 9999
                     else:
                         raise NameError('Empty prediction')
+
+                #Plotting the results for each slice (depending of output variables)
                 if plot == True and len(y_realF.shape) > 1:
                     s = np.max(y_realF.iloc[:, 0]).astype(int) + 15
                     i = np.min(y_realF.iloc[:, 0]).astype(int) - 15
@@ -546,6 +606,8 @@ class MLP(ML):
                                                                       "The average RMSE is", np.mean(rmse), "\n"
                                                                                                             "The average time to train is",
                    np.mean(times)))
+
+            #Consideration if paralelisation is considered
             z = Queue()
             if type(q) == type(z):
                 # q.put(np.array([np.mean(cv), np.std(cv)]))
