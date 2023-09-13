@@ -329,7 +329,7 @@ class ML:
 
     def scalating(self, scalar_limits, groups, x, y):
         '''
-        Scalate date bsed on MinMax scaler and certain limits
+        Scalate date based on MinMax scaler and certain limits
 
         :param scalar_limits: limit of the scalar data
         :param groups: groups defining the different variable groups to be scaled together
@@ -337,6 +337,8 @@ class ML:
         '''
         scalars = dict()
         names = list(groups.keys())
+
+        #We make the scalation based on: inputs, outputs and if groups are defined (if not each variable separately)
         if x == True and y == True:
             if not groups:
                 d =self.data.drop(self.data.columns[self.pos_y], axis=1)
@@ -412,7 +414,11 @@ class ML:
 
     def missing_values_remove(self):
         self.data = self.data.dropna()
+
     def missing_values_masking_onehot(self):
+        '''
+        :return: the data with a column indicating if there missing values or not
+        '''
         d=self.data.drop(self.data.columns[self.pos_y],axis=1)
         places=np.where(d.isnull().any(axis = 1))[0]
         if len(places)<1:
@@ -427,6 +433,7 @@ class ML:
 
     def missing_values_masking(self):
         self.data = self.data.replace(np.nan, self.mask_value)
+
     def missing_values_interpolate(self, delete_end, delete_start, mode, limit, order=2):
         '''
         :param delete_end: delete missing data at the last row
