@@ -318,43 +318,67 @@ class ML:
         scalars = dict()
         names = list(groups.keys())
         if x == True and y == True:
-            try:
-                for i in range(len(groups)):
-                    scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    selec = groups[names[i]]
-                    d = self.data.iloc[:, selec]
-                    if (len(selec) > 1):
-                        scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
-                    else:
-                        scalars[names[i]].fit(np.array(d).reshape(-1, 1))
-                    for z in range(len(selec)):
-                        self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
-            except:
-                raise NameError('Problems with the scalar by groups of variables')
-            scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-            scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-            if len(self.pos_y) > 1:
-                self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-            else:
-                self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+            if not groups:
+                d =self.data.drop(self.data.columns[self.pos_y], axis=1)
+                scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                scalars.fit(d)
+                d= scalars.transform(d)
+                scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                if len(self.pos_y) > 1:
+                    d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                else:
+                    d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
-            self.scalar_y = scalar_y
-            self.scalar_x = scalars
-        elif x == True and y == False:
-            try:
-                for i in range(len(groups)):
-                    scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    selec = groups[names[i]]
-                    d = self.data.iloc[:, selec]
-                    if (len(selec) > 1):
-                        scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
-                    else:
-                        scalars[names[i]].fit(np.array(d).reshape(-1, 1))
-                    for z in range(len(selec)):
-                        self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
+                self.data= pd.DataFrame(np.concatenate((d1,d),axis=1))
+                self.scalar_y = scalar_y
                 self.scalar_x = scalars
-            except:
-                raise NameError('Problems with the scalar by groups of variables')
+            else:
+                try:
+                    for i in range(len(groups)):
+                        scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        selec = groups[names[i]]
+                        d = self.data.iloc[:, selec]
+                        if (len(selec) > 1):
+                            scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                        else:
+                            scalars[names[i]].fit(np.array(d).reshape(-1, 1))
+                        for z in range(len(selec)):
+                            self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
+                scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                if len(self.pos_y) > 1:
+                    self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                else:
+                    self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+
+                self.scalar_y = scalar_y
+                self.scalar_x = scalars
+        elif x == True and y == False:
+            if not groups:
+                d =self.data.drop(self.data.columns[self.pos_y], axis=1)
+                scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                scalars.fit(d)
+                d= scalars.transform(d)
+                self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d)], axis=1)
+                self.scalar_x = scalars
+            else:
+                try:
+                    for i in range(len(groups)):
+                        scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        selec = groups[names[i]]
+                        d = self.data.iloc[:, selec]
+                        if (len(selec) > 1):
+                            scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                        else:
+                            scalars[names[i]].fit(np.array(d).reshape(-1, 1))
+                        for z in range(len(selec)):
+                            self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
+                    self.scalar_x = scalars
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
         elif y == True and x == False:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
