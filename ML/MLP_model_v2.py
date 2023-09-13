@@ -1292,7 +1292,7 @@ class MLP(ML):
         contador = manager.list()
         contador.append(0)
         print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(mean_y, contador, parallel, l_dense,
+        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(model, mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
                                                                             xlimit_sup, dropout,dictionary, weights,epsilon)
         np.savetxt('objectives_selectedR.txt', obj)
