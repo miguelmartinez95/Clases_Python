@@ -199,6 +199,7 @@ class MLP(ML):
             raise NameError('Problems building the MLP')
 
     def cv_analysis(self, fold, neurons, pacience, batch, mean_y, dropout, plot, q=[], model=[]):
+
         '''
         :param fold: divisions in cv analysis
         :param neurons: structure in number of neurons by layer
