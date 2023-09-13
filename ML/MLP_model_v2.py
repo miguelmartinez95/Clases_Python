@@ -618,9 +618,14 @@ class MLP(ML):
 
     def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel,dropout, weights):
         '''
+        :param neurons:structure in number of neurons by layer
+        :param pacience: number of epochs without improvement for stop training
+        :param batch: batch size
         :param fold: division in cv analyses
+        :param mean_y: mean of y values for error calculations
         :param parallel: True or false (True to linux)
-        :param top: the best options yielded
+        :param dropout: percentage of dropout considered
+        :param weights: weights based on the error in mutivariable case (some error must be more weighted)
         :return: the options with their results and the top options
         '''
         error = [0 for x in range(len(neurons) * len(paciences))]
@@ -628,6 +633,8 @@ class MLP(ML):
         options = {'neurons':[], 'pacience':[]}
         w=0
         contador= len(neurons) * len(paciences)-1
+
+        #Based on the cv_analysis and if there is paralelisation colection of results
         if parallel <2:
             for t in range(len(neurons)):
                 print('##################### Option ####################', w)
@@ -639,6 +646,7 @@ class MLP(ML):
                     error[w]=np.mean(res['cv_rmse'])
                     complexity[w]=MLP.complex_mlp(neuron,2000,8)
                     w +=1
+
         elif parallel>=2:
             processes = []
             res2 = []
@@ -694,8 +702,8 @@ class MLP(ML):
             raise NameError('Option not considered')
         r1 = error.copy()
         d1 = complexity.copy()
-        print(r1)
 
+        #Scalating the results: errors and complexity
         scal_cv = MinMaxScaler(feature_range=(0, 1))
         scal_com = MinMaxScaler(feature_range=(0, 1))
 
@@ -707,6 +715,7 @@ class MLP(ML):
 
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
+        #Trying to get the best results consdiering the two metrics
         I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -725,6 +734,7 @@ class MLP(ML):
         np.savetxt('x_selected_brute.txt', np.concatenate((top_result['neurons'],np.array([top_result['pacience']]))))
 
 
+        #Plotting the results of the two metrics and the best selected
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
         plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
@@ -734,16 +744,23 @@ class MLP(ML):
         plt.legend(borderpad=1.25)
         plt.savefig('optimisation_plot.png')
         print('Process finished!!!')
+
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
 
     def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[],loss_plot=False,metric_plot=[False,False]):
         '''
-        :param x_train: x to train
-        :param x_test: x to early stopping
-        :param y_train: y to train
-        :param y_test: y to early stopping
+        :param type: regression or classification
+        :param neurons: structure in number of neurons by layer
+        :param pacience: number of epochs without improvement for stop training
+        :param batch: batch size
+        :param data_train: data to train
+        :param data_test: data to validate the model
+        :param dropout: percentage of dropout considered
+        :param save_model: if the model must be saved
         :param model: loaded model
+        :param loss_plot: plotting the evolution of loss function
+        :param metric_plot: plotting the evolution of a metric function. The seconc will be the title for the plot
         :return: trained model and the time needed to train
         '''
         data_train = pd.DataFrame(data_train)
@@ -782,6 +799,8 @@ class MLP(ML):
             name='mlp'+now+'.h5'
             model.save(name, save_format='h5')
 
+
+        #Plotting the training evolution
         if loss_plot==True:
             plt.figure()
             plt.plot(history.history['loss'])
@@ -814,8 +833,8 @@ class MLP(ML):
     def predict(self, model, val, mean_y, times, plotting):
         '''
         :param model: trained model
-        :param x_val: x to predict
-        :param y_val: y to predict
+        :param val: data to predict
+        :param times: dates
         if mean_y is empty a variation rate will be applied as cv in result. The others relative will be nan
         :return: predictions with the errors depending of zero_problem
         '''
@@ -825,10 +844,13 @@ class MLP(ML):
 
         x_val = x_val.reset_index(drop=True)
         y_val = y_val.reset_index(drop=True)
+
+        #Predict and the inverse scalarisation
         y_pred = model.predict(pd.DataFrame(x_val))
         y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
         y_real = np.array(self.scalar_y.inverse_transform(y_val))
 
+        #Check the limits bsed on the number of outputs
         if len(self.pos_y) > 1:
             for t in range(len(self.pos_y)):
                 y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
@@ -851,8 +873,11 @@ class MLP(ML):
         y_predF.index = times
         y_realF.index = y_predF.index
 
+
+        #Error calculation based on the zero_problem, values out of limits, weights and number of outputs
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
+            # Indexes out due to the zero_problem
             res = super().fix_values_0(times, self.zero_problem, self.limits)
             index_hour = res['indexes_out']
 
@@ -874,6 +899,7 @@ class MLP(ML):
                     y_pred1 = np.concatenate(y_pred1)
                     y_real1 = np.concatenate(y_real1)
 
+                # Indexes for values out of limits
                 if self.mask == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 < self.inf_limit)[0]
@@ -889,6 +915,7 @@ class MLP(ML):
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
 
+                # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 == 0)[0]
@@ -903,7 +930,7 @@ class MLP(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
-
+            # Errors calculation based on mean values, weights...
             if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
@@ -939,6 +966,7 @@ class MLP(ML):
                 raise NameError('Empty prediction')
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
+            # Indexes out due to the zero_problem
             place = np.where(x_val.columns == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
@@ -982,6 +1010,7 @@ class MLP(ML):
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
 
+                # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 == 0)[0]
@@ -996,6 +1025,8 @@ class MLP(ML):
                         oT = np.unique(np.concatenate(o))
                         y_pred1 = np.delete(y_pred1, oT, 0)
                         y_real1 = np.delete(y_real1, oT, 0)
+
+            # Errors calculation based on mean values, weights..
             if len(y_pred1) > 1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
@@ -1050,6 +1081,7 @@ class MLP(ML):
                     y_pred = np.delete(y_pred, oT, 0)
                     y_real = np.delete(y_real, oT, 0)
 
+            # Indexes where the real values are 0
             if self.extract_cero == True and len(y_pred) > 0:
                 if mean_y.size == 0:
                     o = np.where(y_real == 0)[0]
@@ -1065,6 +1097,7 @@ class MLP(ML):
                     y_pred = np.delete(y_pred, oT, 0)
                     y_real = np.delete(y_real, oT, 0)
 
+            # Errors calculation based on mean values, weights...
             if len(y_pred) > 1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     if mean_y.size == 0:
@@ -1119,9 +1152,10 @@ class MLP(ML):
     def nsga2_individual(self,model, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
                          xlimit_sup,dropout, dictionary, weights):
         '''
-        :param med:
+        :param model: object of ML or DL (class)
+        :param med: vector of means
         :param contador: a operator to count the attempts
-        :param n_processes: how many processes are parallelise
+        :param n_processes: how many processes are parallelised
         :param l_dense:maximun number of layers dense
         :param batch: batch size
         :param pop_size: population size selected for NSGA2
@@ -1129,10 +1163,12 @@ class MLP(ML):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param weights: weights for the two objective functions
         :return: options in Pareto front, the optimal selection and the total results
         '''
 
-        print('DATA is', type(self.data))
+
+        #Creation of the problem
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_mlp(model,self.horizont, self.scalar_y, self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,
@@ -1146,17 +1182,19 @@ class MLP(ML):
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
                                 med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
+
+        #Algorithm for optimisation
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_mlp(l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
-                          # sampling =g,
-                          # crossover=0.9,
-                          # mutation=0.1)
                           crossover=get_crossover("int_sbx",prob=0.95),
                           mutation=get_mutation("int_pm", prob=0.4))
+
+        #Termination of the algorithm based on tolerance
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
                                                               n_max_evals=5000)
+        #Result of optimisation
         res = minimize(problem,
                        algorithm,
                        termination,
@@ -1164,6 +1202,8 @@ class MLP(ML):
                        pf=True,
                        verbose=True,
                        seed=7)
+
+        #Selection of the optimum
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
@@ -1187,6 +1227,7 @@ class MLP(ML):
             print(rf.shape)
             print(rx.shape)
 
+            #Plot of the pareto front with the optimum
             plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
@@ -1203,28 +1244,37 @@ class MLP(ML):
             obj = res.F
             struct = res.X
         print('The number of evaluations were:', contador)
+
         if n_processes > 1:
             pool.close()
         else:
             pass
+
         return (obj, struct, obj_T, struct_T, res,contador)
 
     def optimal_search_nsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights):
         '''
+        :param model: object of ML or DL (class)
         :param l_dense: maximun layers dense
         :param batch: batch size
-        :param pop_size: population size for RVEA
+        :param pop_size: population size for iterations
         :param tol: tolerance to built the pareto front
         :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param mean_y: vector of means
+        :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
+        :param weights: weights for the two objective functions
         if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
+
+        #Multiprocessing for possible paralelisation and fill the dictionary and the contador
         manager = multiprocessing.Manager()
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
+
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.nsga2_individual(model,mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
@@ -1236,6 +1286,7 @@ class MLP(ML):
         np.savetxt('evaluations.txt', evaluations)
 
         print('Process finished!!!')
+
         print('The selection is', x_obj, 'with a result of', obj)
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
@@ -1243,7 +1294,8 @@ class MLP(ML):
     def rnsga2_individual(self,model, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
                          xlimit_sup,dropout, dictionary, weights,epsilon):
         '''
-        :param med:
+        :param model: object of ML or DL (class)
+        :param med: vector of means
         :param contador: a operator to count the attempts
         :param n_processes: how many processes are parallelise
         :param l_dense:maximun number of layers dense
@@ -1253,10 +1305,12 @@ class MLP(ML):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param weights: weights for the two objective functions
+        :param epsilon: parameter for RNSGA
         :return: options in Pareto front, the optimal selection and the total results
         '''
 
-        print('DATA is', type(self.data))
+        # Creation of the problem
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_mlp(model,self.horizont, self.scalar_y, self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,
@@ -1271,8 +1325,10 @@ class MLP(ML):
                                 self.type, self.data,self.scalar_x,
                                 med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
 
+        #Definition of the reference points needed by this algorithm
         ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
 
+        # Algorithm for optimisation
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx", prob=0.95),
                           mutation=get_mutation("int_pm", prob=0.4),
@@ -1281,10 +1337,12 @@ class MLP(ML):
                            weights=weights,
                            epsilon=epsilon)
 
+        # Termination of the algorithm based on tolerance
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
                                                               n_max_evals=5000)
+        # Result of optimisation
         res = minimize(problem,
                        algorithm,
                        termination,
@@ -1292,6 +1350,8 @@ class MLP(ML):
                        pf=True,
                        verbose=True,
                        seed=7)
+
+        # Selection of the optimum
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
@@ -1313,9 +1373,8 @@ class MLP(ML):
             struct_T = rx
             obj = res.F[I, :]
             struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
 
+            # Plot of the pareto front with the optimum
             plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
@@ -1340,20 +1399,28 @@ class MLP(ML):
 
     def optimal_search_rnsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights,epsilon=0.01):
         '''
+        :param model: object of ML or DL (class)
         :param l_dense: maximun layers dense
         :param batch: batch size
         :param pop_size: population size for RVEA
         :param tol: tolerance to built the pareto front
         :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param mean_y: vector of means
+        :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
+        :param weights: weights for the two objective functions
+        :param epsilon: parameter of RNSGA
         if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
+
+        # Multiprocessing for possible paralelisation and fill the dictionary and the contador
         manager = multiprocessing.Manager()
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
+
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(model, mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
