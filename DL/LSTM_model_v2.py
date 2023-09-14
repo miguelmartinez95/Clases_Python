@@ -1668,9 +1668,16 @@ class LSTM_model(DL):
 
         :param fold: assumed division of data sample
         :param rep: repetitions of cv analysis considering the intial or the final of sample
+        :param neurons_dense: list of options for neurons dense
+        :param neurons_lstm: list of options for neurons LSTM
+        :param paciences: list of options for paciences
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param batch: batch size for training
+        :param mean_y: vector of means
         :param parallel: 0 no paralyse
-        :param top: number of best solution selected
-        :return: errors obtained with the options considered together  with the best solutions
+        :param weights: weights between the two objective function
+        :param values specific values to divide the sample. specific values of a variable to search division
+        :return: errors obtained with the options considered together  with the best solution
         '''
 
         error = [0 for x in range(len(neurons_lstm) * len(neurons_dense) * len(paciences))]
@@ -1681,6 +1688,7 @@ class LSTM_model(DL):
         contador=len(neurons_lstm) * len(neurons_dense) * len(paciences)-1
         ct = time()
         if parallel<2:
+            # CV analysis for each of the options
             for t in range(len(neurons_dense)):
                 print('##################### Option ####################', w)
                 neuron_dense = neurons_dense[t]
@@ -1702,7 +1710,7 @@ class LSTM_model(DL):
 
             q = Queue()
             for t in range(len(neurons_dense)):
-
+                # CV analysis for each of the options
                 neuron_dense = neurons_dense[t]
                 for j in range(len(neurons_lstm)):
                     neuron_lstm = neurons_lstm[j]
@@ -1713,6 +1721,7 @@ class LSTM_model(DL):
                         options['neurons_lstm'].append(neuron_lstm)
                         options['pacience'].append(paciences[i])
                         if z < parallel and w<contador:
+                            #We acumulate processes
                             p = Process(target=self.cv_analysis,
                                         args=(fold,rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False, q))
                             p.start()
@@ -1720,13 +1729,14 @@ class LSTM_model(DL):
                             processes.append(p)
                             z1 =z+ 1
                         if z == parallel and w < contador:
+                            #Reset processes and send the queues
                             p.close()
                             for p in processes:
                                 p.join()
 
                             for v in range(len(processes)):
                                 res2.append(q.get()[0])
-                                res2.append(q.get()[1])
+                                dev2.append(q.get()[1])
 
                             processes=[]
                             q = Queue()
@@ -1738,6 +1748,7 @@ class LSTM_model(DL):
                             z1 = 1
 
                         elif w==contador:
+                            #We reached the last possible process
                             p = Process(target=self.cv_analysis,
                                         args=(fold, rep, neuron_lstm, neuron_dense, paciences[i], batch, mean_y,values,False, q))
                             p.start()
@@ -1761,18 +1772,17 @@ class LSTM_model(DL):
         ct_total = time()-ct
         r1 = error.copy()
         d1 = complexity.copy()
-        print('Resultados search', r1)
 
+        #Normalize the results
         scal_cv = MinMaxScaler(feature_range=(0, 1))
         scal_com = MinMaxScaler(feature_range=(0, 1))
-
         scal_cv.fit(np.array(r1).reshape(-1, 1))
         scal_com.fit(np.array(d1).reshape(-1, 1))
-
         cv = scal_cv.transform(np.array(r1).reshape(-1, 1))
         com = scal_com.transform(np.array(d1).reshape(-1, 1))
-
         r_final = np.array([cv[:, 0], com[:, 0]]).T
+
+        #We search for the best solution
 
         #I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         I = get_decomposition("pbi").do(r_final, weights).argmin()
@@ -1794,6 +1804,8 @@ class LSTM_model(DL):
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'],top_result['complexity']]))
         np.savetxt('x_selected_brute.txt', np.concatenate((top_result['neurons_lstm'],top_result['neurons_dense'],np.array([top_result['pacience']]))))
 
+
+        #Plot the results on the two objective functions and mark the optimum
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
         plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
