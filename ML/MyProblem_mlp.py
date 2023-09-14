@@ -332,8 +332,8 @@ class MyProblem_mlp(ElementwiseProblem):
         '''
         :x: specific neurons option
         l_dense: number of values that represent dense neurons
-        :return: 0 if the constraint is fulfilled and the places where the constraint is not fulfill
-        It can not be a layer without neuron previous to another layer with neurons
+        :return: 0 if the constraint is fulfilled or the places where the constraint is not fulfill
+        It can not be a layer without neurons previous to another layer with neurons
         '''
 
         #Depending of the length anf checking if there a layer with 0 neurons and then another layer with neurons
@@ -378,15 +378,14 @@ class MyProblem_mlp(ElementwiseProblem):
     #
     def _evaluate(self, x, out, *args, **kwargs):
         '''
-
         :param x: option considered
         :param out: dictionary where kept the results
-
         :return: the results according the constrains (G) and the results fo the objective functions (F), which are gotten from cv_opt function
         '''
         g1 = MyProblem_mlp.bool4(np.delete(x, len(x) - 1), self.l_dense)
         out["G"] = g1
-        print(x)
+
+        print('##########################################  X=', x, '##########################################')
 
         #Modify the vector defined for values more real
         n_dense = x[range(self.l_dense)] * 20 #neurons options
@@ -396,4 +395,7 @@ class MyProblem_mlp(ElementwiseProblem):
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
             self.contador, '\n #########################')
         self.contador[0] += 1
+        print('F1:',f1)
+        print('F2:',f2)
+
         out["F"] = np.column_stack([f1, f2])

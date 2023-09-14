@@ -348,14 +348,13 @@ class MyProblem_lstm(ElementwiseProblem):
         :x: neurons options
         l_lstm: number of values that represent lstm neurons
         l_dense: number of values that represent dense neurons
-        :return: 0 if the constraint is fulfilled
+        :return: 0 if the constraint is fulfilled or the places where the constraint is not fulfill
+        It can not be a layer without neurons previous to another layer with neurons
+
         '''
 #
         x1 = x[range(l_lstm)]
         x2 = x[range(l_lstm, l_lstm+l_dense)]
-        print('LSTM neurons', x1)
-        print('Dense neurons', x2)
-#
 
         if len(x2) == 2:
             if x2[0] == 0 and x2[1] > 0:
@@ -420,29 +419,30 @@ class MyProblem_lstm(ElementwiseProblem):
         return a_lstm, a_dense
 
     def _evaluate(self, x, out, *args, **kwargs):
+        '''
+        :param x: option considered
+        :param out: dictionary where kept the results
+        :return: the results according the constrains (G) and the results fo the objective functions (F), which are gotten from cv_opt function
+
+        '''
         g1,g2 = MyProblem_lstm.bool4(np.delete(x, len(x)-1), self.l_lstm, self.l_dense)
         out["G"] =np.column_stack([g1, g2])
 #
         print('##########################################  X=',x,'##########################################')
-#
-        n_lstm = x[range(self.l_lstm)]*20
-        n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20
-        n_pacience = np.array([x[len(x)-1]])*10
-        #print(self.dictionary.keys())
-        #print('Option:', tuple(np.concatenate((n_lstm, n_dense, n_pacience))))
-        if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in self.dictionary.keys():
-            self.contador[0] += 1
+
+        # Modify the vector defined for values more real
+        n_lstm = x[range(self.l_lstm)]*20 #lstm neurons
+        n_dense = x[range(self.l_lstm, self.l_lstm + self.l_dense)]*20 #dense neurons
+        n_pacience = np.array([x[len(x)-1]])*20 #patience options
+
+        #if not tuple(np.concatenate((n_lstm, n_dense, n_pacience))) in self.dictionary.keys():
+        #    self.contador[0] += 1
 
         print(
             '\n ############################################## \n ############################# \n ########################## EVALUATION ',
             self.contador, '\n ######################### \n #####################################')
 
         f1, f2 = self.cv_opt(self.data,2,1, n_lstm, n_dense, n_pacience, self.batch, self.med)
-        print(
-            '\n ############################################## \n ############################# \n ########################## EVALUATION ',
-            self.contador, '\n ######################### \n #####################################')
-
-
 
         print('F1:',f1)
         print('F2:',f2)
