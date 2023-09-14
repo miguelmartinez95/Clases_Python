@@ -14,16 +14,21 @@ class MyRepair_mlp(Repair):
         '''
         for k in range(len(pop)):
             x = pop[k].X
+
             x2 = x[range(self.l_dense)]
-            d= len(x)- len(x2)
+            x3= np.delete(x, np.arange(self.l_dense))
+            #check the results of constraints
             r_dense = MyProblem_mlp.bool4(x2, self.l_dense)
             if len(r_dense) == 1:
                 if r_dense == 0:
                     pass
                 elif r_dense != 0:
                     x2[r_dense] = 0
-            elif len(r_dense) > 1:
+            else:
                 x2[r_dense] = 0
-            x = np.concatenate((x2, np.array([x[len(x) - d]])))
+            #merge the correction and the other part of x
+            x = np.concatenate((x2, x3))
             pop[k].X = x
+
+            print('X FIXED')
         return pop
