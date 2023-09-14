@@ -2230,7 +2230,7 @@ class LSTM_model(DL):
         contador.append(0)
         print('start optimisation!!!')
 
-        obj, x_obj, obj_total, x_obj_total,res,evaluations = self.rnsga2_individual(model,mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
+        obj, x_obj, obj_total, x_obj_total,res,evaluations = self.rnsga2_individual(model,mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,ref_points,epsilon)
 
         np.savetxt('objectives_selectedR.txt', obj)
         np.savetxt('x_selectedR.txt', x_obj)
