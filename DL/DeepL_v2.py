@@ -21,21 +21,7 @@ if gpus:
 class DL:
     def info(self):
         '''
-        data: dataframe with the data
-        horizont: how many steps are considered to the future
-        scalar x: scalar object empty to be fill with the trained scalar for x
-        scalar y: scalar object empty to be fill with the trained scalar for y
-        zero_problem: relation with the night and day schedule. Can be nothing, schedule or radiation
-        times: dates object
-        limits: threshold to evaluate the outputs: f.e. radiation > 0.001
-        pos_y: number of colunm or columns where the output data are
-        n_lags: time lags considered to train the model
-        mask: masking true or false
-        mask_value: if mask is true the value for masking
-        sup_limit:upper limit wihitn the output of the model must be
-        inf_limit: lower limit wihitn the output of the model must be
-        namnes: columns labels
-        :return:
+        Class for defining the bases and some function for preprocessing for deepl learning models
         '''
 
         print('Super class to built different deep learning models. This class has other more specific classes associated with it ')
@@ -58,6 +44,24 @@ class DL:
         self.names=names
         self.extract_cero = extract_cero
 
+        '''
+        data: dataframe with the data
+        horizont: how many steps are considered to the future
+        scalar x: scalar object empty to be fill with the trained scalar for x
+        scalar y: scalar object empty to be fill with the trained scalar for y
+        zero_problem: relation with the night and day schedule. Can be nothing, schedule or radiation
+        limits: threshold to evaluate the outputs: f.e. radiation > 0.001
+        times: dates object
+        pos_y: number of colunm or columns where the output data are
+        n_lags: time lags considered to train the model
+        mask: masking true or false
+        mask_value: if mask is true the value for masking
+        inf_limit: lower limit wihitn the output of the model must be
+        sup_limit:upper limit wihitn the output of the model must be
+        nanes: columns labels
+        extract_zero: True if we want to discard the moment when real values are 0
+        '''
+
     @staticmethod
     def cv_division(x,y, fold):
         '''
@@ -77,12 +81,14 @@ class DL:
         Y_train = []
         Y_val = []
 
+        #Operator defining how long will be the slices of data
         step = int(x.shape[0]/fold)
         w = 0
         w2 = step
         indexes = []
         try:
             while w2 < x.shape[0]:
+                #Dividing the sample into val and train (and val into test and val)
                 a = x.iloc[range(w, w2)]
                 X_val.append(a.iloc[range(len(a) - math.ceil(len(a) / 2), len(a) - 1)])
                 X_test.append(a.drop(a.index[range(len(a) - math.floor(len(a) / 2), len(a))]))
@@ -122,13 +128,13 @@ class DL:
                     r=np.concatenate(restriction)
                     restriction=pd.Series(r)
 
+                #If third value is weekend the weekend are eliminated for subsequent evaluation
                 if limit[2]=='weekend':
                     wday = restriction.dt.weekday
                     ii1 = np.where(wday>4)[0]
 
                     hours = restriction.dt.hour
                     ii = np.where((hours < limit1) | (hours > limit2))[0]
-                    print(ii)
                     ii = np.union1d(ii1, ii)
 
                 else:
@@ -139,6 +145,7 @@ class DL:
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
         elif zero_problem == 'radiation':
+            #If radiation is the one, only the values where the radiation is less than the limit are considered
             try:
                 rad = np.array([restriction])
                 ii = np.where(rad <= limit)[0]
@@ -150,7 +157,6 @@ class DL:
 
         res = {'indexes_out': ii}
         return res
-
 
     @staticmethod
     def cortes(x, D, lim):
@@ -164,6 +170,7 @@ class DL:
         i=0
         s=0
         while i<=D:
+            #If we are very close to the final, we delete the final empty column (and measure the gap)
             if D-i < lim:
                 Y = np.delete(Y, s-1, 1)
                 break
@@ -175,22 +182,53 @@ class DL:
                     break
         return(Y)
 
+    @staticmethod
+    def cortes_onebyone(x, D, lim):
+        '''
+        :param x:
+        :param D: length of data
+        :param lim: dimension of the curves
+        :return: data divided in curves of specific length but one by one time step
+        The same as cortes but we move one step at a time
+        '''
+
+        Y = np.zeros((lim, D-(lim-1)))
+        i = 0
+        s = 0
+        gap=0
+        while i <= D:
+            print(i)
+            if D - i < lim:
+                Y = np.delete(Y, s-1, 1)
+                gap=D-i
+
+                break
+            else:
+                Y[:, s] = x[i:(i + lim)]
+                i += 1
+                s += 1
+                if i == D:
+                    gap=0
+                    break
+        return (Y,gap)
 
     @staticmethod
     def ts(new_data, look_back, pred_col, names, lag):
         '''
         :param look_back: amount of lags
-        :param pred_col: variables to lagged
+        :param pred_col: variables to lagged (colum index lagged variables)
         :param names: name variables
         :param lag: name of lag-- variable lag1
-        :return: dataframe with lagged data
+        :return: dataframe with lagged data. Intended to have variables to lag in the last columns
         '''
 
         t = new_data.copy()
         t['id'] = range(0, len(t))
+        #We select the data without the required rows in the beginning
         t = t.iloc[look_back:, :]
         t.set_index('id', inplace=True)
         pred_value = new_data.copy()
+        #We select the data without the required rows at the end
         pred_value = pred_value.iloc[:-look_back, pred_col]
         names_lag = [0 for x in range(len(pred_col))]
         for i in range(len(pred_col)):
@@ -206,25 +244,31 @@ class DL:
 
     def introduce_lags(self, lags, var_lag):
         '''
-        Introduction of lags moving the sample
+        Introduction of lags moving the sample (***Data for be lagged at the end of the columns)
 
-        :param lags: amount of lags
-        :param var_lag: label of lagged variables
+        :param lags: amount of lags for each n_lags selected in MLP
+        :param var_lag: label of lagged variables. Amount of variables starting by the end
         :return: data lagged
         '''
-        d1 = self.data.copy()
-        dim = d1.shape[1]
-        selec = range(dim - var_lag, dim)
-        try:
-            names1 = self.data.columns[selec]
-            for i in range(self.n_lags):
-                self.data = self.ts(self.data, lags, selec,  names1, i + 1)
-
-                selec = range(dim, dim + var_lag)
-                dim += var_lag
-            self.times = self.data.index
-        except:
-            raise NameError('Problems introducing time lags')
+        if self.n_lags>0:
+            d1 = self.data.copy()
+            tt = d1.index
+            dim= d1.shape[1]
+            selec = range(dim - var_lag, dim)
+            try:
+                names1= d1.columns[selec]
+                for i in range(self.n_lags):
+                    d1 = self.ts(d1, lags, selec, names1, i + 1)
+                    selec = range(dim, dim +var_lag)
+                    dim += var_lag
+                    tt =  np.delete(tt, 0)
+                self.data = d1
+                self.data.index = tt
+                self.times = self.data.index
+            except:
+                raise NameError('Problems introducing time lags')
+        else:
+            print('No lags selected')
 
     def adjust_limits(self):
         '''
@@ -248,73 +292,48 @@ class DL:
 
     def adapt_horizont(self, onebyone):
         '''
-        Move the data sample to connected the y with the x based on the future selected
-        onebyone: the movement is to match the future and past moving one step at a time (True) or considering certain lags (False)
+        Move the data sample to connected the y with the x based on the future selected and the possible steps
+        After introduce_lags
+        n_steps=step in the future for predicting
+        onebyone: although we want to predict 5 steps in the future (we move the sampke one by one)
         '''
-        if self.n_steps == 0:
+        if self.horizont == 0:
             self.data = self.data
-        else:
-            if self.type == 'series':
-                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-                y = self.data.iloc[:, self.pos_y]
+        else: # if we have horizont>0, make a jump to the future
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+            y = self.data.iloc[:, self.pos_y]
+            for t in range(self.horizont):
                 y = y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
-                index1 = X.index
 
-                if onebyone[0] == True:
-                    y, gap = self.cortes_onebyone(y, len(y), self.n_steps)
-                    y = pd.DataFrame(y.transpose())
-                    if gap > 0:
-                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
-                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
-                    X = X.drop(X.index[range(X.shape[0] - self.n_steps + 1, X.shape[0])], axis=0)
-                    index1 = np.delete(index1, range(len(index1) - self.n_steps + 1, len(index1)))
+            X = X.reset_index(drop=True)
+            X.index = y.index
 
+        if self.type == 'series': #if we are working with series the y will have several columns (future time steps)
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+            y = self.data.iloc[:, self.pos_y]
+            #We create the matrix y with the first step and then columns with the data moved to math the future steps
+            y1 = y.copy().drop(y.index[len(y)-1-self.n_steps:len(y)], axis=0)
+            ys = np.zeros((y1.shape[0], self.n_steps))
+            for t in range(self.n_steps-1):
+                a=y.copy().drop(y.index[0:(t+1)])
+                if self.n_steps - 2 == 1 and (t-1)==0:
+                    a = a
+                elif self.n_steps - 2 == 1 and (t-1)<0:
+                    a=a.drop(a.index[len(a)-1+t],axis=0)
                 else:
-                    y, gap = self.cortes(y, len(y), self.n_steps)
-                    y = pd.DataFrame(y.transpose())
+                    a=a.drop(a.index[len(a)-1-(self.n_steps-2-1+t):len(y)],axis=0)
+                ys[:,t+1]=a
+            ys[:,0]=y1
+            y=ys.copy()
 
-                    seq = np.arange(0, X.shape[0] - self.n_steps + 1, self.n_steps)
-                    X = X.iloc[seq]
-                    index1 = index1[seq]
-
-                    if gap > 0:
-                        fuera = 1 + gap + self.n_steps + self.n_lags
-                        X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
-                        index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
-
-                    else:
-                        fuera = 1 + self.n_lags
-                    print('El total a quitar de time_val es:', fuera)
-
-                X = X.reset_index(drop=True)
-
-                print('X-shape in adapt_horizont', X.shape)
-                print('y-shape in adapt_horizont', y.shape)
-
-                X.index = index1
-                y.index = index1
-
-                if self.pos_y == 0:
-                    self.data = pd.concat([y, X], axis=1)
-                else:
-                    self.data = pd.concat([X, y], axis=1)
-
+            #Merge inputs and outputs
+            if self.pos_y == 0:
+                self.data = pd.concat([y, X.set_index(y.index)], axis=1)
             else:
-                X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-                y = self.data.iloc[:, self.pos_y]
-                for t in range(self.horizont):
-                    y = y.drop(y.index[0], axis=0)
-                    X = X.drop(X.index[X.shape[0] - 1], axis=0)
+                self.data = pd.concat([X.set_index(y.index), y], axis=1)
 
-                X = X.reset_index(drop=True)
-                X.index = y.index
-
-                if self.pos_y == 0:
-                    self.data = pd.concat([y, X.set_index(y.index)], axis=1)
-                else:
-                    self.data = pd.concat([X.set_index(y.index), y], axis=1)
-        print('Horizont adjusted!')
+         print('Horizont adjusted!')
 
     def scalating(self, scalar_limits, groups, x, y):
         '''

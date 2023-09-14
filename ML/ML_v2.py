@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import tensorflow as tf
+import collections
 
 '''
 Conecting with GUPs
@@ -115,6 +116,11 @@ class ML:
                 #Limits based on hours
                 limit1 = int(limit[0])
                 limit2 = int(limit[1])
+                if restriction.shape[1]==1:
+                    restriction=pd.Series(restriction)
+                else:
+                    r=np.concatenate(restriction)
+                    restriction=pd.Series(r)
 
                 #If third value is weekend the weekend are eliminated for subsequent evaluation
                 if limit[2] == 'weekend':
@@ -123,7 +129,6 @@ class ML:
 
                     hours = pd.Series(restriction).dt.hour
                     ii = np.where((hours < limit1) | (hours > limit2))[0]
-                    print(ii)
                     ii = np.union1d(ii1, ii)
 
                 else:
@@ -264,66 +269,64 @@ class ML:
         '''
         Adjust the data or the variable to certain upper or lower limits
         '''
-        inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit)[0]
-        sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit)[0]
-        if len(inf)>0:
-            self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit, len(inf))
-        if len(sup)>0:
-            self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit, len(sup))
+        if isinstance(self.pos_y, collections.abc.Sized):
+            for t in range(len(self.pos_y)):
+                inf = np.where(self.data.iloc[:, self.pos_y[t]] < self.inf_limit[t])[0]
+                sup = np.where(self.data.iloc[:, self.pos_y[t]] > self.sup_limit[t])[0]
+                if len(inf) > 0:
+                    self.data.iloc[inf, self.pos_y[t]] = np.repeat(self.inf_limit[t], len(inf))
+                if len(sup) > 0:
+                    self.data.iloc[sup, self.pos_y[t]] = np.repeat(self.sup_limit[t], len(sup))
+        else:
+            inf = np.where(self.data.iloc[:,self.pos_y] < self.inf_limit[0])[0]
+            sup = np.where(self.data.iloc[:,self.pos_y] > self.sup_limit[0])[0]
+            if len(inf)>0:
+                self.data.iloc[inf, self.pos_y] = np.repeat(self.inf_limit[0], len(inf))
+            if len(sup)>0:
+                self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit[0], len(sup))
 
     def adapt_horizont(self, onebyone):
         '''
-        Move the data sample to connected the y with the x based on the future selected
-        Adapt to series data!!
-        After introduce_lags
-        n_steps=step in the future for predicting
-        onebyone: although we want to predict 5 steps in the future (we move the sampke one by one)
-        Consideration of horizont 0 o 1
-        '''
-        if self.horizont==0:
+         Move the data sample to connected the y with the x based on the future selected and the possible steps
+         After introduce_lags
+         n_steps=step in the future for predicting
+         onebyone: although we want to predict 5 steps in the future (we move the sampke one by one)
+         '''
+        if self.horizont == 0:
             self.data = self.data
-        else:
+        else:  # if we have horizont>0, make a jump to the future
             X = self.data.drop(self.data.columns[self.pos_y], axis=1)
             y = self.data.iloc[:, self.pos_y]
-            y = y.drop(y.index[range(self.horizont)], axis=0)
-            X = X.drop(X.index[range(X.shape[0] - self.horizont, X.shape[0])], axis=0)
-            self.data = pd.concat([y, X], axis=1)
+            for t in range(self.horizont):
+                y = y.drop(y.index[0], axis=0)
+                X = X.drop(X.index[X.shape[0] - 1], axis=0)
 
-
-        if self.type=='series':
-            index1 = X.index
-            if onebyone==True:
-                y,gap = self.cortes_onebyone(y, len(y), self.n_steps)
-                y=pd.DataFrame(y.transpose())
-                if gap > 0:
-                    X = X.drop(X.index[range(X.shape[0] - gap, X.shape[0])], axis=0)
-                    index1 = np.delete(index1, range(X.shape[0] - gap, X.shape[0]))
-                X = X.drop(X.index[range(X.shape[0] - self.n_steps+1, X.shape[0])], axis=0)
-                index1 = np.delete(index1, range(len(index1)-self.n_steps+1, len(index1)))
-            else:
-                y,gap = self.cortes(y, len(y), self.n_steps)
-                y=pd.DataFrame(y.transpose())
-                seq = np.arange(0, X.shape[0] - self.n_steps+1, self.n_steps)
-                X = X.iloc[seq]
-                index1 =index1[seq]
-                if gap > 0:
-                    fuera = 1 + gap + self.n_steps + self.n_lags
-                    X = X.drop(X.index[range(X.shape[0] - 1, X.shape[0])], axis=0)
-                    index1 = np.delete(index1, range(X.shape[0] - 1, X.shape[0]))
-                else:
-                    fuera= 1+self.n_lags
-                print('El total a quitar de time_val es:', fuera)
             X = X.reset_index(drop=True)
-            print(X.shape)
-            print(y.shape)
-            X.index = index1
-            y.index = index1
-            if any(self.pos_y == 0):
-                self.data = pd.concat([y, X], axis=1)
+            X.index = y.index
+
+        if self.type == 'series':  # if we are working with series the y will have several columns (future time steps)
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+            y = self.data.iloc[:, self.pos_y]
+            # We create the matrix y with the first step and then columns with the data moved to math the future steps
+            y1 = y.copy().drop(y.index[len(y) - 1 - self.n_steps:len(y)], axis=0)
+            ys = np.zeros((y1.shape[0], self.n_steps))
+            for t in range(self.n_steps - 1):
+                a = y.copy().drop(y.index[0:(t + 1)])
+                if self.n_steps - 2 == 1 and (t - 1) == 0:
+                    a = a
+                elif self.n_steps - 2 == 1 and (t - 1) < 0:
+                    a = a.drop(a.index[len(a) - 1 + t], axis=0)
+                else:
+                    a = a.drop(a.index[len(a) - 1 - (self.n_steps - 2 - 1 + t):len(y)], axis=0)
+                ys[:, t + 1] = a
+            ys[:, 0] = y1
+            y = ys.copy()
+
+            # Merge inputs and outputs
+            if self.pos_y == 0:
+                self.data = pd.concat([y, X.set_index(y.index)], axis=1)
             else:
-                self.data = pd.concat([X, y], axis=1)
-        else:
-            print('Not series, nothign to do with n_steps')
+                self.data = pd.concat([X.set_index(y.index), y], axis=1)
 
         print('Horizont adjusted!')
 
