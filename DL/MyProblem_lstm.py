@@ -57,15 +57,51 @@ class MyProblem_lstm(ElementwiseProblem):
         self.learning_rate=learning_rate
         self.activation=activation
 
+        '''
+        model: object of a class ML
+        horizont: distance to the present: I want to predict the moment four steps in future
+        scalar_y, scalar_x: scalars fitted
+        zero_problem: schedule, radiation o else. Adjust the result to the constraints
+        limits: limits based on the zero problems (hours, radiation limits, etc)
+        times: dates
+        pos_y: column or columns where the y is located
+        mask: logic if we want to mask the missing values
+        mask_value: specific value for the masking
+        n_lags: times that the variables must be lagged
+        n_steps: continuos time steps to predicti in the future
+        inf_limit: lower accepted limits for the estimated values
+        sup_limits: upper accepted limits for the estimated values
+        repeat_vector:True or False (specific layer). Repeat the inputs n times (batch, 12) -- (batch, n, 12). n would be the timesteps considered as inertia
+        dropout: percentage for NN
+        type: regression or classification
+        med: vector of means
+        contador: operator to count the iterations
+        l_lstm = maximum number for lstm layers
+        l_dense = maximum number for dense layers
+        batch: batch size in training
+        xlimit_inf = lower limits for the variables optimised
+        xlimit_sup = upper limits for the variable optimised
+        n_var: number of inputs
+        dictionary: where the different option tested are kept
+        onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        weights: weights based on the error in mutivariable case (some error must be more weighted)
+        optimizer: one selectec for training
+        learning_rate: one selectec for training
+        activation: one selectec for training
+        '''
+
     def cv_opt(self, data, fold, rep, neurons_lstm, neurons_dense, pacience, batch, mean_y):
-        #from LSTM_model_v2 import LSTM_model
         '''
         :param fold:assumed division of the sample for cv
         :param rep:repetition of the estimation in each subsample
-        :param dictionary: dictionary to fill with the options tested
-        :param q:operator to differentiate when there is parallelisation and the results must be a queue
-        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param neurons_lstm: list of the different options of structures
+        :param neurons_dense: list of the different options of structures
+        :param pacience: limits for epochs without improvement in training
+        :param batch: batchsize for training
+        :param mean_y: vector of means
         :return: cv(rmse) and complexity of the model tested
+        if mean_y is empty a variation rate will be applied
         '''
         name1 = tuple(np.concatenate((neurons_lstm, neurons_dense, pacience)))
         try:
@@ -78,6 +114,8 @@ class MyProblem_lstm(ElementwiseProblem):
             cvs=[0 for x in range(self.values[0])]
         else:
             cvs = [0 for x in range(rep * 2)]
+
+        #Division of the data between inputs and outputs and the slices of the CV
         names = self.names
         names = np.delete(names, self.pos_y)
         res = self.model.cv_division_lstm(data, self.horizont, fold, self.pos_y, self.n_lags, self.n_steps,
@@ -88,9 +126,9 @@ class MyProblem_lstm(ElementwiseProblem):
         y_test = np.array(res['y_test'])
         y_train = np.array(res['y_train'])
         y_val = np.array(res['y_val'])
-        #
+
         times_val = res['time_val']
-        #
+
         if self.type == 'regression':
             # Train the model
             zz = 0
@@ -98,6 +136,7 @@ class MyProblem_lstm(ElementwiseProblem):
                 stop = self.values[0]
             else:
                 stop = len(x_train)
+            #Stop is the number of division in the CV
             for z in range(stop):
                 print('Fold number', z)
                 time_start = time()
@@ -117,17 +156,22 @@ class MyProblem_lstm(ElementwiseProblem):
                     batch=1
                 model, history = self.model.train_model(model, x_train[z], ytrain, x_test[z], ytest, pacience,
                                                         batch)
-                print('Teh training spent ', time() - time_start)
+                print('The training spent ', time() - time_start)
                 if isinstance(self.pos_y, collections.abc.Sized):
                     outputs = len(self.pos_y)
                 else:
                     outputs = 1
+
+                #Conduct the predictions
                 res = self.model.predict_model(model, self.n_lags, x_val[z], batch, outputs)
                 y_pred = res['y_pred']
                 print('Y_val SHAPE in CV_OPT', yval[z].shape)
                 print('X_val SHAPE in CV_OPT', x_val[z].shape)
+
+                #Inverse scalating and check the limits of predictions
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(yval))
+
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = np.repeat(self.inf_limit[t],len(np.where(y_pred[:, t] < self.inf_limit[t])[0]))
@@ -137,6 +181,7 @@ class MyProblem_lstm(ElementwiseProblem):
                     y_pred[np.where(y_pred < self.inf_limit)[0]] = np.repeat(self.inf_limit,len(np.where(y_pred < self.inf_limit)[0]))
                     y_pred[np.where(y_pred > self.sup_limit)[0]] = np.repeat(self.sup_limit,len(np.where(y_pred < self.sup_limit)[0]))
                     y_real = y_real.reshape(-1, 1)
+
                 print('Y_pred SHAPE in CV_OPT ', y_pred.shape)
                 y_predF = y_pred.copy()
                 y_predF = pd.DataFrame(y_predF)
@@ -144,8 +189,10 @@ class MyProblem_lstm(ElementwiseProblem):
                 y_realF = y_real.copy()
                 y_realF = pd.DataFrame(y_realF)
                 y_realF.index = times_val[z]
+
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
+                    # Indexes out due to the zero_problem
                     res = DL.fix_values_0(times_val[z][:, 0],
                                           self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
@@ -158,22 +205,8 @@ class MyProblem_lstm(ElementwiseProblem):
                     else:
                         y_pred1 = y_pred
                         y_real1 = y_real
-                    # Outliers and missing values
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
 
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -189,6 +222,7 @@ class MyProblem_lstm(ElementwiseProblem):
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
 
+                    #Errors calculation based on mean values, weights...
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(
                             y_pred1) > 0 and len(y_real1) > 0:
                         if mean_y.size == 0:
@@ -208,13 +242,13 @@ class MyProblem_lstm(ElementwiseProblem):
                         cvs[zz] = 9999
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
+                    # Indexes out due to the zero_problem
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
                     res = DL.fix_values_0(scalar_rad.inverse_transform(x_val[z][:, self.n_lags - 1, place]),
                                           self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
-                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
-                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
                         y_real1 = np.delete(y_real, index_rad, 0)
@@ -225,22 +259,7 @@ class MyProblem_lstm(ElementwiseProblem):
                         y_pred1 = y_pred
                         y_real1 = y_real
 
-                    # Outliers and missing values
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -255,6 +274,8 @@ class MyProblem_lstm(ElementwiseProblem):
                             oT = np.unique(np.concatenate(o))
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
+
+                    # Errors calculation based on mean values, weights...
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(
                             y_pred1) > 0 and len(y_real1) > 0:
                         if mean_y.size == 0:
@@ -273,21 +294,8 @@ class MyProblem_lstm(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[zz] = 9999
                 else:
-                    if self.mask == True and len(y_pred) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred = np.delete(y_pred, o, 0)
-                                y_real = np.delete(y_real, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred = np.delete(y_pred, oT, 0)
-                            y_real = np.delete(y_real, oT, 0)
-
+                    #NO ZERO PROBLEM
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real == 0)[0]
@@ -302,6 +310,8 @@ class MyProblem_lstm(ElementwiseProblem):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
+
+                    # Errors calculation based on mean values, weights...
                     if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0 and len(
                             y_pred) > 0 and len(y_real) > 0:
                         if mean_y.size == 0:
@@ -322,10 +332,12 @@ class MyProblem_lstm(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[zz] = 9999
                 zz += 1
-            #
+
+            #Calculation of the complexity
             complexity = self.model.complex(neurons_lstm, neurons_dense, 2000, 12)
             self.dictionary[name1] = np.mean(cvs), complexity
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
+            print(self.dictionary[name1])
             print(res_final)
             return res_final['cvs'], res_final['complexity']
 

@@ -26,7 +26,7 @@ class DL:
 
         print('Super class to built different deep learning models. This class has other more specific classes associated with it ')
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,  inf_limit,sup_limit,names,extract_cero):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -37,6 +37,7 @@ class DL:
         self.limits =limits
         self.pos_y = pos_y
         self.n_lags  =n_lags
+        self.n_steps = n_steps
         self.mask = mask
         self.mask_value = mask_value
         self.sup_limit = sup_limit
@@ -54,6 +55,7 @@ class DL:
         times: dates object
         pos_y: number of colunm or columns where the output data are
         n_lags: time lags considered to train the model
+        n_steps: continuos time steps to predict in the future
         mask: masking true or false
         mask_value: if mask is true the value for masking
         inf_limit: lower limit wihitn the output of the model must be
@@ -332,8 +334,10 @@ class DL:
                 self.data = pd.concat([y, X.set_index(y.index)], axis=1)
             else:
                 self.data = pd.concat([X.set_index(y.index), y], axis=1)
+        else:
+            pass
 
-         print('Horizont adjusted!')
+        print('Horizont adjusted!')
 
     def scalating(self, scalar_limits, groups, x, y):
         '''

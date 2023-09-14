@@ -350,21 +350,6 @@ class MLP(ML):
                         y_pred1 = np.concatenate(y_pred1)
                         y_real1 = np.concatenate(y_real1)
 
-                    #Indexes for values out of limits
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
                     #Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
@@ -432,24 +417,6 @@ class MLP(ML):
                         y_pred1 = y_pred
                         y_real1 = y_real
 
-                    if self.type == 'series':
-                        y_pred1 = np.concatenate(y_pred1)
-                        y_real1 = np.concatenate(y_real1)
-                    # Indexes for values out of limits
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
                     # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:

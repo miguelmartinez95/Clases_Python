@@ -55,31 +55,36 @@ class MyProblem_mlp(ElementwiseProblem):
         horizont: distance to the present: I want to predict the moment four steps in future
         scalar_y, scalar_x: scalars fitted
         zero_problem: schedule, radiation o else. Adjust the result to the constraints
-        limits: limits based on the zero problems (hours, radiation limits, etc)
         extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        limits: limits based on the zero problems (hours, radiation limits, etc)
         times: dates
         pos_y: column or columns where the y is located
-        n_lags: times that the variables must be lagged
         mask: logic if we want to mask the missing values
         mask_value: specific value for the masking
+        n_lags: times that the variables must be lagged
         inf_limit: lower accepted limits for the estimated values
         sup_limits: upper accepted limits for the estimated values
-        weights: weights based on the error in mutivariable case (some error must be more weighted)
         type: regression or classification
-        dictionary: where the different option tested are kept
-        n_var: number of inputs
-        dropout: percentage for NN
+        med: vector of means
+        contador: operator to count the iterations
         l_dense = maximum number for layers
-        batch = size of the slices in training
+        batch: batch size in training
+        xlimit_inf = lower limits for the variables optimised
+        xlimit_sup = upper limits for the variable optimised
+        dropout: percentage for NN
+        n_var: number of inputs
+        dictionary: where the different option tested are kept
+       weights: weights based on the error in mutivariable case (some error must be more weighted)
         '''
 
     def cv_opt(self, data, fold, neurons, pacience, batch, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param neurons: list of the different options of structures
-        :param dictionary: dictionary to fill with the options tested
-        :param mean_y: vector of means
         :param pacience: limits for epochs without improvement in training
+        :param batch: batchsize for training
+        :param mean_y: vector of means
+        :param dictionary: dictionary to fill with the options tested
         :return: cv(rmse) and complexity of the model tested
         if mean_y is empty a variation rate will be applied
         '''
@@ -98,11 +103,13 @@ class MyProblem_mlp(ElementwiseProblem):
         except KeyError:
             pass
         cvs = [0 for x in range(fold)]
-        print(type(data))
+
         names = self.data.columns
         names = np.delete(names, self.pos_y)
         neurons = neurons[neurons > 0]
         layers = len(neurons)
+
+        #Division of the data between inputs and outputs and the slices of the CV
         y = self.data.iloc[:, self.pos_y]
         x = self.data.drop(self.data.columns[self.pos_y], axis=1)
         res = self.model.cv_division(x, y, fold)
@@ -173,6 +180,7 @@ class MyProblem_mlp(ElementwiseProblem):
                 #Checking the contrainst of the problem and correcting the results
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
+                    # Indexes out due to the zero_problem
                     res = ML.fix_values_0(times_test[z],
                                           self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
@@ -186,21 +194,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         y_pred1 = y_pred
                         y_real1 = y_real
 
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -216,6 +210,7 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
 
+                    #Errors calculation based on mean values, weights...
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
@@ -232,15 +227,13 @@ class MyProblem_mlp(ElementwiseProblem):
                                 cvs[z] = np.sum(e * self.weights)
 
                 elif self.zero_problem == 'radiation':
-
                     print('*****Night-radiation fixed******')
+                    # Indexes out due to the zero_problem
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
                     res = ML.fix_values_0(scalar_rad.inverse_transform(x_val[z].iloc[:, place]),
                                           self.zero_problem, self.limits)
                     index_rad = res['indexes_out']
-                    index_rad2 = np.where(y_real <= self.inf_limit)[0]
-                    index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
                     if len(index_rad) > 0 and self.horizont == 0:
                         y_pred1 = np.delete(y_pred, index_rad, 0)
@@ -252,21 +245,7 @@ class MyProblem_mlp(ElementwiseProblem):
                         y_pred1 = y_pred
                         y_real1 = y_real
 
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -282,6 +261,7 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
 
+                    # Errors calculation based on mean values, weights...
                     if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                         if mean_y.size == 0:
                             e = evals(y_pred1, y_real1).variation_rate()
@@ -301,21 +281,8 @@ class MyProblem_mlp(ElementwiseProblem):
                         print('Missing values are detected when we are evaluating the predictions')
                         cvs[z] = 9999
                 else:
-                    if self.mask == True and len(y_pred) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred = np.delete(y_pred, o, 0)
-                                y_real = np.delete(y_real, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred = np.delete(y_pred, oT, 0)
-                            y_real = np.delete(y_real, oT, 0)
-
+                    #NO ZERO PROBLEM
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real == 0)[0]
@@ -331,6 +298,7 @@ class MyProblem_mlp(ElementwiseProblem):
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
 
+                    # Errors calculation based on mean values, weights...
                     if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                         if mean_y.size == 0:
                             e = evals(y_pred, y_real).variation_rate()
@@ -356,6 +324,7 @@ class MyProblem_mlp(ElementwiseProblem):
             dictionary[name1] = np.mean(cvs), complexity
             print(dictionary[name1])
             res_final = {'cvs': np.mean(cvs), 'complexity': complexity}
+            print(res_final)
             return res_final['cvs'], res_final['complexity']
 
     @staticmethod
