@@ -116,12 +116,17 @@ class DL:
             try:
                 limit1 = int(limit[0])
                 limit2 = int(limit[1])
+                if restriction.shape[1]==1:
+                    restriction=pd.Series(restriction)
+                else:
+                    r=np.concatenate(restriction)
+                    restriction=pd.Series(r)
 
                 if limit[2]=='weekend':
-                    wday = pd.Series(restriction).dt.weekday
+                    wday = restriction.dt.weekday
                     ii1 = np.where(wday>4)[0]
 
-                    hours = pd.Series(restriction).dt.hour
+                    hours = restriction.dt.hour
                     ii = np.where((hours < limit1) | (hours > limit2))[0]
                     print(ii)
                     ii = np.union1d(ii1, ii)

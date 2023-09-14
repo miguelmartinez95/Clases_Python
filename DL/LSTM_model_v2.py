@@ -720,10 +720,18 @@ class LSTM_model(DL):
     def cv_analysis(self, fold,rep, neurons_lstm, neurons_dense,onebyone, pacience, batch,mean_y,values,plot,loss_plot=False,metric_plot=[False,False],limite=False, q=[], model=[]):
         '''
         :param fold: the assumed size of divisions
-        :param rep: In this case, the analysis repetitions of each of the two possile division considered in lstm analysis
+        :param rep: In this case, the analysis repetitions of each of the two possile divisions (if wanted)
+        :param neurons_lstm: vector of LSTM neurons
+        :param neurons_dense: vector of Dense neurons
         :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param pacience: stopping criterion
+        :param batch: batch size for training
+        :param mean_y: vector of means
         :param values specific values to divide the sample. specific values of a variable to search division
-        :param plot: True plots
+        :param plot: True - plots
+        :param loss_plot: plotting the evolution of loss function
+        :param metric_plot: plotting the evolution of a metric function. The seconc will be the title for the plot
+        :param limite: error threshold for stop training
         :param q: queue that inform us if paralyse or not
         :param model if model we have a pretrained model
 
@@ -737,19 +745,21 @@ class LSTM_model(DL):
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
 
+        #Division of the sample
         res = LSTM_model.cv_division_lstm(self.data, self.horizont, fold, self.pos_y, self.n_lags,self.n_steps, onebyone,values)
 
+        #Get the lists of divisions in three dimensions
         x_test =np.array(res['x_test'])
         x_train=np.array(res['x_train'])
         x_val=np.array(res['x_val'])
         y_test=np.array(res['y_test'])
         y_train =np.array(res['y_train'])
         y_val =np.array(res['y_val'])
-
         times_val = res['time_val']
 
 
         if self.type=='regression':
+            #Checking if we hace a pretrained model
             if isinstance(model, list):
                 if len(y_train[0].shape)>1:
                     y_trainO=y_train[0]
@@ -761,10 +771,12 @@ class LSTM_model(DL):
             else:
                 model1=model
 
+            #Define the times we will do the analysis
             if values:
                 stop = values[0]
             else:
                 stop = len(x_train)
+
             times = [0 for x in range(rep*stop)]
             cv = [0 for x in range(rep*stop)]
             rmse = [0 for x in range(rep*stop)]
@@ -787,19 +799,25 @@ class LSTM_model(DL):
 
                     modelF = model1
                     time_start = time()
-                    if self.n_steps>1:
+
+                    if self.n_steps>1: #condition for n_steps>1
                         batch=1
                     modelF, history = self.__class__.train_model(modelF,x_train[z], ytrain, x_test[z], ytest, pacience, batch,loss_plot, metric_plot, limite)
                     times[zz] = round(time() - time_start, 3)
+
                     if isinstance(self.pos_y, collections.abc.Sized):
                         outputs = len(self.pos_y)
                     else:
                         outputs = 1
-                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, outputs)
-                    y_pred = res['y_pred']
 
+                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, outputs)
+
+                    #Get the prediction and apply inversely the scalating
+                    y_pred = res['y_pred']
                     y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                     y_real = np.array(self.scalar_y.inverse_transform(yval))
+
+                    #Check the defined limits
                     if isinstance(self.pos_y, collections.abc.Sized):
                         for t in range(len(self.pos_y)):
                             y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = np.repeat(self.inf_limit[t], len(
@@ -816,24 +834,29 @@ class LSTM_model(DL):
 
                     if plot == True:
 
-                        if self.horizont>1:
-                            y_predP = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
-                            y_realP = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
+                        if self.n_steps>1:
+                            if len(self.pos_y)<2 and onebyone[0]==False and onebyone[1]==False: # only one variable and we move based on n_steps
+                                #y_predP = y_pred.reshape(int(y_pred.shape[0] / self.horizont), self.horizont)
+                                #y_realP = y_real.reshape(int(y_real.shape[0] / self.horizont), self.horizont)
+                                y_predP = pd.DataFrame(np.concatenate(y_pred))
+                                y_realP = pd.DataFrame(np.concatenate(y_real))
 
-                            y_predP = pd.DataFrame(y_predP[:,0])
-                            y_predP.index = times_val[z]
-                            y_realP = pd.DataFrame(y_realP[:,0])
-                            y_realP.index = times_val[z]
+                                #y_predP = pd.DataFrame(y_predP[:,0])
+                                y_predP.index = times_val[z]
+                                #y_realP = pd.DataFrame(y_realP[:,0])
+                                y_realP.index = times_val[z]
 
-                            s = np.max(y_realP).astype(int) + 12
-                            i = np.min(y_realP).astype(int) - 12
-                            plt.figure()
-                            plt.ylim(i, s)
-                            plt.plot(y_realP, color='black', label='Real')
-                            plt.plot(y_predP, color='blue', label='Prediction')
-                            plt.legend()
-                            plt.title("Subsample {} ".format(z))
-                            plt.show()
+                                s = np.max(y_realP).astype(int) + 12
+                                i = np.min(y_realP).astype(int) - 12
+                                plt.figure()
+                                plt.ylim(i, s)
+                                plt.plot(y_realP, color='black', label='Real')
+                                plt.plot(y_predP, color='blue', label='Prediction')
+                                plt.legend()
+                                plt.title("Subsample {} ".format(z))
+                                plt.show()
+                            else:
+                                print('Plot is not defined for this situation')
                         else:
                             y_realP = pd.DataFrame(y_real)
                             y_predP = pd.DataFrame(y_pred)
@@ -857,11 +880,9 @@ class LSTM_model(DL):
 
                     if self.zero_problem == 'schedule':
                         print('*****Night-schedule fixed******')
-
-                        res = super().fix_values_0(times_val[z][:,0],
+                        # Indexes out due to the zero_problem (dates of estimations)
+                        res = super().fix_values_0(times_val[z],
                                                       self.zero_problem, self.limits)
-
-
                         index_hour = res['indexes_out']
 
                         predictions.append(y_predF)
@@ -880,22 +901,23 @@ class LSTM_model(DL):
                                 y_pred1 = y_pred
                                 y_real1 = y_real
 
-                        # Outliers and missing values
-                        if self.mask == True and len(y_pred1) > 0:
-                            if mean_y.size == 0:
-                                o = np.where(y_real1 < self.inf_limit)[0]
-                                if len(o) > 0:
-                                    y_pred1 = np.delete(y_pred1, o, 0)
-                                    y_real1 = np.delete(y_real1, o, 0)
-                            else:
-                                o=list()
-                                for t in range(len(mean_y)):
-                                    o.append(np.where(y_real1[:,t] < self.inf_limit[t])[0])
+                        # Indexes for values out of limits
+                        #if self.mask == True and len(y_pred1) > 0:
+                        #    if mean_y.size == 0:
+                        #        o = np.where(y_real1 < self.inf_limit)[0]
+                        #        if len(o) > 0:
+                        #            y_pred1 = np.delete(y_pred1, o, 0)
+                        #            y_real1 = np.delete(y_real1, o, 0)
+                        #    else:
+                        #        o=list()
+                        #        for t in range(len(mean_y)):
+                        #            o.append(np.where(y_real1[:,t] < self.inf_limit[t])[0])
+#
+                        #        oT=np.unique(np.concatenate(o))
+                        #        y_pred1 = np.delete(y_pred1, oT, 0)
+                        #        y_real1 = np.delete(y_real1, oT, 0)
 
-                                oT=np.unique(np.concatenate(o))
-                                y_pred1 = np.delete(y_pred1, oT, 0)
-                                y_real1 = np.delete(y_real1, oT, 0)
-
+                        # Indexes where the real values are 0
                         if self.extract_cero == True and len(y_pred1) > 0:
                             if mean_y.size == 0:
                                 o = np.where(y_real1 == 0)[0]
@@ -914,7 +936,6 @@ class LSTM_model(DL):
                         '''After  checking we have data to evaluate:
                         # if the mean_y is empty we use variation rate with or witout weights
                         # on the other hand, we compute the classic error metrics'''
-
                         if len(y_pred1) > 0:
                             if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0 and len(y_pred1)>0 and len(y_real1)>0:
                                 if mean_y.size == 0:
@@ -949,14 +970,15 @@ class LSTM_model(DL):
 
                     elif self.zero_problem == 'radiation':
                         print('*****Night-radiation fixed******')
+                        # Indexes out due to the zero_problem (radiation values in the last values of inputs for each slice)
                         place = np.where(names == 'radiation')[0]
                         scalar_x = self.scalar_x
                         scalar_rad = scalar_x['radiation']
                         res = super().fix_values_0(scalar_rad.inverse_transform(x_val[zz][:, x_val[zz].shape[1] - 1, place]),
                                                    self.zero_problem, self.limits)
                         index_rad = res['indexes_out']
-                        index_rad2 = np.where(y_real <= self.inf_limit)[0]
-                        index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
+                        #index_rad2 = np.where(y_real <= self.inf_limit)[0]
+                        ##index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -976,21 +998,22 @@ class LSTM_model(DL):
                                 y_real1 = y_real
 
                         # Outliers and missing values
-                        if self.mask == True and len(y_pred1) > 0:
-                            if mean_y.size == 0:
-                                o = np.where(y_real1 < self.inf_limit)[0]
-                                if len(o) > 0:
-                                    y_pred1 = np.delete(y_pred1, o, 0)
-                                    y_real1 = np.delete(y_real1, o, 0)
-                            else:
-                                o = list()
-                                for t in range(len(mean_y)):
-                                    o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+                        #if self.mask == True and len(y_pred1) > 0:
+                        #    if mean_y.size == 0:
+                        #        o = np.where(y_real1 < self.inf_limit)[0]
+                        #        if len(o) > 0:
+                        #            y_pred1 = np.delete(y_pred1, o, 0)
+                        #            y_real1 = np.delete(y_real1, o, 0)
+                        #    else:
+                        #        o = list()
+                        #        for t in range(len(mean_y)):
+                        #            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
+#
+                        #        oT = np.unique(np.concatenate(o))
+                        #        y_pred1 = np.delete(y_pred1, oT, 0)
+                        #        y_real1 = np.delete(y_real1, oT, 0)
 
-                                oT = np.unique(np.concatenate(o))
-                                y_pred1 = np.delete(y_pred1, oT, 0)
-                                y_real1 = np.delete(y_real1, oT, 0)
-
+                        # Indexes where the real values are 0
                         if self.extract_cero == True and len(y_pred1) > 0:
                             if mean_y.size == 0:
                                 o = np.where(y_real1 == 0)[0]
@@ -1044,20 +1067,20 @@ class LSTM_model(DL):
                         reales.append(y_realF)
 
                         # Outliers and missing values
-                        if self.mask == True and len(y_pred) > 0:
-                            if mean_y.size == 0:
-                                o = np.where(y_real < self.inf_limit)[0]
-                                if len(o) > 0:
-                                    y_pred = np.delete(y_pred, o, 0)
-                                    y_real = np.delete(y_real, o, 0)
-                            else:
-                                o = list()
-                                for t in range(len(mean_y)):
-                                    o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-
-                                oT = np.unique(np.concatenate(o))
-                                y_pred = np.delete(y_pred, oT, 0)
-                                y_real = np.delete(y_real, oT, 0)
+                        #if self.mask == True and len(y_pred) > 0:
+                        #    if mean_y.size == 0:
+                        #        o = np.where(y_real < self.inf_limit)[0]
+                        #        if len(o) > 0:
+                        #            y_pred = np.delete(y_pred, o, 0)
+                        #            y_real = np.delete(y_real, o, 0)
+                        #    else:
+                        #        o = list()
+                        #        for t in range(len(mean_y)):
+                        #            o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
+#
+                        #        oT = np.unique(np.concatenate(o))
+                        #        y_pred = np.delete(y_pred, oT, 0)
+                        #        y_real = np.delete(y_real, oT, 0)
 
                         if self.extract_cero == True and len(y_pred) > 0:
                             if mean_y.size == 0:
@@ -1119,6 +1142,7 @@ class LSTM_model(DL):
                   'has an Average CV(RMSE): {}, has an Average NMBE: {} \n, an Average RMSE: {} and the average time training is {} s'.format(layers_lstm,layers_neurons,neurons_lstm,neurons_dense,
             pacience, np.nanmean(cv),np.nanmean(nmbe),np.nanmean(rmse),np.mean(times)))
 
+            #Conexions if parallelisation
             z = Queue()
             if type(q) == type(z):
                 #q.put(np.array([np.mean(cv), np.std(cv)]))
