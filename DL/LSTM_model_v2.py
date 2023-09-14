@@ -1824,7 +1824,8 @@ class LSTM_model(DL):
     def nsga2_individual(self,model,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen, xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights):
         from MyProblem_lstm import MyProblem_lstm
         '''
-        :param med:
+        :param model: object of ML or DL (class)
+        :param med:vector of means
         :param contador: a operator to count the attempts
         :param n_processes: how many processes are parallelise
         :param l_lstm:maximun number of layers lstm
@@ -1832,13 +1833,18 @@ class LSTM_model(DL):
         :param batch: batch size
         :param pop_size: population size selected for NSGA2
         :param tol: tolearance selected to terminate the process
+        :param n_last: last generation considered in the search
+        :param nth_gen: number of generation to evaluate
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
-        weigths: se meten al reves 
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param values specific values to divide the sample. specific values of a variable to search division
+        :param weigths: weights for the objective functions
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
         '''
 
+        #Define the problem class considering if parallelisation is wanted
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
@@ -1851,11 +1857,13 @@ class LSTM_model(DL):
                                 self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,
                                      self.optimizer,self.learning_rate, self.activation)
 
+        #Define the algorithm
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_lstm(l_lstm, l_dense), eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1))
 
+        #Define the termination based on tolerance in feasible space
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
                                                               n_max_evals=6000)
@@ -1872,15 +1880,15 @@ class LSTM_model(DL):
                        save_history=True,
                        seed=7)
         ct_total = time()-ct
+
+        #We select the final optimum with normalized results
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
-
             scal_cv.fit(res.F[:,0].reshape(-1,1))
             scal_com.fit(res.F[:,1].reshape(-1,1))
-
             cv=scal_cv.transform(res.F[:,0].reshape(-1,1))
             com=scal_com.transform(res.F[:,1].reshape(-1,1))
 
@@ -1913,7 +1921,11 @@ class LSTM_model(DL):
             obj = res.F
             struct = res.X
 
-        ret = [e.pop.get("F") for e in res.history]
+
+        ##################################################################################################
+        #Posible calculation of center distance evolution
+        ##################################################################################################
+        #ret = [e.pop.get("F") for e in res.history]
         #print('RET', len(ret))
         #print('RET2', ret[0].shape)
         ## Estandarización
@@ -1948,8 +1960,11 @@ class LSTM_model(DL):
         #plt.savefig("convergence1.png")
 
         ###############################################################################
+        #Plot of Hypervolume; metric for evaluate the convergence
+        ###############################################################################
+        from pymoo.indicators.hv import Hypervolume
         X, F = res.opt.get("X", "F")
-        n_evals = []  # corresponding number of function evaluations\
+        n_evals = []  # corresponding number of function evaluations
         hist_F = []  # the objective space values in each generation
         hist_cv = []  # constraint violation in each generation
         hist_cv_avg = []  # average constraint violation in the whole population
@@ -1971,7 +1986,6 @@ class LSTM_model(DL):
 
         approx_ideal = F.min(axis=0)
         approx_nadir = F.max(axis=0)
-        from pymoo.indicators.hv import Hypervolume
 
         metric = Hypervolume(ref_point=np.array([1.1, 1.1]),
                              norm_ref_point=False,
@@ -1980,7 +1994,6 @@ class LSTM_model(DL):
                              nadir=approx_nadir)
 
         hv = [metric.do(_F) for _F in hist_F]
-
         plt.figure(figsize=(10, 7))
         plt.plot(n_evals, hv, color='black', label="Avg. CV of Pop", linewidth=2)
         plt.scatter(n_evals, hv, facecolor="none", edgecolor='black',linewidths=1.5, marker="o",s=40)
