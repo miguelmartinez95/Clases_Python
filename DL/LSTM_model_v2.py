@@ -1901,9 +1901,6 @@ class LSTM_model(DL):
             struct_T = rx
             obj = res.F[I, :]
             struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
-            print(r_final.shape)
 
             plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black',s=75)
@@ -2015,18 +2012,22 @@ class LSTM_model(DL):
 
     def optimal_search_nsga2(self,model,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights, n_last=5, nth_gen=5):
         '''
+        :param model: object of ML or DL (class)
         :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
         :param l_dense: maximun layers dense
         :param batch: batch size
-        :param pop_size: population size for NSGA2
+        :param pop_size: population size for NSGA2-
         :param tol: tolerance to built the pareto front
         :param xlimit_inf: array with lower limits for neurons lstm (range of number multiplied by 10), dense (range of number multiplied by 10) and
-        pacience (range of number multiplied by 10)
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param mean_y: vector of means
         :param parallel: how many processes are parallelise
-        n_last: more robust, we consider the last n generations and take the maximum
-        nth_gen: whenever the termination criterion is calculated
-        :return: the options selected for the pareto front, the optimal selection and the total results
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param values specific values to divide the sample. specific values of a variable to search division
+        :param weigths: weights for the objective functions
+        :param n_last: last generation considered in the search
+        :param nth_gen: number of generation to evaluate
+        :return: the option selected for the pareto front, the optimal selection and the total results
         '''
 
         manager = multiprocessing.Manager()
@@ -2049,24 +2050,31 @@ class LSTM_model(DL):
         return res
 
 
-    def rnsga2_individual(self,model,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights,epsilon):
+    def rnsga2_individual(self,model,med, contador,n_processes,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary,onebyone,values,weights,ref_points,epsilon):
         from MyProblem_lstm import MyProblem_lstm
         '''
-        :param med:
+        :param model: object of ML or DL (class)
+        :param med:vector of means
         :param contador: a operator to count the attempts
         :param n_processes: how many processes are parallelise
         :param l_lstm:maximun number of layers lstm
         :param l_dense:maximun number of layers dense
         :param batch: batch size
-        :param epsilon: smaller generates solutions tighter
-        :param pop_size: population size selected for RVEA
+        :param pop_size: population size selected for NSGA2
         :param tol: tolearance selected to terminate the process
+        :param n_last: last generation considered in the search
+        :param nth_gen: number of generation to evaluate
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param values specific values to divide the sample. specific values of a variable to search division
+        :param weigths: weights for the objective functions
+                :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
+        :param epsilon: smaller generates solutions tighter
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
         '''
-
+        # Define the problem class considering if parallelisation is wanted
         if n_processes>1:
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
@@ -2077,9 +2085,7 @@ class LSTM_model(DL):
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
 
-
-        ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
-
+        # Algorithm for optimisation
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx"),
                           mutation=get_mutation("int_pm", prob=0.1),
@@ -2088,16 +2094,23 @@ class LSTM_model(DL):
                            weights=weights,
                            epsilon=epsilon)
 
+        # Termination of the algorithm based on tolerance
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
                                                               n_max_evals=6000)
+        '''
+        Termination can be with tolerance or with generations limit
+        '''
+        ct = time()
         res = minimize(problem,
                        algorithm,
                        termination,
                        pf=True,
                        verbose=True,
                        seed=7)
+        ct_total = time()-ct
 
+        #We select the final optimum with normalized results
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
@@ -2119,8 +2132,6 @@ class LSTM_model(DL):
             struct_T = rx
             obj = res.F[I, :]
             struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
 
             plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
@@ -2139,38 +2150,86 @@ class LSTM_model(DL):
             obj = res.F
             struct = res.X
 
+        from pymoo.indicators.hv import Hypervolume
+        X, F = res.opt.get("X", "F")
+        n_evals = []  # corresponding number of function evaluations
+        hist_F = []  # the objective space values in each generation
+        hist_cv = []  # constraint violation in each generation
+        hist_cv_avg = []  # average constraint violation in the whole population
+        hist = res.history
+        for algo in hist:
+            # store the number of function evaluations
+            n_evals.append(algo.evaluator.n_eval)
+
+            # retrieve the optimum from the algorithm
+            opt = algo.opt
+
+            # store the least contraint violation and the average in each population
+            hist_cv.append(opt.get("CV").min())
+            hist_cv_avg.append(algo.pop.get("CV").mean())
+
+            # filter out only the feasible and append and objective space values
+            feas = np.where(opt.get("feasible"))[0]
+            hist_F.append(opt.get("F")[feas])
+
+        approx_ideal = F.min(axis=0)
+        approx_nadir = F.max(axis=0)
+
+        metric = Hypervolume(ref_point=np.array([1.1, 1.1]),
+                             norm_ref_point=False,
+                             zero_to_one=True,
+                             ideal=approx_ideal,
+                             nadir=approx_nadir)
+
+        hv = [metric.do(_F) for _F in hist_F]
+        plt.figure(figsize=(10, 7))
+        plt.plot(n_evals, hv, color='black', label="Avg. CV of Pop", linewidth=2)
+        plt.scatter(n_evals, hv, facecolor="none", edgecolor='black',linewidths=1.5, marker="o",s=40)
+        plt.xlabel("Function Evaluations",fontsize=20, labelpad=10)
+        plt.ylabel("Hypervolume",fontsize=20, labelpad=10)
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
+        plt.show()
+        plt.savefig("convergence_HV.png")
+        ###############################################################################
+
         print('The number of evaluations were:', contador)
         if n_processes>1:
             pool.close()
         else:
             pass
 
-        return (obj, struct,obj_T, struct_T,  res,contador)
+        return (obj, struct,obj_T, struct_T,  res,contador,ct_total)
 
 
-
-    def optimal_search_rnsga2(self,model,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights, epsilon=0.01,n_last=5, nth_gen=5):
+    def optimal_search_rnsga2(self,model,l_lstm, l_dense, batch, pop_size, tol,xlimit_inf, xlimit_sup, mean_y,parallel, onebyone, values, weights,ref_points=np.array([[0.3, 0.1], [0.1, 0.3]]), epsilon=0.01,n_last=5, nth_gen=5):
         '''
-        :param l_lstm: maximun layers lstm (first layer never 0 neurons (input layer))
+        :param model: object of ML or DL (class)
         :param l_dense: maximun layers dense
         :param batch: batch size
         :param pop_size: population size for RVEA
         :param tol: tolerance to built the pareto front
-        :param epsilon: smaller generates solutions tighter
-        :param xlimit_inf: array with lower limits for neurons lstm (range of number multiplied by 10), dense (range of number multiplied by 10) and
-        pacience (range of number multiplied by 10)
+        :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param mean_y: vector of means
+        :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
+        :param weights: weights for the two objective functions
+        :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
+        :param epsilon: parameter of RNSGA
         n_last: more robust, we consider the last n generations and take the maximum
         nth_gen: whenever the termination criterion is calculated
+        if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
 
+        # Multiprocessing for possible paralelisation and fill the dictionary and the contador
         manager = multiprocessing.Manager()
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
         print('start optimisation!!!')
+
         obj, x_obj, obj_total, x_obj_total,res,evaluations = self.rnsga2_individual(model,mean_y, contador,parallel,l_lstm, l_dense, batch,pop_size,tol,n_last, nth_gen,xlimit_inf, xlimit_sup,dictionary, onebyone,values, weights,epsilon)
 
         np.savetxt('objectives_selectedR.txt', obj)
