@@ -5,14 +5,6 @@ from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
 import keras
-class MyThresholdCallback(keras.callbacks.Callback):
-    def __init__(self, threshold):
-        super(MyThresholdCallback, self).__init__()
-        self.threshold = threshold
-    def on_epoch_end(self, epoch, logs=None):
-        val_loss = logs["val_mse"]
-        if val_loss <= self.threshold:
-            self.model.stop_training = True
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -43,7 +35,16 @@ from DeepL_v2 import DL
 from MyRepair_lstm import MyRepair_lstm
 from time import time
 
-print('importa bien todo')
+#Class for stop the training based on a threshold
+class MyThresholdCallback(keras.callbacks.Callback):
+    def __init__(self, threshold):
+        super(MyThresholdCallback, self).__init__()
+        self.threshold = threshold
+    def on_epoch_end(self, epoch, logs=None):
+        val_loss = logs["val_mse"]
+        if val_loss <= self.threshold:
+            self.model.stop_training = True
+
 
 '''
 Conexion con GPUs
@@ -64,12 +65,6 @@ class LSTM_model(DL):
         print('Class to built LSTM models.')
         '''
         Subclass of DL 
-        repeat_vector:True or False (specific layer). Repeat the inputs n times (batch, 12) -- (batch, n, 12). n would be the timesteps considered as inertia
-        dropout: between 0 and 1. regularization technique where randomly selected neurons are ignored during training. They are “dropped out” 
-        randomly. This means that their contribution to the activation of downstream neurons is temporally removed.
-        type: regression or classification
-        weights: weights for the outputs. mainly for multivriate output
-        n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered) how much estimations want to do in line
         '''
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type,
@@ -84,9 +79,36 @@ class LSTM_model(DL):
         self.learning_rate = learning_rate
         self.optimizer = optimizer
 
+        '''
+        horizont: distance to the present: I want to predict the moment four steps in future
+        scalar_y, scalar_x: empty lists to save the object fit to the data
+        zero_problem: schedule, radiation o else. Adjust the result to the constraints
+        limits: limits based on the zero problems (hours, radiation limits, etc)
+        times: dates
+        pos_y: column or columns where the y is located
+        mask: logic if we want to mask the missing values
+        mask_value: specific value for the masking
+        n_lags: times that the variables must be lagged
+        n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered) how much estimations want to do in line
+        inf_limit: lower accepted limits for the estimated values
+        sup_limits: upper accepted limits for the estimated values
+        names: column labels 
+        extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        repeat_vector:True or False (specific layer). Repeat the inputs n times (batch, 12) -- (batch, n, 12). n would be the timesteps considered as inertia
+        dropout: between 0 and 1. regularization technique where randomly selected neurons are ignored during training. They are “dropped out” 
+        randomly. This means that their contribution to the activation of downstream neurons is temporally removed.
+        type: regression or classification
+        weights: weights for the outputs. mainly for multivriate output
+        optimizer: used in training
+        learning_rate: used in training
+        activation: activiation function used in training
+        '''
+
     @staticmethod
     def complex(neurons_lstm, neurons_dense, max_N, max_H):
         '''
+        :param neurons_lstm: vector with the LSTM neurons
+        :param neurons_dense: vector with the Dense neurons
         :param max_N: maximun neurons in the network
         :param max_H: maximum hidden layers in the network
         :return: complexity of the model
@@ -106,10 +128,12 @@ class LSTM_model(DL):
         '''
         :param data_new: data
         :param n_inputs: the lags considered (n_lags)
-        :return: data converted in three dimension based on the lags and the variables
+        :return: data converted in three dimension based on the lags and the variables (slice length, amount of slices, variables)
         '''
+
         data_new =np.array(data_new)
         rest2 = data_new.shape[0] % n_inputs
+        #We delete the surplus values for a clean division
         ind_out = 0
         while rest2 != 0:
             data_new = np.delete(data_new,0, axis=0)
@@ -130,7 +154,7 @@ class LSTM_model(DL):
         :param cut1: lower limit to divided into train - test
         :param cut2: upper limit to divided into train - test
         :return: data divided into train - test in three dimensions
-        Also returnin the index modified if some index was left over
+        Also return the index modified if some index was left over
        '''
 
        index=data_new1.index
@@ -170,10 +194,12 @@ class LSTM_model(DL):
         '''
         Relate x and y based on lags and future horizont
 
-        :param
-        train: dataset for transforming
-        horizont: horizont to the future selected
-        onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param train: dataset for transforming
+        :param pos_y: colums for the output data
+        :param n_lags: number of lags considered
+        :param n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered) how much estimations want to do in line
+        :param horizont: horizont to the future selected
+        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
 
@@ -183,13 +209,10 @@ class LSTM_model(DL):
 
         in_start = 0
         # step over the entire history one time step at a time
-        if onebyone[0]==True:
-            #if n_steps==1:
-            for _ in range(len(data)-(n_lags + horizont+(n_steps-1))):
-                if n_steps>1:
-                    timesF.append(data.index[range(_ + n_lags+horizont,_ + n_lags+horizont+n_steps-1)])
-                else:
-                    timesF.append(data.index[_ + n_lags+horizont])
+
+        #Forming the data set (X, y) according the lags and the steps considered
+        if onebyone[0]==True: # 1 a 1
+            for _ in range(len(data)-(n_lags + horizont+(n_steps))): #we go up to the final of dataset minus the lags, the horizont and the steps
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 out_end=in_end+horizont
@@ -199,20 +222,23 @@ class LSTM_model(DL):
                 if (out_end-1+(n_steps))<= len(data):
                     x_input = xx.iloc[in_start:in_end,:]
                     X.append(x_input)
+
+                    #choose the outputs with the dates
                     if n_steps==1:
                         y.append(yy.iloc[out_end-1])
+                        timesF.append(data.index[out_end-1])
                     else:
-                        y.append(yy.iloc[range(out_end-1,out_end-1+(n_steps-1))])
+                        y.append(yy.iloc[range(out_end-1,out_end-1+(n_steps))])
+                        timesF.append(data.index[range(out_end-1,out_end-1+(n_steps))])
+
                 # move along one time step
                 in_start += 1
-            dd=len(data)-len(data)-(n_lags + horizont)+1
+
+            #check if we go to the correct value (0)
+            dd=len(data)-in_start-(n_lags + horizont-n_steps)
         else:
-            if onebyone[1]==True:
-                while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
-                    if n_steps == 1:
-                        timesF.append(data.index[in_start + n_lags + horizont-1])
-                    else:
-                        timesF.append(data.index[(in_start + n_lags + horizont):(in_start + n_lags + horizont + (n_steps - 1))])
+            if onebyone[1]==True: #lag a lag
+                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps)):#we go up to the final of dataset minus the lags, the horizont and the steps
                     # define the end of the input sequence
                     in_end = in_start + n_lags
                     out_end = in_end + horizont + (n_steps - 1)
@@ -225,20 +251,19 @@ class LSTM_model(DL):
                         X.append(x_input)
                         if n_steps == 1:
                             y.append(yy.iloc[out_end - 1])
+                            timesF.append(data.index[out_end - 1])
                         else:
-                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
-                    # se selecciona uno
+                            y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps))])
+                            timesF.append(data.index[range(out_end - 1, out_end - 1 + (n_steps))])
+
                     # move along one time step
                     in_start += n_lags
-                    dd = len(data) - len(data) - (n_lags + horizont) + 1
+
+                # check if we go to the correct value (0)
+                dd=len(data)-in_start-(n_lags + horizont-n_steps)
 
             else:
-                while in_start <= data.shape[0] - (n_steps - 1) - horizont - n_lags:
-                    if n_steps == 1:
-                        timesF.append(data.index[in_start + n_lags + horizont-1])
-                    else:
-                        timesF.append(
-                            data.index[(in_start + n_lags + horizont):(in_start + n_lags + horizont + (n_steps - 1))])
+                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps)):#we go up to the final of dataset minus the lags, the horizont and the steps
                     # define the end of the input sequence
                     in_end = in_start + n_lags
                     out_end = in_end + horizont + (n_steps - 1)
@@ -251,12 +276,16 @@ class LSTM_model(DL):
                         X.append(x_input)
                         if n_steps == 1:
                             y.append(yy.iloc[out_end - 1])
+                            timesF.append(data.index[out_end - 1])
                         else:
                             y.append(yy.iloc[range(out_end - 1, out_end - 1 + (n_steps - 1))])
-                    # se selecciona uno
+                            timesF.append(data.index[range(out_end - 1, out_end - 1 + (n_steps))])
+
                     # move along one time step
                     in_start += n_steps
-                    dd = len(data) - len(data) - (n_lags + horizont) + 1
+
+                # check if we go to the correct value (0)
+                dd=len(data)-in_start-(n_lags + horizont-n_steps)
                 print('Data supervised')
 
         return(np.array(X), np.array(y),timesF, dd)
@@ -329,16 +358,18 @@ class LSTM_model(DL):
     @staticmethod
     def built_model_regression(train_x1, train_y1, neurons_lstm, neurons_dense, mask,mask_value, repeat_vector,dropout, optimizer, learning_rate, activation):
         '''
-        :param
-        trains: datasets
-        neurons_lstm: array with the LSTM neurons that define the LSTM layers
-        neurons_dense: array with the dense neurons that define the dense layers
-        mask: True or False
-        repeat_vector: True or False
-        dropout: between 0 and 1
-        :return: the model architecture built to be trained
 
-        CAREFUL: with masking at least two lstm layers are required
+        :param trains: datasets
+        :param neurons_lstm: array with the LSTM neurons that define the LSTM layers
+        :param neurons_dense: array with the dense neurons that define the dense layers
+        :param mask: True or False
+        :param mask_value: specific value for masking
+        :param repeat_vector: True or False (specific layer). Repeat the inputs n times (batch, 12) -- (batch, n, 12). n would be the timesteps considered as inertia
+        :param dropout: between 0 and 1
+        :param optimizer: for training
+        :param learning_rate: for training
+        :param activation: activation function for training
+        :return: the model architecture built to be trained
         '''
         from keras import backend as K
 
@@ -347,6 +378,7 @@ class LSTM_model(DL):
         if any(neurons_dense==0):
             neurons_dense = neurons_dense[neurons_dense>0]
 
+        #Define the operator based on the shape of X and y
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
         if len(train_x1.shape)<3 and len(train_y1.shape)<2:
@@ -360,6 +392,7 @@ class LSTM_model(DL):
 
         model = Sequential()
 
+        #Building the structure of LSTM layers (masking, dropout, repeat_vector)
         if layers_lstm<2:
             if mask == True:
                 model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
@@ -412,6 +445,8 @@ class LSTM_model(DL):
                         model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
                 else:
                     raise (NameError('Dropout and Repeat vector together not considered'))
+
+        #Building the structure of Dense layers (dropout)
         if layers_neurons>0:
             if dropout>0:
                 for z in range(layers_neurons):
@@ -427,6 +462,7 @@ class LSTM_model(DL):
                     else:
                         model.add(Dense(neurons_dense[z], activation=activation))
 
+        #Last layer neurons equal to the number of outputs
         model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
 
         model.compile(loss='mse', optimizer=optimizer,metrics=['mse'])
@@ -438,19 +474,23 @@ class LSTM_model(DL):
     @staticmethod
     def train_model(model,train_x1, train_y1, test_x1, test_y1, pacience, batch, loss_plot, metric_plot, limite):
         '''
-        :param
-        train: train data set
-        test: test data set
-        pacience: stopping criterion
-        bath: batchsize
-        model: model architecture built
+        :param model: model architecture built
+        :param train: train data set
+        :param test: test data set
+        :param pacience: stopping criterion
+        :param bath: batchsize
+        :param loss_plot: plotting the evolution of loss function
+        :param metric_plot: plotting the evolution of a metric function. The seconc will be the title for the plot
+        :param limite: error threshold for stop training
         :return: model trained based on pacience
         '''
+
         print('SHAPE TRAIN:', train_x1.shape)
         print('SHAPE TRAIN_Y:',train_y1.shape)
         print('SHAPE TEST:', test_x1.shape)
         print('SHAPE TEST_Y:', test_y1.shape)
 
+        #Create path for save the models
         h_path = Path('./best_models')
         h_path.mkdir(exist_ok=True)
         h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
@@ -468,6 +508,7 @@ class LSTM_model(DL):
                            callbacks=[my_callback])
 
 
+        #Plots of training evolution
         if loss_plot==True:
             plt.figure()
             plt.plot(history.history['loss'])

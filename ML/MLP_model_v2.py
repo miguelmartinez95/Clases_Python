@@ -28,7 +28,8 @@ from pymoo.core.problem import starmap_parallelized_eval
 class MLP(ML):
     def info(self):
         print(('Class to built MLP models. \n'
-              'All the parameters comes from the ML class except the activation functions'))
+              'All the parameters comes from the ML class except the activation functions'
+               'The shape of inputs must be: y in the first columns and the variables to be lagged in the last columns'))
     def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags,n_steps, mask, mask_value, inf_limit,sup_limit,weights, type, optimizer='adam', learning_rate=0.001, activation='relu'):
         super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
         self.type = type
