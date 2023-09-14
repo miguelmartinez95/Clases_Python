@@ -1347,7 +1347,7 @@ class MLP(ML):
         return res
 
     def rnsga2_individual(self,model, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
-                         xlimit_sup,dropout, dictionary, weights,epsilon):
+                         xlimit_sup,dropout, dictionary, weights,ref_points,epsilon):
         '''
         :param model: object of ML or DL (class)
         :param med: vector of means
@@ -1361,6 +1361,7 @@ class MLP(ML):
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
         :param weights: weights for the two objective functions
+        :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter for RNSGA
         :return: options in Pareto front, the optimal selection and the total results
         '''
@@ -1379,9 +1380,6 @@ class MLP(ML):
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
                                 med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
-
-        #Definition of the reference points needed by this algorithm
-        ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
 
         # Algorithm for optimisation
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
@@ -1452,7 +1450,7 @@ class MLP(ML):
             pass
         return (obj, struct, obj_T, struct_T, res,contador)
 
-    def optimal_search_rnsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights,epsilon=0.01):
+    def optimal_search_rnsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights,ref_points=np.array([[0.3, 0.1], [0.1, 0.3]]),epsilon=0.01):
         '''
         :param model: object of ML or DL (class)
         :param l_dense: maximun layers dense
@@ -1465,6 +1463,7 @@ class MLP(ML):
         :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
         :param weights: weights for the two objective functions
+        :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter of RNSGA
         if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
@@ -1479,7 +1478,7 @@ class MLP(ML):
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(model, mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dropout,dictionary, weights,epsilon)
+                                                                            xlimit_sup, dropout,dictionary, weights,ref_points,epsilon)
         np.savetxt('objectives_selectedR.txt', obj)
         np.savetxt('x_selectedR.txt', x_obj)
         np.savetxt('objectivesR.txt', obj_total)
