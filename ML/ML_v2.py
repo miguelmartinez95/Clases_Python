@@ -344,20 +344,23 @@ class ML:
         #We make the scalation based on: inputs, outputs and if groups are defined (if not each variable separately)
         if x == True and y == True:
             if not groups:
-                d =self.data.drop(self.data.columns[self.pos_y], axis=1)
-                scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                scalars.fit(d)
-                d= scalars.transform(d)
-                scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-                if len(self.pos_y) > 1:
-                    d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-                else:
-                    d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+                try:
+                    d =self.data.drop(self.data.columns[self.pos_y], axis=1)
+                    scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalars.fit(d)
+                    d= scalars.transform(d)
+                    scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                    if len(self.pos_y) > 1:
+                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                    else:
+                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
-                self.data= pd.DataFrame(np.concatenate((d1,d),axis=1))
-                self.scalar_y = scalar_y
-                self.scalar_x = scalars
+                    self.data= pd.DataFrame(np.concatenate((d1,d),axis=1))
+                    self.scalar_y = scalar_y
+                    self.scalar_x = scalars
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
             else:
                 try:
                     for i in range(len(groups)):
@@ -383,12 +386,15 @@ class ML:
                 self.scalar_x = scalars
         elif x == True and y == False:
             if not groups:
-                d =self.data.drop(self.data.columns[self.pos_y], axis=1)
-                scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                scalars.fit(d)
-                d= scalars.transform(d)
-                self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d)], axis=1)
-                self.scalar_x = scalars
+                try:
+                    d =self.data.drop(self.data.columns[self.pos_y], axis=1)
+                    scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalars.fit(d)
+                    d= scalars.transform(d)
+                    self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d)], axis=1)
+                    self.scalar_x = scalars
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
             else:
                 try:
                     for i in range(len(groups)):
@@ -414,9 +420,11 @@ class ML:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
             self.scalar_y = scalar_y
+        print('Data scaled!!')
 
     def missing_values_remove(self):
         self.data = self.data.dropna()
+        self.times = self.data.index
 
     def missing_values_masking_onehot(self):
         '''
@@ -436,6 +444,14 @@ class ML:
 
     def missing_values_masking(self):
         self.data = self.data.replace(np.nan, self.mask_value)
+
+        m = self.data.isna().sum()
+        if np.array(m > 0).sum() == 0:
+            print('Missing values masked')
+        else:
+            w = np.where(m > 0)
+            print('CAREFUL!!! There are still missing values \n'
+                  'The variables with missing values are', self.data.columns[w])
 
     def missing_values_interpolate(self, delete_end, delete_start, mode, limit, order=2):
         '''
@@ -470,3 +486,8 @@ class ML:
                   'The variables with missing values are', dd.columns[w])
         self.data = dd
         self.data.index=ii
+
+        a = self.data.iloc[:,self.pos_y]
+        a[a<self.inf_limit] = self.inf_limit
+        a[a>self.sup_limit] = self.sup_limit
+        self.data.iloc[:,self.pos_y] = a

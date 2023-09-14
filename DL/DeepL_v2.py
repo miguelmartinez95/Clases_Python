@@ -345,45 +345,76 @@ class DL:
         '''
         scalars = dict()
         names = list(groups.keys())
+        #We make the scalation based on: inputs, outputs and if groups are defined (if not each variable separately)
         if x == True and y == True:
-            try:
-                for i in range(len(groups)):
-                    scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    selec = groups[names[i]]
-                    d = self.data.iloc[:, selec]
-                    if (len(selec) > 1):
-                        scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+            if not groups:
+                try:
+                    d = self.data.drop(self.data.columns[self.pos_y], axis=1)
+                    scalars = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalars.fit(d)
+                    d = scalars.transform(d)
+                    scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                    if len(self.pos_y) > 1:
+                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
                     else:
-                        scalars[names[i]].fit(np.array(d).reshape(-1, 1))
-                    for z in range(len(selec)):
-                        self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
-            except:
-                raise NameError('Problems with the scalar by groups of variables')
-            scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-            scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
-            if isinstance(self.pos_y, collections.abc.Sized):
-                self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                    self.data = pd.DataFrame(np.concatenate((d1, d), axis=1))
+                    self.scalar_y = scalar_y
+                    self.scalar_x = scalars
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
             else:
-                self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+                try:
+                    for i in range(len(groups)):
+                        scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        selec = groups[names[i]]
+                        d = self.data.iloc[:, selec]
+                        if (len(selec) > 1):
+                            scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                        else:
+                            scalars[names[i]].fit(np.array(d).reshape(-1, 1))
+                        for z in range(len(selec)):
+                            self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
+                scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
-            self.scalar_y = scalar_y
-            self.scalar_x = scalars
-        elif x == True and y == False:
-            try:
-                for i in range(len(groups)):
-                    scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    selec = groups[names[i]]
-                    d = self.data.iloc[:, selec]
-                    if (len(selec) > 1):
-                        scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
-                    else:
-                        scalars[names[i]].fit(np.array(d).reshape(-1, 1))
-                    for z in range(len(selec)):
-                        self.data.iloc[:,selec[z]]= scalars[names[i]].transform(pd.DataFrame(d.iloc[:,z]))[:,0]
+                if isinstance(self.pos_y, collections.abc.Sized):
+                    self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                else:
+                    self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+
+                self.scalar_y = scalar_y
                 self.scalar_x = scalars
-            except:
-                raise NameError('Problems with the scalar by groups of variables')
+        elif x == True and y == False:
+            if not groups:
+                try:
+                    d =self.data.drop(self.data.columns[self.pos_y], axis=1)
+                    scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalars.fit(d)
+                    d= scalars.transform(d)
+                    self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d)], axis=1)
+                    self.scalar_x = scalars
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
+            else:
+                try:
+                    for i in range(len(groups)):
+                        scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        selec = groups[names[i]]
+                        d = self.data.iloc[:, selec]
+                        if (len(selec) > 1):
+                            scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                        else:
+                            scalars[names[i]].fit(np.array(d).reshape(-1, 1))
+                        for z in range(len(selec)):
+                            self.data.iloc[:,selec[z]]= scalars[names[i]].transform(pd.DataFrame(d.iloc[:,z]))[:,0]
+                    self.scalar_x = scalars
+                except:
+                    raise NameError('Problems with the scalar by groups of variables')
         elif y == True and x == False:
             scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
             scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
@@ -401,6 +432,9 @@ class DL:
         self.times = self.data.index
 
     def missing_values_masking_onehot(self):
+        '''
+        :return: the data with a column indicating if there missing values or not
+        '''
         d=self.data.drop(self.data.columns[self.pos_y],axis=1)
         places=np.where(d.isnull().any(axis = 1))[0]
         if len(places)<1:
@@ -433,24 +467,30 @@ class DL:
         :param order: if spline or polinomial
         :return: data interpolated
         '''
-        if delete_end==True:
-            while(any(self.data.iloc[self.data.index[self.data.shape[0]-1]].isna())):
-                self.data.drop(self.data.index[self.data.shape[0]-1], axis=0, inplace=True)
-        if delete_start==True:
-            while(any(self.data.iloc[self.data.index[0]].isna())):
-                self.data.drop(self.data.index[0], axis=0, inplace=True)
-
-        if mode=='spline' or mode=='polynomial':
-            self.data = self.data.interpolate(method=mode, order=order, axis=0, limit=limit)
+        dd = self.data.copy()
+        dd = dd.reset_index(drop=True)
+        ii = self.data.index
+        if delete_end == True:
+            while (any(dd.iloc[dd.shape[0] - 1].isna())):
+                dd.drop(dd.index[dd.shape[0] - 1], axis=0, inplace=True)
+                ii = np.delete(ii, len(ii) - 1)
+        if delete_start == True:
+            while (any(dd.iloc[0].isna())):
+                dd.drop(dd.index[0], axis=0, inplace=True)
+                ii = np.delete(ii, 0)
+        if mode == 'spline' or mode == 'polynomial':
+            dd = dd.interpolate(method=mode, order=order, axis=0, limit=limit)
         else:
-            self.data = self.data.interpolate(method=mode, axis=0, limit=limit)
-        m = self.data.isna().sum()
-        if np.array(m>0).sum() == 0:
+            dd = dd.interpolate(method=mode, axis=0, limit=limit)
+        m = dd.isna().sum()
+        if np.array(m > 0).sum() == 0:
             print('Missing values interpolated')
         else:
-            w = np.where(m>0)
+            w = np.where(m > 0)
             print('CAREFUL!!! There are still missing values; increase the limit? \n'
-                  'The variables with missing values are', self.data.columns[w])
+                  'The variables with missing values are', dd.columns[w])
+        self.data = dd
+        self.data.index = ii
 
         a = self.data.iloc[:,self.pos_y]
         a[a<self.inf_limit] = self.inf_limit
