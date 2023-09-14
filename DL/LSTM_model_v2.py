@@ -163,6 +163,7 @@ class LSTM_model(DL):
 
        train, test = data_new.drop(range(cut1, cut2)), data_new.iloc[range(cut1, cut2)]
        index_test = index[range(cut1, cut2)]
+       index_train = np.delete(index, range(cut1, cut2))
 
        ###################################################################################
        #Evalaute that the datasets match with a number of timesteps sets
@@ -170,6 +171,7 @@ class LSTM_model(DL):
        ind_out1 = 0
        while rest1 != 0:
            train = train.drop(train.index[0], axis=0)
+           index_train = np.delete(index_train, 0, axis=0)
            rest1 = train.shape[0] % n_inputs
            ind_out1 += 1
 
@@ -183,10 +185,10 @@ class LSTM_model(DL):
 
        ###################################################################################
        # restructure into windows of  data
-       train1 = np.array(np.split(train, len(train) / n_inputs))
-       test1 = np.array(np.split(test, len(test) / n_inputs))
+       #train1 = np.array(np.split(train, len(train) / n_inputs))
+       #test1 = np.array(np.split(test, len(test) / n_inputs))
 
-       return train1, test1, index_test
+       return train, test, index_train, index_test
 
 
     @staticmethod
@@ -203,8 +205,8 @@ class LSTM_model(DL):
         :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
 
-        data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
-        data=pd.DataFrame(data)
+        #data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
+        data=pd.DataFrame(train)
         X, y, timesF= list(), list(),list()
 
         in_start = 0
@@ -583,13 +585,20 @@ class LSTM_model(DL):
         '''
             MODIFICATION TO DIVIDE INTO MORE PIECES????
 
-        :return: Division to cv analysis considering that with lstm algorithm the data can not be divided into simple pieces.
+        :param horizont: steps in the future to estimate (two hours afterwards)
+        :param fold: how many divisions (optimum 3)
+        :param n_lags: number of lags
+        :param estimations simutaneously to the future
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [0][1] False False steps by steps
         The validation sample is extracted from the first test sample
+        :param values:
         If values the division is previously defined
         It can only be divided with a initial part and a final part
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :return: Division to cv analysis considering that with lstm algorithm the data can not be divided into simple pieces.
         return: train, test, and validation samples. Indexes for test samples (before division into test-validation)
         '''
+
         X_test = []
         X_train = []
         X_val = []
@@ -597,14 +606,15 @@ class LSTM_model(DL):
         Y_train = []
         Y_val = []
 
+        #If values the division will be based on a list of operators or a variable
         if values:
             times_val = []
             place = values[2]
             var= data.iloc[:,place]
             for t in range(values[0]):
                 if len(place)==1:
-                    w = np.where(var==values[1])[0][0]
-                    w2 = np.where(var==values[1])[0][len(np.where(var==values[1])[0])-1]
+                    w = np.where(var==values[1])[t][0]
+                    w2 = np.where(var==values[1])[t][len(np.where(var==values[1])[0])-1]
                 elif len(place)==2:
                     w = np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0][0]
                     w2 = np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0][len(np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0])-1]
@@ -615,31 +625,35 @@ class LSTM_model(DL):
                 else:
                     raise(NameError('Not considered'))
 
+                #Divide based on the limits according the values (index_val simply index for validation set)
+                train, val, index_train, index_val = LSTM_model.split_dataset(data, n_lags, w, w2)
+                val.index=index_val
+                train.index = index_train
 
-                train, val, index_val = LSTM_model.split_dataset(data, n_lags, w, w2)
-                print('VAL SHAPE',val.shape)
-
-                index_val = index_val[range(index_val.shape[0] - math.ceil(index_val.shape[0] / 2))]
+                #Once we have train and val, we define test
+                #index_val = index_val[range(index_val.shape[0] - math.ceil(index_val.shape[0] / 2))]
                 st = int(train.shape[0]/3)
-                test= train[range(train.shape[0]-st, train.shape[0]),:,:]
-                train=np.delete(train, list(range(train.shape[0]-st, train.shape[0])), 0)
+                #test= train[range(train.shape[0]-st, train.shape[0]),:,:] #the last rows (one third) for testing
+                test= train.iloc[range(train.shape[0]-st, train.shape[0]),:] #the last rows (one third) for testing
+                #train=np.delete(train, list(range(train.shape[0]-st, train.shape[0])), 0) # the rest for training
+                train=train.drop(train.index[range(train.shape[0]-st, train.shape[0])], axis=0) # the rest for training
 
+                #We build the three dimension dataset with their indexes
                 x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, pos_y, n_lags,n_steps, horizont, onebyone)
                 x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, pos_y, n_lags,n_steps, horizont, onebyone)
                 x_val, y_val, ind_val, dif = LSTM_model.to_supervised(val, pos_y, n_lags,n_steps, horizont, onebyone)
 
-                if onebyone[0] == True:
-                    if horizont == 0:
-                        index_val = np.delete(index_val, range(n_lags - 1), axis=0)
-                    else:
-                        index_val = np.delete(index_val, range(n_lags), axis=0)
-                else:
-                    index_val = ind_val
+                ##Define the index
+                #if onebyone[0] == True:
+                #    if horizont == 0:
+                #        index_val = np.delete(index_val, range(n_lags - 1), axis=0)
+                #    else:
+                #        index_val = np.delete(index_val, range(n_lags), axis=0)
+                #else:
+                #    index_val = ind_val
 
-                times_val.append(index_val)
-
-                print(len(index_val))
-                print(y_val.shape)
+                #We form the list with the appropiate division based on lags and according the different values
+                times_val.append(ind_val)
                 X_test.append(x_test)
                 X_train.append(x_train)
                 X_val.append(x_val)
@@ -649,7 +663,7 @@ class LSTM_model(DL):
                 print('cv_division done')
 
         else:
-
+            #If not values the cv division is classic but only taking into account the beginning and the end of the sample (simplification)
             ###################################################################################
             step = int(data.shape[0] / fold)
             w = 0
@@ -658,41 +672,36 @@ class LSTM_model(DL):
             ####################################################################################
 
             try:
-               for i in range(2):
-                    train, test, index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
+               for i in range(2): #division in two: test with the beginning and test with the final
+                    train, test, index_train,index_val = LSTM_model.split_dataset(data, n_lags,w, w2)
+                    test.index = index_val
+                    train.index = index_train
+                    #r = LSTM_model.three_dimension(index_val, n_lags)
+                    #index_val=r['data']
 
-                    print('####',test.shape)
-                    print(len(index_val))
+                    #index_val = index_val[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:]
+                    #val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
+                    val = train.iloc[range(train.shape[0]-math.ceil(train.shape[0]/3), train.shape[0]),:]
+                    #test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
+                    train = train.iloc[range(0, math.ceil(train.shape[0] / 3)), :]
 
-                    r = LSTM_model.three_dimension(index_val, n_lags)
-                    index_val=r['data']
-
-                    print(index_val.shape)
-                    index_val = index_val[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:]
-                    val = test[range(test.shape[0]-math.ceil(test.shape[0]/2), test.shape[0]),:,:]
-                    test = test[range(0, math.ceil(test.shape[0] / 2)), :, :]
-
-                    print(len(index_val))
-                    print(val.shape)
-                    index_val= index_val.reshape(index_val.shape[0]*index_val.shape[1],1)
+                    #index_val= index_val.reshape(index_val.shape[0]*index_val.shape[1],1)
 
                     x_train, y_train,ind_train,dif = LSTM_model.to_supervised(train, pos_y, n_lags,n_steps,horizont, onebyone)
                     x_test, y_test,ind_test,dif = LSTM_model.to_supervised(test, pos_y, n_lags,n_steps,horizont,onebyone)
                     x_val, y_val,ind_val,dif = LSTM_model.to_supervised(val, pos_y, n_lags,n_steps,horizont, onebyone)
 
 
-                    if onebyone[0]==True:
-                        index_val = np.delete(index_val, range(n_lags+horizont), axis=0)
-                    else:
-                        if isinstance(ind_val, list):
-                            index_val = index_val[np.concatenate(ind_val)]
-                        else:
-                            index_val=index_val[ind_val]
+                    #if onebyone[0]==True:
+                    #    index_val = np.delete(index_val, range(n_lags+horizont), axis=0)
+                    #else:
+                    #    if isinstance(ind_val, list):
+                    #        index_val = index_val[np.concatenate(ind_val)]
+                    #    else:
+                    #        index_val=index_val[ind_val]
 
-                    times_val.append(index_val)
-
-                    print(len(index_val))
-                    print(y_val.shape)
+                    # We form the list with the appropiate division based on lags and according to the fold division
+                    times_val.append(ind_val)
                     X_test.append(x_test)
                     X_train.append(x_train)
                     X_val.append(x_val)
@@ -700,6 +709,7 @@ class LSTM_model(DL):
                     Y_train.append(y_train)
                     Y_val.append(y_val)
 
+                    #Update the cuts
                     w = data.shape[0]-w2
                     w2 = data.shape[0]
             except:
