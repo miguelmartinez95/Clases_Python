@@ -543,21 +543,22 @@ class LSTM_model(DL):
         '''
         :param model: trained model
         :param n_lags: lags to built lstm block
+        :param x_val: data for predictions
         :param n_outputs: how many variables want to estimate
-        :return: predictions in the validation sample, considering the selected moving window
-        CAREFUL: the predictions here taking into account movements by n_lags
+        :return: predictions in the validation sample, considering the selected moving window (x_val: samples, time steps, features)
         '''
 
         data = np.array(x_val)
-        data = data.reshape((data.shape[0] * data.shape[1], data.shape[2]))
+        #data = data.reshape((data.shape[0] * data.shape[1], data.shape[2]))
         predictions = list()
-        l1 = 0
-        l2 = n_lags
-        for i in range(x_val.shape[0]):
+        #l1 = 0
+        #l2 = n_lags
+        for i in range(data.shape[0]):
             # flatten data
-            input_x = data[l1:l2, :]
-            input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
-            print(input_x.shape)
+            #input_x = data[l1:l2, :]
+            input_x = data[i, :,:]
+            #input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
+            input_x = input_x.reshape((1, input_x.shape[1], input_x.shape[2]))
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
             if n_outputs>1:
@@ -566,8 +567,8 @@ class LSTM_model(DL):
                 yhat = yhat[0]
             predictions.append(yhat)
             #history.append(tt[i,:])
-            l1 =l2
-            l2 += n_lags
+            #l1 =l2
+            #l2 += n_lags
 
         predictions  =np.array(predictions)
         if n_outputs>1:
