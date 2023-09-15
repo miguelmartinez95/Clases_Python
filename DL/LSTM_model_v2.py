@@ -1190,14 +1190,6 @@ class LSTM_model(DL):
         Instance to predict certain samples outside these classes
         '''
 
-        #Convert the input data in three dimensions
-        res = self.__class__.three_dimension(val, self.n_lags)
-
-        val = res['data']
-        i_out = res['ind_out']
-        if i_out>0:
-            times=np.delete(times, range(i_out),0)
-
         #We define the times for the prediction sample  based on horizont and n_steps
         if self.horizont == 0:
             if onebyone[0]==True:
@@ -1255,7 +1247,6 @@ class LSTM_model(DL):
         x_val, y_val,ind_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags,self.n_steps, self.horizont, onebyone)
 
         print('Diferencia entre time and y:',dif)
-
         print('X_val SHAPE in testing',x_val.shape)
         print('Y_val SHAPE in testing',y_val.shape)
 
@@ -1268,6 +1259,11 @@ class LSTM_model(DL):
 
         y_pred = res['y_pred']
         print('Y_pred SHAPE in testing',y_pred.shape)
+
+
+        times=pd.to_datetime(pd.Series(np.concatenate(ind_val)))
+        if len(times)!=len(y_pred):
+            raise NameError('Dates length is not equal than predictions')
 
         #Apply the inverse scalating (if neccesary)
         if scalated[0]==True:
@@ -1374,7 +1370,7 @@ class LSTM_model(DL):
                                 mae= np.sum(e_mae * self.weights)
 
                         res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'mae':mae, 'nmbe': nmbe,
-                               'rmse': rmse, 'r2': r2, 'ind_out':i_out}
+                               'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1382,7 +1378,7 @@ class LSTM_model(DL):
                     rmse = 9999
                     r2 = -9999
                     res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
-                           'rmse': rmse, 'r2': r2,'ind_out':i_out}
+                           'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
 
@@ -1468,7 +1464,7 @@ class LSTM_model(DL):
                                 nmbe = np.sum(e_n * self.weights)
                                 mae = np.sum(e_mae * self.weights)
                         res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'mae':mae, 'nmbe': nmbe,
-                               'rmse': rmse, 'r2': r2,'ind_out':i_out}
+                               'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1476,7 +1472,7 @@ class LSTM_model(DL):
                     rmse = 9999
                     r2 = -9999
                     res = {'y_pred': y_predF, 'cv_rmse': cv, 'nmbe': nmbe,
-                           'rmse': rmse, 'r2': r2,'ind_out':i_out}
+                           'rmse': rmse, 'r2': r2}
 
             else:
                 raise NameError('Empty prediction')
@@ -1512,7 +1508,7 @@ class LSTM_model(DL):
                         cv = np.mean(cv)
                         nmbe=np.mean(nmbe)
                         res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'std_cv': std_cv, 'nmbe': nmbe, 'std_nmbe': std_nmbe,
-                               'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2,'ind_out':i_out}
+                               'rmse': rmse, 'std_rmse': std_rmse, 'r2': r2}
                     else:
                         if mean_y.size == 0:
                             e = evals(y_pred, y_real).variation_rate()
@@ -1540,7 +1536,7 @@ class LSTM_model(DL):
                                 nmbe = np.sum(e_n * self.weights)
                                 mae = np.sum(e_mae * self.weights)
                         res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'mae':mae, 'nmbe': nmbe,
-                               'rmse': rmse, 'r2': r2,'ind_out':i_out}
+                               'rmse': rmse, 'r2': r2}
                 else:
                     print('Missing values are detected when we are evaluating the predictions')
                     cv = 9999
@@ -1549,7 +1545,7 @@ class LSTM_model(DL):
                     r2 = -9999
                     mae=99999
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv,'mae':mae, 'nmbe': nmbe,
-                           'rmse': rmse, 'r2': r2,'ind_out':i_out}
+                           'rmse': rmse, 'r2': r2}
             else:
                 raise NameError('Empty prediction')
 
