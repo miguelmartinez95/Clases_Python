@@ -285,6 +285,7 @@ class LSTM_model(DL):
 
                 # check if we go to the correct value (0)
                 dd=len(data)-in_start-(n_lags + horizont-n_steps)
+
         print('Data supervised')
 
         return(np.array(X), np.array(y),timesF, dd)
