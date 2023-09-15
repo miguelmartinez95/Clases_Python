@@ -1199,49 +1199,56 @@ class LSTM_model(DL):
 
         #We define the times for the prediction sample  based on horizont and n_steps
         if self.horizont == 0:
-            if onebyone[1] == True:
-                seq=list()
-                cont = self.n_lags - 1
-                while cont <= len(times):
-                    if self.n_steps == 1:
-                        seq.append(times[cont])
-                    else:
-                        seq.append(times[range(cont, cont + (self.n_steps))])
-                    cont += self.n_lags
-                times = np.concatenate(seq)
-            elif onebyone[1] == False:
-                seq = list()
-                cont = self.n_lags - 1
-                while cont <= len(times):
-                    if self.n_steps == 1:
-                        seq.append(times[cont])
-                    else:
-                        seq.append(times[range(cont, cont + (self.n_steps))])
-                    cont += self.n_steps
-                times = np.concatenate(seq)
+            if onebyone[0]==True:
+                times = np.delete(times, 0, 0)
+            else:
+                if onebyone[1] == True:
+                    seq=list()
+                    cont = self.n_lags
+                    while cont <= len(times):
+                        if self.n_steps == 1:
+                            seq.append(times[cont])
+                        else:
+                            seq.append(times[range(cont, cont + (self.n_steps))])
+                        cont += self.n_lags
+                    times = np.concatenate(seq)
+                elif onebyone[1] == False:
+                    seq = list()
+                    cont = self.n_lags
+                    while cont <= len(times):
+                        if self.n_steps == 1:
+                            seq.append(times[cont])
+                        else:
+                            seq.append(times[range(cont, cont + (self.n_steps))])
+                        cont += self.n_steps
+                    times = np.concatenate(seq)
+
         elif self.horizont > 0:
-            if onebyone[1] == True:
-                seq=list()
-                cont = self.n_lags +self.horizont- 1
-                while cont <= len(times):
-                    if self.n_steps == 1:
-                        seq.append(times[cont])
-                    else:
-                        seq.append(times[range(cont, cont + (self.n_steps))])
-                    cont += self.n_lags
-                times = np.concatenate(seq)
-            elif onebyone[1] == False:
-                seq = list()
-                cont = self.n_lags +self.horizont- 1
-                while cont <= len(times):
-                    if self.n_steps == 1:
-                        seq.append(times[cont])
-                    else:
-                        seq.append(times[range(cont, cont + (self.n_steps))])
-                    cont += self.n_steps
-                times = np.concatenate(seq)
+            if onebyone[0]==True:
+                times = np.delete(times, self.horizont, 0)
+            else:
+                if onebyone[1] == True:
+                    seq=list()
+                    cont = self.n_lags +self.horizont
+                    while cont <= len(times):
+                        if self.n_steps == 1:
+                            seq.append(times[cont])
+                        else:
+                            seq.append(times[range(cont, cont + (self.n_steps))])
+                        cont += self.n_lags
+                    times = np.concatenate(seq)
+                elif onebyone[1] == False:
+                    seq = list()
+                    cont = self.n_lags +self.horizont
+                    while cont <= len(times):
+                        if self.n_steps == 1:
+                            seq.append(times[cont])
+                        else:
+                            seq.append(times[range(cont, cont + (self.n_steps))])
+                        cont += self.n_steps
+                    times = np.concatenate(seq)
         else:
-            times = np.delete(times, range(self.n_lags), 0)
+            raise NameError('Negative horizont')
 
         #Define the structure of inputs and outputs
         x_val, y_val,ind_val,dif = self.__class__.to_supervised(val, self.pos_y, self.n_lags,self.n_steps, self.horizont, onebyone)
