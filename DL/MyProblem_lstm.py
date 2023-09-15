@@ -84,6 +84,7 @@ class MyProblem_lstm(ElementwiseProblem):
         n_var: number of inputs
         dictionary: where the different option tested are kept
         onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        values specific values to divide the sample. specific values of a variable to search division
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         weights: weights based on the error in mutivariable case (some error must be more weighted)
         optimizer: one selectec for training

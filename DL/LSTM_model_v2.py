@@ -612,16 +612,21 @@ class LSTM_model(DL):
             place = values[2]
             var= data.iloc[:,place]
             for t in range(values[0]):
-                if len(place)==1:
-                    w = np.where(var==values[1])[t][0]
-                    w2 = np.where(var==values[1])[t][len(np.where(var==values[1])[0])-1]
-                elif len(place)==2:
-                    w = np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0][0]
-                    w2 = np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0][len(np.where((var.iloc[:,0]==values[1][t][0])&(var.iloc[:,1]==values[1][t][1]))[0])-1]
-                elif len(place)==3:
-                    w = np.where((var.iloc[:, 0] == values[1][t][0]) & (var.iloc[:, 1] == values[1][t][1])&(var.iloc[:, 2] == values[1][t][2]))[0][0]
-                    w2 = np.where((var.iloc[:, 0] == values[1][t][0]) & (var.iloc[:, 1] == values[1][t][1])&(var.iloc[:, 2] == values[1][t][2]))[0][
-                        len(np.where((var.iloc[:, 0] == values[1][t][0]) & (var.iloc[:, 1] == values[1][t][1])&(var.iloc[:, 2] == values[1][t][2]))[0]) - 1]
+                if len(place) == 1:
+                    w = np.where(var == values[1][t])[0][0]
+                    w2 = np.where(var == values[1][t])[0][len(np.where(var == values[1][t])[0]) - 1]
+                elif len(place) == 2:
+                    w = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]))[
+                                0]) - 1]
+                elif len(place) == 3:
+                    w = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]) & (
+                            var.iloc[:, 2] == values[1][:, 2][t]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]) & (
+                            var.iloc[:, 2] == values[1][:, 2][t]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]) & (
+                                var.iloc[:, 2] == values[1][:, 2][t]))[0]) - 1]
                 else:
                     raise(NameError('Not considered'))
 
@@ -1578,6 +1583,7 @@ class LSTM_model(DL):
         :param parallel: 0 no paralyse
         :param weights: weights between the two objective function (*AL REVES)
         :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :return: errors obtained with the options considered together  with the best solution
         '''
 
@@ -1741,6 +1747,7 @@ class LSTM_model(DL):
         :param dictionary: dictionary to stored the options tested
         :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param weigths: weights for the objective functions (*AL REVES)
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
         '''

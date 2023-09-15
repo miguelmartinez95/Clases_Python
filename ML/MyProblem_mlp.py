@@ -14,7 +14,7 @@ class MyProblem_mlp(ElementwiseProblem):
     def __init__(self,model, horizont, scalar_y, zero_problem, extract_cero, limits, times, pos_y, mask, mask_value, n_lags,
                  inf_limit,
                  sup_limit, type, data, scalar_x, med, contador,
-                 n_var, l_dense, batch, xlimit_inf, xlimit_sup, dropout, dictionary, weights, **kwargs):
+                 n_var, l_dense, batch, xlimit_inf, xlimit_sup, dropout, dictionary,values, weights, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -48,6 +48,7 @@ class MyProblem_mlp(ElementwiseProblem):
         self.dropout = dropout
         self.n_var = n_var
         self.dictionary = dictionary
+        self.values=values
         self.weights = weights
 
         '''
@@ -74,6 +75,8 @@ class MyProblem_mlp(ElementwiseProblem):
         dropout: percentage for NN
         n_var: number of inputs
         dictionary: where the different option tested are kept
+        values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         weights: weights based on the error in mutivariable case (some error must be more weighted)
         '''
 
@@ -102,7 +105,10 @@ class MyProblem_mlp(ElementwiseProblem):
             return a0, a1
         except KeyError:
             pass
-        cvs = [0 for x in range(fold)]
+        if self.values:
+            cvs=[0 for x in range(self.values[0])]
+        else:
+            cvs = [0 for x in range(fold)]
 
         names = self.data.columns
         names = np.delete(names, self.pos_y)
@@ -112,7 +118,7 @@ class MyProblem_mlp(ElementwiseProblem):
         #Division of the data between inputs and outputs and the slices of the CV
         y = self.data.iloc[:, self.pos_y]
         x = self.data.drop(self.data.columns[self.pos_y], axis=1)
-        res = self.model.cv_division(x, y, fold)
+        res = self.model.cv_division(x, y, fold,self.values)
         x_test = res['x_test']
         x_train = res['x_train']
         x_val = res['x_val']
@@ -144,8 +150,13 @@ class MyProblem_mlp(ElementwiseProblem):
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
+            if self.values:
+                stop = self.values[0]
+            else:
+                stop = fold
+
             # Train the model through a CV process
-            for z in range(fold):
+            for z in range(stop):
                 print('Fold number', z)
                 x_t = pd.DataFrame(x_train[z]).reset_index(drop=True)
                 y_t = pd.DataFrame(y_train[z]).reset_index(drop=True)

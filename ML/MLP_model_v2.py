@@ -199,10 +199,12 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self, fold, neurons, pacience, batch, mean_y, dropout, plot, q=[], model=[]):
+    def cv_analysis(self, fold,values, neurons, pacience, batch, mean_y, dropout, plot, q=[], model=[]):
 
         '''
         :param fold: divisions in cv analysis
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param neurons: structure in number of neurons by layer
         :param pacience: number of epochs without improvement for stop training
         :param batch: batch size
@@ -233,7 +235,7 @@ class MLP(ML):
         y = y.reset_index(drop=True)
 
         #Division of the data for a CV analysis
-        res = super().cv_division(x, y, fold)
+        res = super().cv_division(x, y, fold,values)
         x_test = res['x_test']
         x_train = res['x_train']
         x_val = res['x_val']
@@ -587,12 +589,14 @@ class MLP(ML):
             else:
                 return (res)
 
-    def optimal_search(self, neurons, paciences,batch, fold,mean_y, parallel,dropout, weights):
+    def optimal_search(self, neurons, paciences,batch, fold,values,mean_y, parallel,dropout, weights):
         '''
         :param neurons:structure in number of neurons by layer
         :param pacience: number of epochs without improvement for stop training
         :param batch: batch size
         :param fold: division in cv analyses
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param mean_y: mean of y values for error calculations
         :param parallel: True or false (True to linux)
         :param dropout: percentage of dropout considered
@@ -613,7 +617,7 @@ class MLP(ML):
                 for i in range(len(paciences)):
                     options['neurons'].append(neuron)
                     options['pacience'].append(paciences[i])
-                    res = self.cv_analysis(fold, neuron , paciences[i],batch,mean_y,dropout,False)
+                    res = self.cv_analysis(fold, values, neuron , paciences[i],batch,mean_y,dropout,False)
                     error[w]=np.mean(res['cv_rmse'])
                     complexity[w]=MLP.complex_mlp(neuron,2000,8)
                     w +=1
@@ -633,7 +637,7 @@ class MLP(ML):
                     if z < parallel and w < contador:
                         multiprocessing.set_start_method('fork')
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y,dropout,False, q))
+                                    args=(fold, values, neuron, paciences[i], batch, mean_y,dropout,False, q))
                         p.start()
                         processes.append(p)
                         z1 =z+ 1
@@ -649,13 +653,13 @@ class MLP(ML):
                         # multiprocessing.set_start_method('spawn')
                         q = Queue()
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y,dropout,False, q))
+                                    args=(fold, values, neuron, paciences[i], batch, mean_y,dropout,False, q))
                         p.start()
                         processes.append(p)
                         z1 = 1
                     elif w == contador:
                         p = Process(target=self.cv_analysis,
-                                    args=(fold, neuron, paciences[i], batch, mean_y,dropout,False, q))
+                                    args=(fold, values, neuron, paciences[i], batch, mean_y,dropout,False, q))
                         p.start()
                         processes.append(p)
                         p.close()
@@ -1090,7 +1094,7 @@ class MLP(ML):
         return res
 
     def nsga2_individual(self,model, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
-                         xlimit_sup,dropout, dictionary, weights):
+                         xlimit_sup,dropout, dictionary, values,weights):
         '''
         :param model: object of ML or DL (class)
         :param med: vector of means
@@ -1103,6 +1107,8 @@ class MLP(ML):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param weights: weights for the two objective functions (*AL REVES)
         :return: options in Pareto front, the optimal selection and the total results
         '''
@@ -1115,13 +1121,13 @@ class MLP(ML):
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,values,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_mlp(model,self.horizont, self.scalar_y, self.zero_problem, self.extract_cero, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
+                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, values,self.weights)
 
         #Algorithm for optimisation
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_mlp(l_dense), eliminate_duplicates=True,
@@ -1189,7 +1195,7 @@ class MLP(ML):
 
         return (obj, struct, obj_T, struct_T, res,contador)
 
-    def optimal_search_nsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights):
+    def optimal_search_nsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,values,weights):
         '''
         :param model: object of ML or DL (class)
         :param l_dense: maximun layers dense
@@ -1201,6 +1207,8 @@ class MLP(ML):
         :param mean_y: vector of means
         :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param weights: weights for the two objective functions (*AL REVES)
         if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
@@ -1215,7 +1223,7 @@ class MLP(ML):
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.nsga2_individual(model,mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dropout,dictionary, weights)
+                                                                            xlimit_sup, dropout,dictionary, values, weights)
         np.savetxt('objectives_selected.txt', obj)
         np.savetxt('x_selected.txt', x_obj)
         np.savetxt('objectives.txt', obj_total)
@@ -1229,7 +1237,7 @@ class MLP(ML):
         return res
 
     def rnsga2_individual(self,model, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
-                         xlimit_sup,dropout, dictionary, weights,ref_points,epsilon):
+                         xlimit_sup,dropout, dictionary, values,weights,ref_points,epsilon):
         '''
         :param model: object of ML or DL (class)
         :param med: vector of means
@@ -1242,6 +1250,8 @@ class MLP(ML):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param weights: weights for the two objective functions (*AL REVES)
         :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter for RNSGA
@@ -1255,13 +1265,13 @@ class MLP(ML):
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador,len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout,dictionary,values,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_mlp(model,self.horizont, self.scalar_y, self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,
                                 self.mask,
                                 self.mask_value, self.n_lags, self.inf_limit, self.sup_limit,
                                 self.type, self.data,self.scalar_x,
-                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary, self.weights)
+                                med, contador, len(xlimit_inf), l_dense, batch, xlimit_inf, xlimit_sup,dropout, dictionary,values, self.weights)
 
         # Algorithm for optimisation
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
@@ -1332,7 +1342,7 @@ class MLP(ML):
             pass
         return (obj, struct, obj_T, struct_T, res,contador)
 
-    def optimal_search_rnsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,weights,ref_points=np.array([[0.3, 0.1], [0.1, 0.3]]),epsilon=0.01):
+    def optimal_search_rnsga2(self,model, l_dense, batch, pop_size, tol, xlimit_inf, xlimit_sup, mean_y,dropout, parallel,values,weights,ref_points=np.array([[0.3, 0.1], [0.1, 0.3]]),epsilon=0.01):
         '''
         :param model: object of ML or DL (class)
         :param l_dense: maximun layers dense
@@ -1344,6 +1354,8 @@ class MLP(ML):
         :param mean_y: vector of means
         :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param weights: weights for the two objective functions (*AL REVES)
         :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter of RNSGA
