@@ -235,7 +235,7 @@ class MLP(ML):
         y = y.reset_index(drop=True)
 
         #Division of the data for a CV analysis
-        res = super().cv_division(x, y, fold,values)
+        res = super().cv_division(x, y, self.pos_y,fold,values)
         x_test = res['x_test']
         x_train = res['x_train']
         x_val = res['x_val']

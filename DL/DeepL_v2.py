@@ -65,16 +65,21 @@ class DL:
         '''
 
     @staticmethod
-    def cv_division(x,y, fold):
+    def cv_division(x, y, pos_y, fold, values):
         '''
         Division de la muestra en trozos según fold para datos normales y no recurrentes
-        Para datos recurrentes más abajo está cv_division_lstm
-
         :param fold: division for cv_analysis
-        :return: data divided into train, test and validations in addition to the indexes division
+        If values the division is previously defined
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :return: data divided into train, test and validations in addition to the indexes division for a CV analysis
         '''
         x = x.reset_index(drop=True)
         y = y.reset_index(drop=True)
+        if any(pos_y) == 0:
+            data = pd.concat([y, x], axis=1)
+        else:
+            data = pd.concat([x, y], axis=1)
 
         X_test = []
         X_train = []
@@ -83,14 +88,31 @@ class DL:
         Y_train = []
         Y_val = []
 
-        #Operator defining how long will be the slices of data
-        step = int(x.shape[0]/fold)
-        w = 0
-        w2 = step
-        indexes = []
-        try:
-            while w2 < x.shape[0]:
-                #Dividing the sample into val and train (and val into test and val)
+        if values:
+            indexes = []
+            place = values[2]
+            var = data.iloc[:, place]
+            for t in range(values[0]):
+                if len(place) == 1:
+                    w = np.where(var == values[1][t])[0][0]
+                    w2 = np.where(var == values[1][t])[0][len(np.where(var == values[1][t])[0]) - 1]
+                elif len(place) == 2:
+                    w = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]))[
+                                0]) - 1]
+                elif len(place) == 3:
+                    w = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]) & (
+                            var.iloc[:, 2] == values[1][:, 2][t]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]) & (
+                            var.iloc[:, 2] == values[1][:, 2][t]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][:, 0][t]) & (var.iloc[:, 1] == values[1][:, 1][t]) & (
+                                var.iloc[:, 2] == values[1][:, 2][t]))[0]) - 1]
+                else:
+                    raise (NameError('Not considered'))
+
+                # Divide based on the limits according the values (index_val simply index for validation set)
+                # Dividing the sample into val and train (and val into test and val)
                 a = x.iloc[range(w, w2)]
                 X_val.append(a.iloc[range(len(a) - math.ceil(len(a) / 2), len(a) - 1)])
                 X_test.append(a.drop(a.index[range(len(a) - math.floor(len(a) / 2), len(a))]))
@@ -100,14 +122,41 @@ class DL:
                 Y_val.append(a.iloc[range(len(a) - math.ceil(len(a) / 2), len(a) - 1)])
                 Y_test.append(a.drop(a.index[range(len(a) - math.floor(len(a) / 2), len(a))]))
                 Y_train.append(y.drop(range(w, w2)))
+
                 indexes.append(np.array([w2 - math.ceil(len(a) / 2) + 1, w2]))
-                w = w2
-                w2 += step
-                if (w2 > x.shape[0] and w < x.shape[0]):
-                    w2 = x.shape[0]
-        except:
-            raise NameError('Problems with the sample division in the cv classic')
-        res = {'x_test': X_test, 'x_train':X_train,'X_val':X_val, 'y_test':Y_test, 'y_train':Y_train, 'y_val':Y_val,'indexes':indexes}
+                print('cv_division done')
+
+        else:
+            # Operator defining how long will be the slices of data
+            step = int(x.shape[0] / fold)
+            w = 0
+            w2 = step
+            indexes = []
+            try:
+                while w2 < x.shape[0]:
+
+                    # Dividing the sample into val and train (and val into test and val)
+                    a = x.iloc[range(w, w2)]
+                    X_val.append(a.iloc[range(len(a) - math.ceil(len(a) / 2), len(a) - 1)])
+                    X_test.append(a.drop(a.index[range(len(a) - math.floor(len(a) / 2), len(a))]))
+                    X_train.append(x.drop(range(w, w2)))
+
+                    a = y.iloc[range(w, w2)]
+                    Y_val.append(a.iloc[range(len(a) - math.ceil(len(a) / 2), len(a) - 1)])
+                    Y_test.append(a.drop(a.index[range(len(a) - math.floor(len(a) / 2), len(a))]))
+                    Y_train.append(y.drop(range(w, w2)))
+                    indexes.append(np.array([w2 - math.ceil(len(a) / 2) + 1, w2]))
+                    w = w2
+                    w2 += step
+                    if w2 > x.shape[0] and w < x.shape[0]:
+                        w2 = x.shape[0]
+            except:
+                raise NameError('Problems with the sample division in the cv classic')
+
+        res = {'x_test': X_test, 'x_train': X_train, 'x_val': X_val, 'y_test': Y_test, 'y_train': Y_train,
+               'y_val': Y_val,
+               'indexes': indexes}
+
         return res
 
     @staticmethod

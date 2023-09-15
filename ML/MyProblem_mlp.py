@@ -118,7 +118,7 @@ class MyProblem_mlp(ElementwiseProblem):
         #Division of the data between inputs and outputs and the slices of the CV
         y = self.data.iloc[:, self.pos_y]
         x = self.data.drop(self.data.columns[self.pos_y], axis=1)
-        res = self.model.cv_division(x, y, fold,self.values)
+        res = self.model.cv_division(x, y,self.pos_y, fold,self.values)
         x_test = res['x_test']
         x_train = res['x_train']
         x_val = res['x_val']
