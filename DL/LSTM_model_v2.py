@@ -199,8 +199,7 @@ class LSTM_model(DL):
         :param n_lags: number of lags considered
         :param n_steps= time steps into future to predict (if >1 bathsize must be 1 and only one variable can be considered) how much estimations want to do in line
         :param horizont: horizont to the future selected
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :return: x (past) and y (future horizont) considering the past-future relations selected
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :return: x (past) and y (future horizont) considering the past-future relations selected
         '''
 
         #data = train.reshape((train.shape[0] * train.shape[1], train.shape[2]))
@@ -587,7 +586,7 @@ class LSTM_model(DL):
         :param fold: how many divisions (optimum 3)
         :param n_lags: number of lags
         :param estimations simutaneously to the future
-        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [0][1] False False steps by steps
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps
         The validation sample is extracted from the first test sample
         :param values:
         If values the division is previously defined
@@ -726,7 +725,7 @@ class LSTM_model(DL):
         :param rep: In this case, the analysis repetitions of each of the two possile divisions (if wanted)
         :param neurons_lstm: vector of LSTM neurons
         :param neurons_dense: vector of Dense neurons
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps
         :param pacience: stopping criterion
         :param batch: batch size for training
         :param mean_y: vector of means
@@ -1117,8 +1116,7 @@ class LSTM_model(DL):
         :param pacience: stopping criterion
         :param batch: bathc size for training
         :param save_model: True if we want to save the model
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param model: if we have a pretrained model
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param model: if we have a pretrained model
         :param loss_plot: plotting the evolution of loss function
         :param metric_plot: plotting the evolution of a metric function. The seconc will be the title for the plot
         :param limite: error threshold for stop training
@@ -1184,8 +1182,7 @@ class LSTM_model(DL):
         :param mean_y: vector of means
         :param batch: batch size for training
         :param times: dates for plot
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param scalated: if they are scalated: [0] prediction sample [1] real sample
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param scalated: if they are scalated: [0] prediction sample [1] real sample
         :param daily: option to generate results day by day
         :param plotting: if True we create plots
          :return: prediction with the built metrics
@@ -1575,8 +1572,7 @@ class LSTM_model(DL):
         :param neurons_dense: list of options for neurons dense
         :param neurons_lstm: list of options for neurons LSTM
         :param paciences: list of options for paciences
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param batch: batch size for training
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param batch: batch size for training
         :param mean_y: vector of means
         :param parallel: 0 no paralyse
         :param weights: weights between the two objective function (*AL REVES)
@@ -1743,8 +1739,7 @@ class LSTM_model(DL):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param values specific values to divide the sample. specific values of a variable to search division
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param values specific values to divide the sample. specific values of a variable to search division
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param weigths: weights for the objective functions (*AL REVES)
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
@@ -1927,8 +1922,7 @@ class LSTM_model(DL):
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
         :param mean_y: vector of means
         :param parallel: how many processes are parallelise
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param values specific values to divide the sample. specific values of a variable to search division
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param values specific values to divide the sample. specific values of a variable to search division
         :param weigths: weights for the objective functions (*AL REVES)
         :param n_last: last generation considered in the search
         :param nth_gen: number of generation to evaluate
@@ -1972,8 +1966,7 @@ class LSTM_model(DL):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
-        :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
-        :param values specific values to divide the sample. specific values of a variable to search division
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param values specific values to divide the sample. specific values of a variable to search division
         :param weigths: weights for the objective functions
                 :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: smaller generates solutions tighter
@@ -2125,7 +2118,7 @@ class LSTM_model(DL):
         n_last: more robust, we consider the last n generations and take the maximum
         nth_gen: whenever the termination criterion is calculated
         if mean_y is empty a variation rate will be applied
-        :return: the options selected for the pareto front, the optimal selection and the total results
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :return: the options selected for the pareto front, the optimal selection and the total results
         '''
 
         # Multiprocessing for possible paralelisation and fill the dictionary and the contador

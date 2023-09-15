@@ -338,7 +338,6 @@ class ML:
          Move the data sample to connected the y with the x based on the future selected and the possible steps
          After introduce_lags
          n_steps=step in the future for predicting
-         onebyone: although we want to predict 5 steps in the future (we move the sampke one by one)
          '''
         if self.horizont == 0:
             self.data = self.data
