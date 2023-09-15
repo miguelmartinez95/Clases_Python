@@ -69,10 +69,9 @@ class LSTM_model(DL):
 
     def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps, inf_limit,sup_limit,names,extract_cero, repeat_vector,dropout,weights, type,
                  optimizer='adam',learning_rate=0.001,activation='relu'):
-        super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps, inf_limit,sup_limit,names,extract_cero)
+        super().__init__(data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps, inf_limit,sup_limit,names,extract_cero, type)
         self.repeat_vector = repeat_vector
         self.dropout = dropout
-        self.type = type
         self.weights=weights
         self.activation = activation
         self.learning_rate = learning_rate
