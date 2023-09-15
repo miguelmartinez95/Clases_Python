@@ -25,6 +25,18 @@ from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
 
+#Class for stop the training based on a threshold
+class MyThresholdCallback(keras.callbacks.Callback):
+    def __init__(self, threshold):
+        super(MyThresholdCallback, self).__init__()
+        self.threshold = threshold
+    def on_epoch_end(self, epoch, logs=None):
+        val_loss = logs["val_mse"]
+        if val_loss <= self.threshold:
+            self.model.stop_training = True
+
+
+
 class MLP(ML):
     def info(self):
         print(('Class to built MLP models. \n'
@@ -199,7 +211,7 @@ class MLP(ML):
         except:
             raise NameError('Problems building the MLP')
 
-    def cv_analysis(self, fold,values, neurons, pacience, batch, mean_y, dropout, plot, q=[], model=[]):
+    def cv_analysis(self, fold,values, neurons, pacience, batch, mean_y, dropout, plot, limite=False, q=[], model=[]):
 
         '''
         :param fold: divisions in cv analysis
@@ -211,6 +223,7 @@ class MLP(ML):
         :param mean_y: mean of y values for error calculations
         :param dropout: percentage of dropout considered
         :param plot: True plots
+        :param limite: error threshold for stop training
         :param q: a Queue to paralelyse or empty list to do not paralyse
         :param model: if model is not empty a pretrained model is considered
         :return: predictions, real values, errors and the times needed to train
@@ -302,10 +315,17 @@ class MLP(ML):
                 val_y = pd.DataFrame(y_val[z]).reset_index(drop=True)
 
                 #Training
-                time_start = time()
-                modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],
-                           batch_size=batch)
-                times[z] = round(time() - time_start, 3)
+                if limite==False:
+                    time_start = time()
+                    modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[es, mc],
+                               batch_size=batch)
+                    times[z] = round(time() - time_start, 3)
+                else:
+                    my_callback = MyThresholdCallback(threshold=limite)
+                    time_start = time()
+                    modelF.fit(x_t, y_t, epochs=2000, validation_data=(test_x, test_y), callbacks=[my_callback],
+                               batch_size=batch)
+                    times[z] = round(time() - time_start, 3)
 
                 #Predicting
                 y_pred = modelF.predict(val_x)
@@ -723,7 +743,7 @@ class MLP(ML):
         res = {'errors': r1, 'complexity':d1, 'options': options, 'best': top_result}
         return(res)
 
-    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model, model=[],loss_plot=False,metric_plot=[False,False]):
+    def train(self, type,neurons, pacience, batch,data_train, data_test, dropout, save_model,limite=False, model=[],loss_plot=False,metric_plot=[False,False]):
         '''
         :param type: regression or classification
         :param neurons: structure in number of neurons by layer
@@ -733,6 +753,7 @@ class MLP(ML):
         :param data_test: data to validate the model
         :param dropout: percentage of dropout considered
         :param save_model: if the model must be saved
+        :param limite: error threshold for stop training
         :param model: loaded model
         :param loss_plot: plotting the evolution of loss function
         :param metric_plot: plotting the evolution of a metric function. The seconc will be the title for the plot
@@ -760,12 +781,21 @@ class MLP(ML):
             else:
                 model=model
             # Checkpoint callback
-            es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
-            mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
-            time_start = time()
-            history = model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
-                      callbacks=[es, mc],batch_size=batch)
-            times = round(time() - time_start, 3)
+            if limite==False:
+                es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
+                mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+                time_start = time()
+                history = model.fit(x_train, y_train   , epochs=2000, validation_data=(x_test, y_test),
+                          callbacks=[es, mc],batch_size=batch)
+                times = round(time() - time_start, 3)
+            else:
+                my_callback = MyThresholdCallback(threshold=limite)
+                time_start = time()
+                history = model.fit(x_train, y_train, epochs=2000, validation_data=(x_test, y_test),
+                                    batch_size=batch,
+                                    callbacks=[my_callback])
+                times = round(time() - time_start, 3)
+
         else:
 
             'clasification'

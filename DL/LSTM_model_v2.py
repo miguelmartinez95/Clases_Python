@@ -18,7 +18,7 @@ from keras.constraints import maxnorm
 import time
 import math
 import multiprocessing
-from multiprocessing import Process,Manager,Queue
+from multiprocessing import Process,Queue
 import collections
 from pathlib import Path
 import random
