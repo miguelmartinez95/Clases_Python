@@ -345,10 +345,9 @@ class MyProblem_mlp(ElementwiseProblem):
             return res_final['cvs'], res_final['complexity']
 
     @staticmethod
-    def bool4(x2, l_dense):
+    def bool4(x2):
         '''
         :x: specific neurons option
-        l_dense: number of values that represent dense neurons
         :return: 0 if the constraint is fulfilled or the places where the constraint is not fulfill
         It can not be a layer without neurons previous to another layer with neurons
         '''

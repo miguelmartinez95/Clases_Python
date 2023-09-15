@@ -30,7 +30,7 @@ class MyRepair_lstm(Repair):
             x2 = xx[range(self.l_lstm, self.l_lstm + self.l_dense)]
             x3 = np.delete(x, np.arange(self.l_lstm+self.l_dense))
             #check the results of constraints
-            r_lstm, r_dense = MyProblem_lstm.bool4(xx, self.l_lstm, self.l_dense)
+            r_lstm, r_dense = MyProblem_lstm.bool4(x1,x2)
             if len(r_lstm) == 1:
                 if r_lstm == 0:
                     pass

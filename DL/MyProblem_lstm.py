@@ -344,18 +344,14 @@ class MyProblem_lstm(ElementwiseProblem):
 
     #
     @staticmethod
-    def bool4(x, l_lstm, l_dense):
+    def bool4(x1,x2):
         '''
-        :x: neurons options
-        l_lstm: number of values that represent lstm neurons
-        l_dense: number of values that represent dense neurons
+        :x1: neurons options of LSTM type
+        :x2: neurons options of Dense type
         :return: 0 if the constraint is fulfilled or the places where the constraint is not fulfill
         It can not be a layer without neurons previous to another layer with neurons
 
         '''
-#
-        x1 = x[range(l_lstm)]
-        x2 = x[range(l_lstm, l_lstm+l_dense)]
 
         if len(x2) == 2:
             if x2[0] == 0 and x2[1] > 0:

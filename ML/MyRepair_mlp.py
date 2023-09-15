@@ -18,7 +18,7 @@ class MyRepair_mlp(Repair):
             x2 = x[range(self.l_dense)]
             x3= np.delete(x, np.arange(self.l_dense))
             #check the results of constraints
-            r_dense = MyProblem_mlp.bool4(x2, self.l_dense)
+            r_dense = MyProblem_mlp.bool4(x2)
             if len(r_dense) == 1:
                 if r_dense == 0:
                     pass
