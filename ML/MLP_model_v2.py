@@ -468,22 +468,7 @@ class MLP(ML):
                     if self.type == 'series':
                         y_pred = np.concatenate(y_pred)
                         y_real = np.concatenate(y_real)
-                    # Outliers and missing values
-                    if self.mask == True and len(y_pred) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred = np.delete(y_pred, o, 0)
-                                y_real = np.delete(y_real, o, 0)
 
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred = np.delete(y_pred, oT, 0)
-                            y_real = np.delete(y_real, oT, 0)
                     # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
@@ -611,7 +596,7 @@ class MLP(ML):
         :param mean_y: mean of y values for error calculations
         :param parallel: True or false (True to linux)
         :param dropout: percentage of dropout considered
-        :param weights: weights based on the error in mutivariable case (some error must be more weighted)
+        :param weights: weights for the two objective functions (*AL REVES)
         :return: the options with their results and the top options
         '''
         error = [0 for x in range(len(neurons) * len(paciences))]
@@ -881,26 +866,6 @@ class MLP(ML):
                     y_pred1 = y_pred
                     y_real1 = y_real
 
-                if self.type == 'series':
-                    y_pred1 = np.concatenate(y_pred1)
-                    y_real1 = np.concatenate(y_real1)
-
-                # Indexes for values out of limits
-                if self.mask == True and len(y_pred1) > 0:
-                    if mean_y.size == 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                    else:
-                        o = list()
-                        for t in range(len(mean_y)):
-                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                        oT = np.unique(np.concatenate(o))
-                        y_pred1 = np.delete(y_pred1, oT, 0)
-                        y_real1 = np.delete(y_real1, oT, 0)
-
                 # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
@@ -959,8 +924,6 @@ class MLP(ML):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val.iloc[:, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            index_rad2 = np.where(y_real <= self.inf_limit)[0]
-            index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
             if len(y_pred) <= 1:
                 y_pred1 = np.nan
@@ -979,22 +942,6 @@ class MLP(ML):
                 if self.type == 'series':
                     y_pred1 = np.concatenate(y_pred1)
                     y_real1 = np.concatenate(y_real1)
-
-                # Outliers and missing values
-                if self.mask == True and len(y_pred1) > 0:
-                    if mean_y.size == 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                    else:
-                        o = list()
-                        for t in range(len(mean_y)):
-                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                        oT = np.unique(np.concatenate(o))
-                        y_pred1 = np.delete(y_pred1, oT, 0)
-                        y_real1 = np.delete(y_real1, oT, 0)
 
                 # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
@@ -1047,26 +994,6 @@ class MLP(ML):
             else:
                 raise NameError('Empty prediction')
         else:
-            if self.type == 'series':
-                y_pred = np.concatenate(y_pred)
-                y_real = np.concatenate(y_real)
-
-            # Outliers and missing values
-            if self.mask == True and len(y_pred) > 0:
-                if mean_y.size == 0:
-                    o = np.where(y_real < self.inf_limit)[0]
-                    if len(o) > 0:
-                        y_pred = np.delete(y_pred, o, 0)
-                        y_real = np.delete(y_real, o, 0)
-                else:
-                    o = list()
-                    for t in range(len(mean_y)):
-                        o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-
-                    oT = np.unique(np.concatenate(o))
-                    y_pred = np.delete(y_pred, oT, 0)
-                    y_real = np.delete(y_real, oT, 0)
-
             # Indexes where the real values are 0
             if self.extract_cero == True and len(y_pred) > 0:
                 if mean_y.size == 0:
@@ -1160,16 +1087,6 @@ class MLP(ML):
             plt.title("CV(RMSE)={}".format(str(a)))
             plt.savefig('plot1.png')
 
-            plt.figure()
-            plt.ylim(i, s)
-            plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
-            plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
-            plt.legend()
-            plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
-            plot_name = a + b
-            plt.show()
-            plt.savefig(plot_name)
-
         return res
 
     def nsga2_individual(self,model, med, contador, n_processes, l_dense, batch, pop_size, tol, xlimit_inf,
@@ -1186,7 +1103,7 @@ class MLP(ML):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
-        :param weights: weights for the two objective functions
+        :param weights: weights for the two objective functions (*AL REVES)
         :return: options in Pareto front, the optimal selection and the total results
         '''
 
@@ -1228,7 +1145,6 @@ class MLP(ML):
 
         #Selection of the optimum
         if res.F.shape[0] > 1:
-            rf=res.F
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
@@ -1247,8 +1163,6 @@ class MLP(ML):
             struct_T = rx
             obj = res.F[I, :]
             struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
 
             #Plot of the pareto front with the optimum
             plt.figure(figsize=(10, 7))
@@ -1287,7 +1201,7 @@ class MLP(ML):
         :param mean_y: vector of means
         :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
-        :param weights: weights for the two objective functions
+        :param weights: weights for the two objective functions (*AL REVES)
         if mean_y is empty a variation rate will be applied
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
@@ -1328,7 +1242,7 @@ class MLP(ML):
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
-        :param weights: weights for the two objective functions
+        :param weights: weights for the two objective functions (*AL REVES)
         :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter for RNSGA
         :return: options in Pareto front, the optimal selection and the total results
@@ -1430,7 +1344,7 @@ class MLP(ML):
         :param mean_y: vector of means
         :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
-        :param weights: weights for the two objective functions
+        :param weights: weights for the two objective functions (*AL REVES)
         :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter of RNSGA
         if mean_y is empty a variation rate will be applied

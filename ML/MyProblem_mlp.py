@@ -74,10 +74,10 @@ class MyProblem_mlp(ElementwiseProblem):
         dropout: percentage for NN
         n_var: number of inputs
         dictionary: where the different option tested are kept
-       weights: weights based on the error in mutivariable case (some error must be more weighted)
+        weights: weights based on the error in mutivariable case (some error must be more weighted)
         '''
 
-    def cv_opt(self, data, fold, neurons, pacience, batch, mean_y, dictionary):
+    def cv_opt(self, fold, neurons, pacience, batch, mean_y, dictionary):
         '''
         :param fold:assumed division of the sample for cv
         :param neurons: list of the different options of structures
@@ -390,7 +390,7 @@ class MyProblem_mlp(ElementwiseProblem):
         #Modify the vector defined for values more real
         n_dense = x[range(self.l_dense)] * 20 #neurons options
         n_pacience = x[len(x) - 1] * 20 #patience options
-        f1, f2 = self.cv_opt(self.data, 3, n_dense, n_pacience, self.batch, self.med, self.dictionary)
+        f1, f2 = self.cv_opt(3, n_dense, n_pacience, self.batch, self.med, self.dictionary)
         print(
             '\n ############################################## \n ############################# \n ########################## EvaluaciÃ³n ',
             self.contador, '\n #########################')

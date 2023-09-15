@@ -901,22 +901,6 @@ class LSTM_model(DL):
                                 y_pred1 = y_pred
                                 y_real1 = y_real
 
-                        # Indexes for values out of limits
-                        #if self.mask == True and len(y_pred1) > 0:
-                        #    if mean_y.size == 0:
-                        #        o = np.where(y_real1 < self.inf_limit)[0]
-                        #        if len(o) > 0:
-                        #            y_pred1 = np.delete(y_pred1, o, 0)
-                        #            y_real1 = np.delete(y_real1, o, 0)
-                        #    else:
-                        #        o=list()
-                        #        for t in range(len(mean_y)):
-                        #            o.append(np.where(y_real1[:,t] < self.inf_limit[t])[0])
-#
-                        #        oT=np.unique(np.concatenate(o))
-                        #        y_pred1 = np.delete(y_pred1, oT, 0)
-                        #        y_real1 = np.delete(y_real1, oT, 0)
-
                         # Indexes where the real values are 0
                         if self.extract_cero == True and len(y_pred1) > 0:
                             if mean_y.size == 0:
@@ -977,8 +961,6 @@ class LSTM_model(DL):
                         res = super().fix_values_0(scalar_rad.inverse_transform(x_val[zz][:, x_val[zz].shape[1] - 1, place]),
                                                    self.zero_problem, self.limits)
                         index_rad = res['indexes_out']
-                        #index_rad2 = np.where(y_real <= self.inf_limit)[0]
-                        ##index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
                         predictions.append(y_predF)
                         reales.append(y_realF)
@@ -996,22 +978,6 @@ class LSTM_model(DL):
                             else:
                                 y_pred1 = y_pred
                                 y_real1 = y_real
-
-                        # Outliers and missing values
-                        #if self.mask == True and len(y_pred1) > 0:
-                        #    if mean_y.size == 0:
-                        #        o = np.where(y_real1 < self.inf_limit)[0]
-                        #        if len(o) > 0:
-                        #            y_pred1 = np.delete(y_pred1, o, 0)
-                        #            y_real1 = np.delete(y_real1, o, 0)
-                        #    else:
-                        #        o = list()
-                        #        for t in range(len(mean_y)):
-                        #            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-#
-                        #        oT = np.unique(np.concatenate(o))
-                        #        y_pred1 = np.delete(y_pred1, oT, 0)
-                        #        y_real1 = np.delete(y_real1, oT, 0)
 
                         # Indexes where the real values are 0
                         if self.extract_cero == True and len(y_pred1) > 0:
@@ -1065,22 +1031,6 @@ class LSTM_model(DL):
                     else:
                         predictions.append(y_predF)
                         reales.append(y_realF)
-
-                        # Outliers and missing values
-                        #if self.mask == True and len(y_pred) > 0:
-                        #    if mean_y.size == 0:
-                        #        o = np.where(y_real < self.inf_limit)[0]
-                        #        if len(o) > 0:
-                        #            y_pred = np.delete(y_pred, o, 0)
-                        #            y_real = np.delete(y_real, o, 0)
-                        #    else:
-                        #        o = list()
-                        #        for t in range(len(mean_y)):
-                        #            o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-#
-                        #        oT = np.unique(np.concatenate(o))
-                        #        y_pred = np.delete(y_pred, oT, 0)
-                        #        y_real = np.delete(y_real, oT, 0)
 
                         # Indexes where the real values are 0
                         if self.extract_cero == True and len(y_pred) > 0:
@@ -1359,21 +1309,6 @@ class LSTM_model(DL):
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
-            # Outliers and missing values
-            #if self.mask == True and len(y_pred1) > 0:
-            #    if mean_y.size == 0:
-            #        o = np.where(y_real1 < self.inf_limit)[0]
-            #        if len(o) > 0:
-            #            y_pred1 = np.delete(y_pred1, o, 0)
-            #            y_real1 = np.delete(y_real1, o, 0)
-            #    else:
-            #        o = list()
-            #        for t in range(len(mean_y)):
-            #            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-#
-            #        oT = np.unique(np.concatenate(o))
-            #        y_pred1 = np.delete(y_pred1, oT, 0)
-            #        y_real1 = np.delete(y_real1, oT, 0)
 
             # Indexes where the real values are 0
             if self.extract_cero == True and len(y_pred1) > 0:
@@ -1453,8 +1388,6 @@ class LSTM_model(DL):
             res = super().fix_values_0(scalar_rad.inverse_transform(x_val[:,x_val.shape[1]-1, place]),
                                        self.zero_problem, self.limits)
             index_rad = res['indexes_out']
-            #index_rad2 = np.where(y_real <= self.inf_limit)[0]
-            #index_rad = np.union1d(np.array(index_rad), np.array(index_rad2))
 
             if len(y_pred) <= 1:
                 y_pred1 = np.nan
@@ -1469,23 +1402,6 @@ class LSTM_model(DL):
                 else:
                     y_pred1 = y_pred
                     y_real1 = y_real
-
-                ## Outliers and missing values
-                #if self.mask == True and len(y_pred1) > 0:
-                #    if mean_y.size == 0:
-                #        o = np.where(y_real1 < self.inf_limit)[0]
-                #        if len(o) > 0:
-                #            y_pred1 = np.delete(y_pred1, o, 0)
-                #            y_real1 = np.delete(y_real1, o, 0)
-
-#                #    else:
-                #        o = list()
-                #        for t in range(len(mean_y)):
-                #            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-#                #        oT = np.unique(np.concatenate(o))
-                #        y_pred1 = np.delete(y_pred1, oT, 0)
-                #        y_real1 = np.delete(y_real1, oT, 0)
 
                 # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
@@ -1557,21 +1473,6 @@ class LSTM_model(DL):
             else:
                 raise NameError('Empty prediction')
         else:
-            ## Outliers and missing values
-            #if self.mask == True and len(y_pred) > 0:
-            #    if mean_y.size == 0:
-            #        o = np.where(y_real < self.inf_limit)[0]
-            #        if len(o) > 0:
-            #            y_pred = np.delete(y_pred, o, 0)
-            #            y_real = np.delete(y_real, o, 0)
-            #    else:
-            #        o = list()
-            #        for t in range(len(mean_y)):
-            #            o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-#
-            #        oT = np.unique(np.concatenate(o))
-            #        y_pred = np.delete(y_pred, oT, 0)
-            #        y_real = np.delete(y_real, oT, 0)
 
             # Indexes where the real values are 0
             if self.extract_cero == True and len(y_pred) > 0:
@@ -1675,7 +1576,7 @@ class LSTM_model(DL):
         :param batch: batch size for training
         :param mean_y: vector of means
         :param parallel: 0 no paralyse
-        :param weights: weights between the two objective function
+        :param weights: weights between the two objective function (*AL REVES)
         :param values specific values to divide the sample. specific values of a variable to search division
         :return: errors obtained with the options considered together  with the best solution
         '''
@@ -1840,7 +1741,7 @@ class LSTM_model(DL):
         :param dictionary: dictionary to stored the options tested
         :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :param values specific values to divide the sample. specific values of a variable to search division
-        :param weigths: weights for the objective functions
+        :param weigths: weights for the objective functions (*AL REVES)
         :return: options in Pareto front, the optimal selection and the total results. Consider the option of parallelisation with runners
         '''
 
@@ -1883,7 +1784,6 @@ class LSTM_model(DL):
 
         #We select the final optimum with normalized results
         if res.F.shape[0] > 1:
-            rf=res.F
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
@@ -2024,7 +1924,7 @@ class LSTM_model(DL):
         :param parallel: how many processes are parallelise
         :param onebyone: [0] if we want to move the sample one by one [1] (True)although the horizont is 0 we want to move th sample lags by lags
         :param values specific values to divide the sample. specific values of a variable to search division
-        :param weigths: weights for the objective functions
+        :param weigths: weights for the objective functions (*AL REVES)
         :param n_last: last generation considered in the search
         :param nth_gen: number of generation to evaluate
         :return: the option selected for the pareto front, the optimal selection and the total results
@@ -2214,7 +2114,7 @@ class LSTM_model(DL):
         :param mean_y: vector of means
         :param dropout: percentage for NN
         :param parallel: how many processes are parallelise
-        :param weights: weights for the two objective functions
+        :param weights: weights for the two objective functions (*AL REVES)
         :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
         :param epsilon: parameter of RNSGA
         n_last: more robust, we consider the last n generations and take the maximum
