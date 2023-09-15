@@ -55,7 +55,7 @@ class ML:
         '''
 
     @staticmethod
-    def cv_division(x,y, fold,values):
+    def cv_division(x,y, pos_y,fold,values):
         '''
         Division de la muestra en trozos según fold para datos normales y no recurrentes
         :param fold: division for cv_analysis
@@ -66,7 +66,11 @@ class ML:
         '''
         x = x.reset_index(drop=True)
         y = y.reset_index(drop=True)
-        data=pd.concat([y,x], axis=1)
+        if any(pos_y)==0:
+            data=pd.concat([y,x], axis=1)
+        else:
+            data = pd.concat([x,y], axis=1)
+
         X_test = []
         X_train = []
         X_val = []
