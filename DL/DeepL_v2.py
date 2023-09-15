@@ -31,7 +31,6 @@ class DL:
         self.horizont = horizont
         self.scalar_y = scalar_y
         self.scalar_x = scalar_x
-        self.scalar_x = scalar_x
         self.zero_problem = zero_problem
         self.times = times
         self.limits =limits

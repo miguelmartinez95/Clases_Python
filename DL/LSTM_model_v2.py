@@ -82,7 +82,7 @@ class LSTM_model(DL):
         horizont: distance to the present: I want to predict the moment four steps in future
         scalar_y, scalar_x: empty lists to save the object fit to the data
         zero_problem: schedule, radiation o else. Adjust the result to the constraints
-        limits: limits based on the zero problems (hours, radiation limits, etc)
+        limits: limits based on the zero problems (hours, radiation limits, etc) [0][1] limits and [2] weekend o nothing
         times: dates
         pos_y: column or columns where the y is located
         mask: logic if we want to mask the missing values
