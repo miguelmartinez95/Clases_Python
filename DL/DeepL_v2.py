@@ -26,7 +26,7 @@ class DL:
 
         print('Super class to built different deep learning models. This class has other more specific classes associated with it ')
 
-    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero):
+    def __init__(self, data, horizont,scalar_y, scalar_x,zero_problem, limits,times, pos_y, mask,mask_value,n_lags,n_steps,  inf_limit,sup_limit,names,extract_cero,type):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -43,6 +43,7 @@ class DL:
         self.inf_limit = inf_limit
         self.names=names
         self.extract_cero = extract_cero
+        self.type=type
 
         '''
         data: dataframe with the data
@@ -340,7 +341,7 @@ class DL:
             if len(sup)>0:
                 self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit[0], len(sup))
 
-    def adapt_horizont(self, onebyone):
+    def adapt_horizont(self):
         '''
         Move the data sample to connected the y with the x based on the future selected and the possible steps
         After introduce_lags

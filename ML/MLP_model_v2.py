@@ -24,6 +24,7 @@ from pymoo.factory import get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
+import keras
 
 #Class for stop the training based on a threshold
 class MyThresholdCallback(keras.callbacks.Callback):

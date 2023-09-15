@@ -28,7 +28,7 @@ class ML:
                'IMPORTANT: the variables that can be lagged to the end of data frame'
               ))
 
-    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit):
+    def __init__(self, data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags, n_steps, mask, mask_value, inf_limit,sup_limit,type):
         self.data = data
         self.horizont = horizont
         self.scalar_y = scalar_y
@@ -39,10 +39,12 @@ class ML:
         self.extract_cero=extract_cero
         self.pos_y = pos_y
         self.n_lags = n_lags
+        self.n_steps = n_steps
         self.mask = mask
         self.mask_value = mask_value
         self.sup_limit = sup_limit
         self.inf_limit = inf_limit
+        self.type = type
 
         '''
         zero_problem: what limitation is considered in the result values (schedule, radiation o nothing)
@@ -331,7 +333,7 @@ class ML:
             if len(sup)>0:
                 self.data.iloc[sup, self.pos_y] = np.repeat(self.sup_limit[0], len(sup))
 
-    def adapt_horizont(self, onebyone):
+    def adapt_horizont(self):
         '''
          Move the data sample to connected the y with the x based on the future selected and the possible steps
          After introduce_lags
