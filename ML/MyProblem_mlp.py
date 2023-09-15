@@ -14,7 +14,7 @@ class MyProblem_mlp(ElementwiseProblem):
     def __init__(self,model, horizont, scalar_y, zero_problem, extract_cero, limits, times, pos_y, mask, mask_value, n_lags,
                  inf_limit,
                  sup_limit, type, data, scalar_x, med, contador,
-                 n_var, l_dense, batch, xlimit_inf, xlimit_sup, dropout, dictionary,values, weights, **kwargs):
+                 n_var, l_dense, batch, xlimit_inf, xlimit_sup, dropout, dictionary,values, weights,optimizer,learning_rate,activation, **kwargs):
         super().__init__(n_var=n_var,
                          n_obj=2,
                          n_constr=1,
@@ -50,6 +50,9 @@ class MyProblem_mlp(ElementwiseProblem):
         self.dictionary = dictionary
         self.values=values
         self.weights = weights
+        self.optimizer=optimizer
+        self.learning_rate=learning_rate
+        self.activation=activation
 
         '''
         model: object of a class ML
@@ -78,6 +81,9 @@ class MyProblem_mlp(ElementwiseProblem):
         values specific values to divide the sample. specific values of a variable to search division
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         weights: weights based on the error in mutivariable case (some error must be more weighted)
+        optimizer: one selectec for training
+        learning_rate: one selectec for training
+        activation: one selectec for training
         '''
 
     def cv_opt(self, fold, neurons, pacience, batch, mean_y, dictionary):
@@ -142,10 +148,10 @@ class MyProblem_mlp(ElementwiseProblem):
         else:
             if self.type == 'regression':
                 model = self.model.mlp_regression(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value,
-                                           self.dropout, len(self.pos_y))
+                                           self.dropout, len(self.pos_y),self.optimizer,self.learning_rate,self.activation)
             elif self.type == 'series':
                 model = self.model.mlp_series(layers, neurons, x_train[0].shape[1], self.mask, self.mask_value,
-                                       self.dropout, self.n_steps)
+                                       self.dropout, self.n_steps,self.optimizer,self.learning_rate,self.activation)
             # Checkpoitn callback
             es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=pacience)
             mc = ModelCheckpoint(str(h), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
