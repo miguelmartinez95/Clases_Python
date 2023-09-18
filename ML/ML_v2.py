@@ -337,20 +337,20 @@ class ML:
         '''
          Move the data sample to connected the y with the x based on the future selected and the possible steps
          After introduce_lags
-         n_steps=step in the future for predicting
          '''
         if self.horizont == 0:
-            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-            y = self.data.iloc[:, self.pos_y]
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1).copy()
+            y = self.data.iloc[:, self.pos_y].copy()
         else:  # if we have horizont>0, make a jump to the future
-            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-            y = self.data.iloc[:, self.pos_y]
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1).copy()
+            y = self.data.iloc[:, self.pos_y].copy()
             c=0
+            print('shape before horizont adjusted: ',y.shape[0])
             while c<self.horizont:
                 y = y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
                 c+=1
-
+            print('shape after horizont adjusted: ',y.shape[0])
             X = X.reset_index(drop=True)
 
         if self.type == 'series':  # if we are working with series the y will have several columns (future time steps)
