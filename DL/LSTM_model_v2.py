@@ -539,7 +539,7 @@ class LSTM_model(DL):
 
 
     @staticmethod
-    def predict_model(model,n_lags, x_val,batch, n_outputs):
+    def predict_model(model,x_val,batch, n_outputs):
         '''
         :param model: trained model
         :param n_lags: lags to built lstm block
@@ -558,7 +558,7 @@ class LSTM_model(DL):
             #input_x = data[l1:l2, :]
             input_x = data[i, :,:]
             #input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
-            input_x = input_x.reshape((1, input_x.shape[1], input_x.shape[2]))
+            input_x = input_x.reshape((1, data.shape[1], data.shape[2]))
             # forecast the next step
             yhat = model.predict(input_x, verbose=0, batch_size=batch)
             if n_outputs>1:
@@ -813,7 +813,7 @@ class LSTM_model(DL):
                     else:
                         outputs = 1
 
-                    res = self.__class__.predict_model(modelF, self.n_lags, x_val[z], batch, outputs)
+                    res = self.__class__.predict_model(modelF, x_val[z], batch, outputs)
 
                     #Get the prediction and apply inversely the scalating
                     y_pred = res['y_pred']
@@ -1255,7 +1255,7 @@ class LSTM_model(DL):
         else:
             outputs = 1
 
-        res = self.__class__.predict_model(model, self.n_lags,  x_val,batch, outputs)
+        res = self.__class__.predict_model(model, x_val,batch, outputs)
 
         y_pred = res['y_pred']
         print('Y_pred SHAPE in testing',y_pred.shape)
