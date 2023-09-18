@@ -339,6 +339,7 @@ class ML:
          After introduce_lags
          '''
         if self.horizont == 0:
+            print('There are no horizont in future')
             X = self.data.drop(self.data.columns[self.pos_y], axis=1).copy()
             y = self.data.iloc[:, self.pos_y].copy()
         else:  # if we have horizont>0, make a jump to the future
