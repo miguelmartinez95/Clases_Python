@@ -369,11 +369,11 @@ class ML:
             ys[:, 0] = y1
             y = ys.copy()
 
-            # Merge inputs and outputs
-            if self.pos_y == 0:
-                self.data = pd.concat([y, X.set_index(y.index)], axis=1)
-            else:
-                self.data = pd.concat([X.set_index(y.index), y], axis=1)
+        # Merge inputs and outputs
+        if self.pos_y == 0:
+            self.data = pd.concat([y, X.set_index(y.index)], axis=1)
+        else:
+            self.data = pd.concat([X.set_index(y.index), y], axis=1)
 
         print('Horizont adjusted!')
 
