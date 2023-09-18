@@ -287,6 +287,7 @@ class LSTM_model(DL):
                 dd=len(data)-in_start-(n_lags + horizont-n_steps)
 
         print('Data supervised')
+        print('X shape: ', np.array(X).shape)
 
         return(np.array(X), np.array(y),timesF, dd)
 
