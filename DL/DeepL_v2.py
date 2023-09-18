@@ -173,6 +173,10 @@ class DL:
             try:
                 limit1 = int(limit[0])
                 limit2 = int(limit[1])
+                if len(restriction.shape)<2:
+                    restriction.reshape(-1,1)
+                else:
+                    pass
                 if restriction.shape[1]==1:
                     restriction=pd.Series(restriction)
                 else:
@@ -198,7 +202,10 @@ class DL:
         elif zero_problem == 'radiation':
             #If radiation is the one, only the values where the radiation is less than the limit are considered
             try:
-                rad = np.array([restriction])
+                if len(restriction.shape)<2:
+                    rad = restriction.reshape(-1,1)
+                else:
+                    rad=restriction
                 ii = np.where(rad <= limit)[0]
             except:
                 raise NameError('Zero_problem and restriction incompatibles')
