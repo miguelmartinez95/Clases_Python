@@ -173,15 +173,6 @@ class DL:
             try:
                 limit1 = int(limit[0])
                 limit2 = int(limit[1])
-                if len(restriction.shape)<2:
-                    restriction.reshape(-1,1)
-                else:
-                    pass
-                if restriction.shape[1]==1:
-                    restriction=pd.Series(restriction)
-                else:
-                    r=np.concatenate(restriction)
-                    restriction=pd.Series(r)
 
                 #If third value is weekend the weekend are eliminated for subsequent evaluation
                 if limit[2]=='weekend':

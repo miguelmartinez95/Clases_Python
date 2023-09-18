@@ -289,7 +289,7 @@ class LSTM_model(DL):
         print('Data supervised')
         print('X shape: ', np.array(X).shape)
 
-        return(np.array(X), np.array(y),timesF, dd)
+        return(np.array(X), np.array(y),pd.to_datetime(pd.Series(timesF)), dd)
 
     @staticmethod
     def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout, optimizer,learning_rate,activation):
