@@ -1262,7 +1262,7 @@ class LSTM_model(DL):
         print('Y_pred SHAPE in testing',y_pred.shape)
 
 
-        times=pd.to_datetime(pd.Series(np.concatenate(ind_val)))
+        times=pd.to_datetime(pd.Series(ind_val))
         if len(times)!=len(y_pred):
             raise NameError('Dates length is not equal than predictions')
 
