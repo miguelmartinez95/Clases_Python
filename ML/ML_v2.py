@@ -340,7 +340,8 @@ class ML:
          n_steps=step in the future for predicting
          '''
         if self.horizont == 0:
-            self.data = self.data
+            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
+            y = self.data.iloc[:, self.pos_y]
         else:  # if we have horizont>0, make a jump to the future
             X = self.data.drop(self.data.columns[self.pos_y], axis=1)
             y = self.data.iloc[:, self.pos_y]
@@ -352,9 +353,7 @@ class ML:
             X.index = y.index
 
         if self.type == 'series':  # if we are working with series the y will have several columns (future time steps)
-            X = self.data.drop(self.data.columns[self.pos_y], axis=1)
-            y = self.data.iloc[:, self.pos_y]
-            # We create the matrix y with the first step and then columns with the data moved to math the future steps
+            # We create the matrix y with the first step and then columns with the data moved to match the future steps
             y1 = y.copy().drop(y.index[len(y) - 1 - self.n_steps:len(y)], axis=0)
             ys = np.zeros((y1.shape[0], self.n_steps))
             for t in range(self.n_steps - 1):
