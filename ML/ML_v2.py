@@ -345,12 +345,13 @@ class ML:
         else:  # if we have horizont>0, make a jump to the future
             X = self.data.drop(self.data.columns[self.pos_y], axis=1)
             y = self.data.iloc[:, self.pos_y]
-            for t in range(self.horizont):
+            c=0
+            while c<self.horizont:
                 y = y.drop(y.index[0], axis=0)
                 X = X.drop(X.index[X.shape[0] - 1], axis=0)
+                c+=1
 
             X = X.reset_index(drop=True)
-            X.index = y.index
 
         if self.type == 'series':  # if we are working with series the y will have several columns (future time steps)
             # We create the matrix y with the first step and then columns with the data moved to match the future steps
