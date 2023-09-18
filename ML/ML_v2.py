@@ -50,9 +50,11 @@ class ML:
         zero_problem: what limitation is considered in the result values (schedule, radiation o nothing)
         limits: limits based on the zer_problem (hours, radiation, etc)
         extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        pos_y: column or columns where the y is located (np.array([]))
         n_lags: times that the variables must be lagged
         inf_limit: lower accepted limits for the estimated values
         sup_limits: upper accepted limits for the estimated values
+        
 
         '''
 
@@ -371,7 +373,7 @@ class ML:
             y = ys.copy()
 
         # Merge inputs and outputs
-        if self.pos_y == 0:
+        if len(self.pos_y) == 1:
             self.data = pd.concat([y, X.set_index(y.index)], axis=1)
         else:
             self.data = pd.concat([X.set_index(y.index), y], axis=1)
