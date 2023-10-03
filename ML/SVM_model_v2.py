@@ -9,12 +9,17 @@ from multiprocessing import Process,Queue
 import matplotlib.pyplot as plt
 from pymoo.algorithms.moo.rnsga2 import RNSGA2
 from ML_v2 import ML
-from pymoo.factory import get_decomposition
 from datetime import datetime
 from MyProblem_svm import MyProblem_svm
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn import svm
 from MyRepair_svm import MyRepair_svm
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.factory import get_decomposition
+from pymoo.factory import get_crossover, get_mutation, get_sampling
+from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+from pymoo.optimize import minimize
+from pymoo.core.problem import starmap_parallelized_eval
 
 class SVM(ML):
     def info(self):
@@ -144,7 +149,7 @@ class SVM(ML):
         :param pos_y: column index of target values
         :param C: C values
         :param epsilon: epsilon value
-        :param tol: tolerance value
+        :param tol: tolerance value (parameter SVR)
         :param save_model: True or False
         :param model: previously model trained
         :return: model and history of training
@@ -562,7 +567,7 @@ class SVM(ML):
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param C: C value
         :param epsilon: epsilon value
-        :param tol: tolerance value
+        :param tol: tolerance value (SVR parameter)
         :param mean_y: mean of y values for error calculations
         :param dropout: percentage of dropout considered
         :param plot: True plots
@@ -920,7 +925,7 @@ class SVM(ML):
         '''
         :param C_options:possible values for C
         :param epsilon_options: possible values for epsilon
-        :param tol_options:possible values for tolerance
+        :param tol_options:possible values for tolerance (SVR parameter)
         :param fold: division in cv analyses
         :param values specific values to divide the sample. specific values of a variable to search division
         values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
@@ -1060,48 +1065,52 @@ class SVM(ML):
 
 
     def nsga2_individual(self, med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
-                         xlimit_sup, dictionary, weights):
+                         xlimit_sup, dictionary, values,weights):
         '''
-        :param med:
+        :param model: object of ML or DL (class)
+        :param med: vector of means
         :param contador: a operator to count the attempts
-        :param n_processes: how many processes are parallelise
+        :param n_processes: how many processes are parallelised
         :param l_dense:maximun number of layers dense
         :param batch: batch size
         :param pop_size: population size selected for NSGA2
-        :param tol: tolearance selected to terminate the process
+        :param tol: tolearance selected to terminate the process (NSGa2 parameter)
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param weights: weights for the two objective functions (*AL REVES)
         :return: options in Pareto front, the optimal selection and the total results
         '''
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.factory import get_problem, get_visualization, get_decomposition
-        from pymoo.factory import get_algorithm, get_crossover, get_mutation, get_sampling
-        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
-        from pymoo.optimize import minimize
-        from pymoo.core.problem import starmap_parallelized_eval
-        print('DATA is', type(self.data))
+
+        #Creation of the problem
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
-                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,values,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
             problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
-                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights)
+                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,values,self.weights)
+
+        #Algorithm for optimisation
         algorithm = NSGA2(pop_size=pop_size, repair=MyRepair_svm(),eliminate_duplicates=True,
                           sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx",prob=0.95),
                           mutation=get_mutation("int_pm", prob=0.4))
+
+        #Termination of the algorithm based on tolerance
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
                                                               n_max_evals=5000)
+        #Result of optimisation
         res = minimize(problem,
                        algorithm,
                        termination,
@@ -1109,6 +1118,8 @@ class SVM(ML):
                        pf=True,
                        verbose=True,
                        seed=7)
+
+        #Selection of the optimum
         if res.F.shape[0] > 1:
             rf=res.F
             rx=res.X
@@ -1130,9 +1141,8 @@ class SVM(ML):
             struct_T = rx
             obj = res.F[I, :]
             struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
 
+            #Plot of the pareto front with the optimum
             plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
@@ -1155,18 +1165,24 @@ class SVM(ML):
             pass
         return (obj, struct, obj_T, struct_T, res,contador)
 
-    def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,weights):
+    def optimal_search_nsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,values,weights):
         '''
-        :param l_dense: maximun layers dense
-        :param batch: batch size
+        :param C_max: maximum value for C_max
+        :param epsilon_max: maximum value for epsilon
         :param pop_size: population size for RVEA
-        :param tol: tolerance to built the pareto front
+        :param tol: tolerance to built the pareto front (NSGA2 parameter)
         :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
-        :param parallel: how many processes are parallelise
+        :param mean_y: vector of means
         if mean_y is empty a variation rate will be applied
+        :param parallel: how many processes are parallelise
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param weights: weights for the two objective functions (*AL REVES)
         :return: the options selected for the pareto front, the optimal selection and the total results
         '''
+
+        #Multiprocessing for possible paralelisation and fill the dictionary and the contador
         manager = multiprocessing.Manager()
         dictionary = manager.dict()
         contador = manager.list()
@@ -1186,43 +1202,44 @@ class SVM(ML):
         res = {'total_x': x_obj_total, 'total_obj': obj_total, 'opt_x': x_obj, 'opt_obj': obj, 'res': res,'evaluations':evaluations}
         return res
 
-    def rnsga2_individual(self, med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
-                         xlimit_sup, dictionary, weights,epsilon):
+    def rnsga2_individual(self, model,med, contador, n_processes, C_max, epsilon_max, pop_size, tol, xlimit_inf,
+                         xlimit_sup, dictionary,values,ref_points, weights,epsilon):
         '''
-        :param med:
+        :param model: object of ML or DL (class)
+        :param med: vector of means
         :param contador: a operator to count the attempts
         :param n_processes: how many processes are parallelise
-        :param l_dense:maximun number of layers dense
-        :param batch: batch size
+        :param C_max:maximun value for C
+        :param epsilon_max: maximum value for epsilon (hyperarameter of SVR)
         :param pop_size: population size selected for NSGA2
-        :param tol: tolearance selected to terminate the process
+        :param tol: tolearance selected to terminate the process (RNSGA2 parameter)
         :param xlimit_inf: array with the lower limits to the neuron  lstm , neurons dense and pacience
         :param xlimit_sup:array with the upper limits to the neuron  lstm , neurons dense and pacience
         :param dictionary: dictionary to stored the options tested
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param weights: weights for the two objective functions (*AL REVES)
+        :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
+        :param epsilon: parameter for RNSGA
         :return: options in Pareto front, the optimal selection and the total results
         '''
-        from pymoo.factory import  get_decomposition
-        from pymoo.factory import  get_crossover, get_mutation, get_sampling
-        from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
-        from pymoo.optimize import minimize
-        from pymoo.core.problem import starmap_parallelized_eval
-        print('DATA is', type(self.data))
+
+        # Creation of the problem
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(model,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
-                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,values,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem_svm(self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(model,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
-                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,self.weights)
+                                med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,values,self.weights)
 
-        ref_points = np.array([[0.3, 0.1], [0.1, 0.3]])
-
+        # Algorithm for optimisation
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
                           crossover=get_crossover("int_sbx",prob=0.95),
                           mutation=get_mutation("int_pm", prob=0.4),
@@ -1231,10 +1248,12 @@ class SVM(ML):
                            weights=weights,
                            epsilon=epsilon)
 
+        # Termination of the algorithm based on tolerance
         termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
                                                               n_last=int(pop_size / 2), nth_gen=int(pop_size / 4),
                                                               n_max_gen=None,
                                                               n_max_evals=5000)
+        # Result of optimisation
         res = minimize(problem,
                        algorithm,
                        termination,
@@ -1242,8 +1261,9 @@ class SVM(ML):
                        pf=True,
                        verbose=True,
                        seed=7)
+
+        # Selection of the optimum
         if res.F.shape[0] > 1:
-            rf=res.F
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
@@ -1263,9 +1283,8 @@ class SVM(ML):
             struct_T = rx
             obj = res.F[I, :]
             struct = rx[I, :]
-            print(rf.shape)
-            print(rx.shape)
 
+            # Plot of the pareto front with the optimum
             plt.figure(figsize=(10, 7))
             plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
             plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
@@ -1288,26 +1307,35 @@ class SVM(ML):
             pass
         return (obj, struct, obj_T, struct_T, res,contador)
 
-    def optimal_search_rnsga2(self, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,weights,epsilon=0.01):
+    def optimal_search_rnsga2(self, model, C_max, epsilon_max, pop_size, tol, xlimit_inf, xlimit_sup, mean_y, parallel,values,weights,ref_points=np.array([[0.3, 0.1], [0.1, 0.3]]),epsilon=0.01):
         '''
-        :param l_dense: maximun layers dense
-        :param batch: batch size
+        :param model: object of ML or DL (class)
+        :param C_max:maximun value for C
+        :param epsilon_max: maximum value for epsilon (hyperarameter of SVR)
         :param pop_size: population size for RVEA
-        :param tol: tolerance to built the pareto front
+        :param tol: tolerance to built the pareto front (RNSGA2 parameter)
         :param xlimit_inf: array with lower limits for neurons lstm, dense and pacience
         :param xlimit_sup: array with upper limits for neurons lstm, dense and pacience
+        :param mean_y: vector of means
         :param parallel: how many processes are parallelise
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param weights: weights for the two objective functions (*AL REVES)
+        :param ref_points:reference points for algorithm initialisation i.e np.array([[0.3, 0.1], [0.1, 0.3]])
+        :param epsilon: parameter of RNSGA
         if mean_y is empty a variation rate will be applied
-        :return: the options selected for the pareto front, the optimal selection and the total results
-        '''
+        :return: the options selected for the pareto front, the optimal selection and the total results        '''
+
+        # Multiprocessing for possible paralelisation and fill the dictionary and the contador
         manager = multiprocessing.Manager()
         dictionary = manager.dict()
         contador = manager.list()
         contador.append(0)
+
         print('Start the optimization!!!!!')
-        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(mean_y, contador, parallel, C_max,
+        obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(model, mean_y, contador, parallel, C_max,
                                                                             epsilon_max, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dictionary, weights,epsilon)
+                                                                            xlimit_sup, dictionary, values, weights,ref_points,epsilon)
         np.savetxt('objectives_selectedR.txt', obj)
         np.savetxt('x_selectedR.txt', x_obj)
         np.savetxt('objectivesR.txt', obj_total)

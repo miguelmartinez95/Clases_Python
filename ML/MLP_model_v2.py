@@ -1192,7 +1192,8 @@ class MLP(ML):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("pbi").do(r_final, weights).argmin()
+            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
+            #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -1327,7 +1328,6 @@ class MLP(ML):
 
         # Selection of the optimum
         if res.F.shape[0] > 1:
-            rf=res.F
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
@@ -1401,7 +1401,7 @@ class MLP(ML):
         print('Start the optimization!!!!!')
         obj, x_obj, obj_total, x_obj_total, res,evaluations = self.rnsga2_individual(model, mean_y, contador, parallel, l_dense,
                                                                             batch, pop_size, tol, xlimit_inf,
-                                                                            xlimit_sup, dropout,dictionary, weights,ref_points,epsilon)
+                                                                            xlimit_sup, dropout,dictionary,values, weights,ref_points,epsilon)
         np.savetxt('objectives_selectedR.txt', obj)
         np.savetxt('x_selectedR.txt', x_obj)
         np.savetxt('objectivesR.txt', obj_total)
