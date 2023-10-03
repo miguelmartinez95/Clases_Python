@@ -604,7 +604,6 @@ class MLP(ML):
             #Consideration if paralelisation is considered
             z = Queue()
             if type(q) == type(z):
-                # q.put(np.array([np.mean(cv), np.std(cv)]))
                 q.put(np.array([np.mean(cv), MLP.complex_mlp(neurons, 2000, 8)]))
             else:
                 return (res)

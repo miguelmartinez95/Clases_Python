@@ -47,15 +47,21 @@ class ML:
         self.type = type
 
         '''
-        zero_problem: what limitation is considered in the result values (schedule, radiation o nothing)
-        limits: limits based on the zer_problem (hours, radiation, etc)
+        horizont: distance to the present: I want to predict the moment four steps in future
+        scalar_y, scalar_x: empty lists to save the object fit to the data
+        zero_problem: schedule, radiation o else. Adjust the result to the constraints
+        limits: limits based on the zero problems (hours, radiation limits, etc)
         extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        times: dates
         pos_y: column or columns where the y is located (np.array([]))
         n_lags: times that the variables must be lagged
+        n_steps: amount of steps estimated simultaneously
+        mask: logic if we want to mask the missing values
+        mask_value: specific value for the masking
         inf_limit: lower accepted limits for the estimated values
         sup_limits: upper accepted limits for the estimated values
-        
-
+        weights: weights based on the error in mutivariable case (some error must be more weighted)
+        type: regression or classification
         '''
 
     @staticmethod

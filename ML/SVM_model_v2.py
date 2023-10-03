@@ -19,17 +19,33 @@ from MyRepair_svm import MyRepair_svm
 class SVM(ML):
     def info(self):
         print(('Class to built SVM models. \n'))
-    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit,weights, type):
-        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem, limits, extract_cero, times, pos_y, n_lags, mask, mask_value, inf_limit,sup_limit)
+    def __init__(self,data,horizont, scalar_y,scalar_x, zero_problem,limits,extract_cero, times, pos_y, n_lags, n_steps,mask, mask_value, inf_limit,sup_limit,weights, type):
+        super().__init__(data,horizont, scalar_y,scalar_x, zero_problem,limits, extract_cero, times, pos_y, n_lags, n_steps,mask, mask_value, inf_limit,sup_limit,type)
         self.type = type
         self.weights = weights
+
         '''
-        I want to predict the moment four steps in future
+        horizont: distance to the present: I want to predict the moment four steps in future
+        scalar_y, scalar_x: empty lists to save the object fit to the data
+        zero_problem: schedule, radiation o else. Adjust the result to the constraints
+        limits: limits based on the zero problems (hours, radiation limits, etc)
+        extract_zero: Logic, if we want to consider or not the moment when real data is 0 (True are deleted)
+        times: dates
+        pos_y: column or columns where the y is located (np.array([]))
+        n_lags: times that the variables must be lagged
+        mask: logic if we want to mask the missing values
+        mask_value: specific value for the masking
+        inf_limit: lower accepted limits for the estimated values
+        sup_limits: upper accepted limits for the estimated values
+        weights: weights based on the error in mutivariable case (some error must be more weighted)
+        type: regression or classification
         '''
 
     @staticmethod
     def complex_svm(C_svm,epsilon_svm, max_C, max_epsilon):
         '''
+        :param C_svm: value of C
+        :param epsilon_svm: epsilon value
         :param max_N: maximun neurons in the network
         :param max_H: maximum hidden layers in the network
         :return: complexity of the model
@@ -40,10 +56,11 @@ class SVM(ML):
 
 
     @staticmethod
-    def svm_cv_division(x,y, fold):
+    def svm_cv_division(x,y, pos_y, fold,values):
         '''
         Division de la muestra en trozos según fold para datos normales y no recurrentes
-
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
         :param fold: division for cv_analysis
         :return: data divided into train, test and validations in addition to the indexes division for a CV analysis
         '''
@@ -54,24 +71,62 @@ class SVM(ML):
         Y_test = []
         Y_train = []
 
-        step = int(x.shape[0]/fold)
-        w = 0
-        w2 = step
-        indexes = []
-        try:
-            while w2 < x.shape[0]:
-                X_test.append(x.iloc[range(w,w2)])
-                X_train.append(x.drop(range(w,w2)))
+        if any(pos_y)==0:
+            data=pd.concat([y,x], axis=1)
+        else:
+            data = pd.concat([x,y], axis=1)
+
+        if values:
+            indexes = []
+            place = values[2]
+            var = data.iloc[:, place]
+            for t in range(values[0]):
+                if len(place) == 1:
+                    w = np.where(var == values[1][t])[0][0]
+                    w2 = np.where(var == values[1][t])[0][len(np.where(var == values[1][t])[0]) - 1]
+                elif len(place) == 2:
+                    w = np.where((var.iloc[:, 0] == values[1][:,0][t]) & (var.iloc[:, 1] == values[1][:,1][t]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][:,0][t]) & (var.iloc[:, 1] == values[1][:,1][t]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][:,0][t]) & (var.iloc[:, 1] == values[1][:,1][t]))[0]) - 1]
+                elif len(place) == 3:
+                    w = np.where((var.iloc[:, 0] == values[1][:,0][t]) & (var.iloc[:, 1] == values[1][:,1][t]) & (
+                                var.iloc[:, 2] == values[1][:,2][t]))[0][0]
+                    w2 = np.where((var.iloc[:, 0] == values[1][:,0][t]) & (var.iloc[:, 1] == values[1][:,1][t]) & (
+                                var.iloc[:, 2] == values[1][:,2][t]))[0][
+                        len(np.where((var.iloc[:, 0] == values[1][:,0][t]) & (var.iloc[:, 1] == values[1][:,1][t]) & (
+                                var.iloc[:, 2] == values[1][:,2][t]))[0]) - 1]
+                else:
+                    raise (NameError('Not considered'))
+
+                # Divide based on the limits according the values (index_val simply index for validation set)
+                # Dividing the sample into val and train (and val into test and val)
+                X_test.append(x.iloc[range(w, w2)])
+                X_train.append(x.drop(range(w, w2)))
 
                 Y_test.append(y.iloc[range(w, w2)])
                 Y_train.append(y.drop(range(w, w2)))
                 indexes.append(np.array([w, w2]))
-                w = w2
-                w2 += step
-                if w2 > x.shape[0] and w < x.shape[0]:
-                    w2 = x.shape[0]
-        except:
-            raise NameError('Problems with the sample division in the cv classic')
+                print('cv_division done')
+        else:
+
+            step = int(x.shape[0]/fold)
+            w = 0
+            w2 = step
+            indexes = []
+            try:
+                while w2 < x.shape[0]:
+                    X_test.append(x.iloc[range(w,w2)])
+                    X_train.append(x.drop(range(w,w2)))
+
+                    Y_test.append(y.iloc[range(w, w2)])
+                    Y_train.append(y.drop(range(w, w2)))
+                    indexes.append(np.array([w, w2]))
+                    w = w2
+                    w2 += step
+                    if w2 > x.shape[0] and w < x.shape[0]:
+                        w2 = x.shape[0]
+            except:
+                raise NameError('Problems with the sample division in the cv classic')
 
         res = {'x_test': X_test, 'x_train':X_train, 'y_test':Y_test, 'y_train':Y_train,
             'indexes':indexes}
@@ -83,6 +138,17 @@ class SVM(ML):
 
     @staticmethod
     def SVR_training(data_train,pos_y,C,epsilon, tol, save_model, model=[]):
+
+        '''
+        :param data_train: data for training
+        :param pos_y: column index of target values
+        :param C: C values
+        :param epsilon: epsilon value
+        :param tol: tolerance value
+        :param save_model: True or False
+        :param model: previously model trained
+        :return: model and history of training
+        '''
         now = str(datetime.now().microsecond)
 
         data_train = pd.DataFrame(data_train)
@@ -101,7 +167,7 @@ class SVM(ML):
         history = model.fit(x_train, y_train)
 
         if save_model==True:
-            name='mlp'+now+'.h5'
+            name='svr'+now+'.h5'
             model.save(name, save_format='h5')
 
         res = {'model':model,  'history':history}
@@ -155,6 +221,7 @@ class SVM(ML):
 
         if self.zero_problem == 'schedule':
             print('*****Night-schedule fixed******')
+            # Indexes out due to the zero_problem
             res = super().fix_values_0(times,  self.zero_problem, self.limits)
             res2 = super().fix_values_0(times_train,  self.zero_problem, self.limits)
             index_hour = res['indexes_out']
@@ -182,30 +249,7 @@ class SVM(ML):
                     y_real1 = y_real
                     y_realt1 = y_real_t
 
-                if self.mask == True and len(y_pred1) > 0:
-                    if mean_y.size == 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        o2 = np.where(y_realt1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                        if len(o2) > 0:
-                            y_predt1 = np.delete(y_predt1, o2, 0)
-                            y_realt1 = np.delete(y_realt1, o2, 0)
-                    else:
-                        o = list()
-                        o2 = list()
-                        for t in range(len(mean_y)):
-                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-                            o2.append(np.where(y_realt1[:, t] < self.inf_limit[t])[0])
-
-                        oT = np.unique(np.concatenate(o))
-                        oT2 = np.unique(np.concatenate(o2))
-                        y_pred1 = np.delete(y_pred1, oT, 0)
-                        y_real1 = np.delete(y_real1, oT, 0)
-                        y_predt1 = np.delete(y_predt1, oT2, 0)
-                        y_realt1 = np.delete(y_realt1, oT2, 0)
-
+                # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 == 0)[0]
@@ -230,6 +274,7 @@ class SVM(ML):
                         y_predt1 = np.delete(y_predt1, oT2, 0)
                         y_realt1 = np.delete(y_realt1, oT2, 0)
 
+            # Errors calculation based on mean values, weights...
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
@@ -281,6 +326,7 @@ class SVM(ML):
                 raise NameError('Empty prediction')
         elif self.zero_problem == 'radiation':
             print('*****Night-radiation fixed******')
+            # Indexes out due to the zero_problem
             place = np.where(x_val.columns == 'radiation')[0]
             scalar_x = self.scalar_x
             scalar_rad = scalar_x['radiation']
@@ -316,30 +362,7 @@ class SVM(ML):
                     y_real1 = y_real
                     y_realt1 = y_real_t
 
-                if self.mask == True and len(y_pred1) > 0:
-                    if mean_y.size == 0:
-                        o = np.where(y_real1 < self.inf_limit)[0]
-                        o2 = np.where(y_realt1 < self.inf_limit)[0]
-                        if len(o) > 0:
-                            y_pred1 = np.delete(y_pred1, o, 0)
-                            y_real1 = np.delete(y_real1, o, 0)
-                        if len(o2) > 0:
-                            y_predt1 = np.delete(y_predt1, o2, 0)
-                            y_realt1 = np.delete(y_realt1, o2, 0)
-                    else:
-                        o = list()
-                        o2 = list()
-                        for t in range(len(mean_y)):
-                            o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-                            o2.append(np.where(y_realt1[:, t] < self.inf_limit[t])[0])
-
-                        oT = np.unique(np.concatenate(o))
-                        oT2 = np.unique(np.concatenate(o2))
-                        y_pred1 = np.delete(y_pred1, oT, 0)
-                        y_real1 = np.delete(y_real1, oT, 0)
-                        y_predt1 = np.delete(y_predt1, oT2, 0)
-                        y_realt1 = np.delete(y_realt1, oT2, 0)
-
+                # Indexes where the real values are 0
                 if self.extract_cero == True and len(y_pred1) > 0:
                     if mean_y.size == 0:
                         o = np.where(y_real1 == 0)[0]
@@ -364,6 +387,7 @@ class SVM(ML):
                         y_predt1 = np.delete(y_predt1, oT2, 0)
                         y_realt1 = np.delete(y_realt1, oT2, 0)
 
+            # Errors calculation based on mean values, weights..
             if len(y_pred1)>1:
                 if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                     if mean_y.size == 0:
@@ -413,31 +437,7 @@ class SVM(ML):
             else:
                 raise NameError('Empty prediction')
         else:
-
-            if self.mask == True and len(y_pred) > 0:
-                if mean_y.size == 0:
-                    o = np.where(y_real < self.inf_limit)[0]
-                    o2 = np.where(y_real_t < self.inf_limit)[0]
-                    if len(o) > 0:
-                        y_pred = np.delete(y_pred, o, 0)
-                        y_real = np.delete(y_real, o, 0)
-                    if len(o2) > 0:
-                        y_pred_t = np.delete(y_pred_t, o2, 0)
-                        y_real_t = np.delete(y_real_t, o2, 0)
-                else:
-                    o = list()
-                    o2 = list()
-                    for t in range(len(mean_y)):
-                        o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-                        o2.append(np.where(y_real_t[:, t] < self.inf_limit[t])[0])
-
-                    oT = np.unique(np.concatenate(o))
-                    oT2 = np.unique(np.concatenate(o2))
-                    y_pred = np.delete(y_pred, oT, 0)
-                    y_pred_t = np.delete(y_pred_t, oT2, 0)
-                    y_real = np.delete(y_real, oT, 0)
-                    y_real_t = np.delete(y_real_t, oT2, 0)
-
+            # Indexes where the real values are 0
             if self.extract_cero == True and len(y_pred) > 0:
                 if mean_y.size == 0:
                     o = np.where(y_real == 0)[0]
@@ -462,6 +462,7 @@ class SVM(ML):
                     y_real = np.delete(y_real, oT, 0)
                     y_real_t = np.delete(y_real_t, oT2, 0)
 
+            # Errors calculation based on mean values, weights...
             if len(y_pred)>1:
                 if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                     if mean_y.size == 0:
@@ -514,7 +515,34 @@ class SVM(ML):
             else:
                 raise NameError('Empty prediction')
 
-        if plotting==True:
+        if plotting == True and len(y_realF.shape) > 1:
+            if y_realF.shape[1]>1:
+                for t in range(y_realF.shape[1]):
+                    a = np.round(cv, 2)
+                    up = int(np.max(y_realF.iloc[:, t])) + int(np.max(y_realF.iloc[:, t]) / 4)
+                    low = int(np.min(y_realF.iloc[:, t])) - int(np.min(y_realF.iloc[:, t]) / 4)
+                    plt.figure()
+                    plt.ylim(low, up)
+                    plt.plot(y_realF.iloc[:, t], color='black', label='Real')
+                    plt.plot(y_predF.iloc[:, t], color='blue', label='Prediction')
+                    plt.legend()
+                    plt.title("CV(RMSE)={}".format(str(a)))
+                    a = 'Var-'
+                    b = str(t) + '.png'
+                    plot_name = a + b
+                    plt.savefig(plot_name)
+            else:
+                a = np.round(cv, 2)
+                up = int(np.max(y_realF.iloc[:, 0])) + int(np.max(y_realF.iloc[:, 0]) / 4)
+                low = int(np.min(y_realF.iloc[:, 0])) - int(np.min(y_realF.iloc[:, 0]) / 4)
+                plt.figure()
+                plt.ylim(low, up)
+                plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+                plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
+                plt.legend()
+                plt.title("CV(RMSE)={}".format(str(a)))
+                plt.savefig('plot1.png')
+        elif plotting == True and len(y_realF.shape) < 2:
             a = np.round(cv, 2)
             up = int(np.max(y_realF)) + int(np.max(y_realF) / 4)
             low = int(np.min(y_realF)) - int(np.min(y_realF) / 4)
@@ -527,13 +555,21 @@ class SVM(ML):
             plt.savefig('plot1.png')
         return res
 
-    def cv_analysis_svm(self, fold, C, epsilon, tol, mean_y, plot, q=[], model=[]):
+    def cv_analysis_svm(self, fold, values, C, epsilon, tol, mean_y, plot, q=[], model=[]):
         '''
         :param fold: divisions in cv analysis
-        :param q: a Queue to paralelyse or empty list to do not paralyse
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param C: C value
+        :param epsilon: epsilon value
+        :param tol: tolerance value
+        :param mean_y: mean of y values for error calculations
+        :param dropout: percentage of dropout considered
         :param plot: True plots
-        :return: predictions, real values, errors and the times needed to train
-        '''
+        :param limite: error threshold for stop training
+        :param q: a Queue to paralelyse or empty list to do not paralyse
+        :param model: if model is not empty a pretrained model is considered
+        :return: predictions, real values, errors and the times needed to train        '''
         from pathlib import Path
         import random
         names = self.data.drop(self.data.columns[self.pos_y], axis=1).columns
@@ -542,15 +578,21 @@ class SVM(ML):
               'CROSS-VALIDATION'
               '#################################'
               '################################')
+
+        #Separate y and X
         x = pd.DataFrame(self.data.drop(self.data.columns[self.pos_y], axis=1))
         y = pd.DataFrame(self.data.iloc[:, self.pos_y])
         x = x.reset_index(drop=True)
         y = y.reset_index(drop=True)
-        res = self.svm_cv_division(x, y, fold)
+
+        #Division of the data for a CV analysis
+        res = self.svm_cv_division(x, y,self.pos_y, fold,values)
         x_test = res['x_test']
         x_train = res['x_train']
         y_test = res['y_test']
         y_train = res['y_train']
+
+        #Trying to save all the dates in each slice considered
         indexes = res['indexes']
         times_test = []
         tt = self.times
@@ -580,6 +622,7 @@ class SVM(ML):
                 h_path.mkdir(exist_ok=True)
                 h = h_path / f'best_{random.randint(0, 1000000)}_model.h5'
                 if isinstance(model, list):
+                    # Create the model
                     res = self.SVR_training(pd.concat([pd.DataFrame(y_train[z]).reset_index(drop=True),
                                                        pd.DataFrame(x_train[z]).reset_index(drop=True)], axis=1),
                                             self.pos_y, C, epsilon, tol, False)
@@ -593,14 +636,19 @@ class SVM(ML):
                     modelF = res['model']
 
                 print('Fold number', z)
+
+                #Test sample
                 test_x = pd.DataFrame(x_test[z]).reset_index(drop=True)
                 test_y = pd.DataFrame(y_test[z]).reset_index(drop=True)
                 time_start = time()
                 times[z] = round(time() - time_start, 3)
-                y_pred = modelF.predict(test_x)
 
+                #Predicting
+                y_pred = modelF.predict(test_x)
                 y_pred = np.array(self.scalar_y.inverse_transform(pd.DataFrame(y_pred)))
                 y_real = np.array(self.scalar_y.inverse_transform(test_y))
+
+                #Check the limits
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]
@@ -619,8 +667,11 @@ class SVM(ML):
                 reales.append(y_realF)
                 predictions.append(y_predF)
                 reales.append(y_realF)
+
+                #Error calculation based on the limits (schedule, radiation)
                 if self.zero_problem == 'schedule':
                     print('*****Night-schedule fixed******')
+                    #Indexes out due to the zero_problem
                     res = super().fix_values_0(times_test[z],
                                                self.zero_problem, self.limits)
                     index_hour = res['indexes_out']
@@ -634,21 +685,7 @@ class SVM(ML):
                         y_pred1 = y_pred
                         y_real1 = y_real
 
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
-
+                    #Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -664,6 +701,7 @@ class SVM(ML):
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
 
+                    #Errors calculation based on mean values, weights...
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
@@ -695,6 +733,7 @@ class SVM(ML):
                         raise NameError('Empty prediction')
                 elif self.zero_problem == 'radiation':
                     print('*****Night-radiation fixed******')
+                    # Indexes out due to the zero_problem
                     place = np.where(names == 'radiation')[0]
                     scalar_rad = self.scalar_x['radiation']
                     res = super().fix_values_0(scalar_rad.inverse_transform(x_test[z].iloc[:, place]),
@@ -713,21 +752,7 @@ class SVM(ML):
                         y_pred1 = y_pred
                         y_real1 = y_real
 
-                    if self.mask == True and len(y_pred1) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real1 < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred1 = np.delete(y_pred1, o, 0)
-                                y_real1 = np.delete(y_real1, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real1[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred1 = np.delete(y_pred1, oT, 0)
-                            y_real1 = np.delete(y_real1, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred1) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real1 == 0)[0]
@@ -743,6 +768,7 @@ class SVM(ML):
                             y_pred1 = np.delete(y_pred1, oT, 0)
                             y_real1 = np.delete(y_real1, oT, 0)
 
+                    # Errors calculation based on mean values, weights...
                     if len(y_pred1) > 0:
                         if np.sum(np.isnan(y_pred1)) == 0 and np.sum(np.isnan(y_real1)) == 0:
                             if mean_y.size == 0:
@@ -775,22 +801,7 @@ class SVM(ML):
                     else:
                         raise NameError('Empty prediction')
                 else:
-
-                    if self.mask == True and len(y_pred) > 0:
-                        if mean_y.size == 0:
-                            o = np.where(y_real < self.inf_limit)[0]
-                            if len(o) > 0:
-                                y_pred = np.delete(y_pred, o, 0)
-                                y_real = np.delete(y_real, o, 0)
-                        else:
-                            o = list()
-                            for t in range(len(mean_y)):
-                                o.append(np.where(y_real[:, t] < self.inf_limit[t])[0])
-
-                            oT = np.unique(np.concatenate(o))
-                            y_pred = np.delete(y_pred, oT, 0)
-                            y_real = np.delete(y_real, oT, 0)
-
+                    # Indexes where the real values are 0
                     if self.extract_cero == True and len(y_pred) > 0:
                         if mean_y.size == 0:
                             o = np.where(y_real == 0)[0]
@@ -805,7 +816,7 @@ class SVM(ML):
                             oT = np.unique(np.concatenate(o))
                             y_pred = np.delete(y_pred, oT, 0)
                             y_real = np.delete(y_real, oT, 0)
-
+                    # Errors calculation based on mean values, weights...
                     if len(y_pred) > 0:
                         if np.sum(np.isnan(y_pred)) == 0 and np.sum(np.isnan(y_real)) == 0:
                             if mean_y.size == 0:
@@ -837,24 +848,44 @@ class SVM(ML):
                             nmbe[z] = 9999
                     else:
                         raise NameError('Empty prediction')
+
+                #Plotting the results for each slice (depending of output variables)
                 if plot == True and len(y_realF.shape) > 1:
-                    s = np.max(y_realF.iloc[:, 0]).astype(int) + 15
-                    i = np.min(y_realF.iloc[:, 0]).astype(int) - 15
-                    a = np.round(cv[z], 2)
-                    plt.figure()
-                    plt.ylim(i, s)
-                    plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
-                    plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
-                    plt.legend()
-                    plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
-                    a = 'Subsample-'
-                    b = str(z) + '.png'
-                    plot_name = a + b
-                    plt.show()
-                    plt.savefig(plot_name)
+                    if y_realF.shape[1] > 1:
+                        for t in range(y_realF.shape[1]):
+                            s = np.max(y_realF.iloc[:, t]).astype(int) + 2
+                            i = np.min(y_realF.iloc[:, t]).astype(int) - 2
+                            a = np.round(cv[z], 2)
+                            plt.figure()
+                            plt.ylim(i, s)
+                            plt.plot(y_realF.iloc[:, t], color='black', label='Real')
+                            plt.plot(y_predF.iloc[:, t], color='blue', label='Prediction')
+                            plt.legend()
+                            plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                            a = 'Subsample-'
+                            b = str(z) + '.png'
+                            plot_name = a + b
+                            plot_name = plot_name + '- Var' + str(t)
+                            plt.show()
+                            plt.savefig(plot_name)
+                    else:
+                        s = np.max(y_realF.iloc[:, 0]).astype(int) + 2
+                        i = np.min(y_realF.iloc[:, 0]).astype(int) - 2
+                        a = np.round(cv[z], 2)
+                        plt.figure()
+                        plt.ylim(i, s)
+                        plt.plot(y_realF.iloc[:, 0], color='black', label='Real')
+                        plt.plot(y_predF.iloc[:, 0], color='blue', label='Prediction')
+                        plt.legend()
+                        plt.title("Subsample {} - CV(RMSE)={}".format(z, str(a)))
+                        a = 'Subsample-'
+                        b = str(z) + '.png'
+                        plot_name = a + b
+                        plt.show()
+                        plt.savefig(plot_name)
                 elif plot == True and len(y_realF.shape) < 2:
-                    s = np.max(y_realF).astype(int) + 15
-                    i = np.min(y_realF).astype(int) - 15
+                    s = np.max(y_realF).astype(int) + 2
+                    i = np.min(y_realF).astype(int) - 2
                     a = np.round(cv[z], 2)
                     plt.figure()
                     plt.ylim(i, s)
@@ -867,6 +898,7 @@ class SVM(ML):
                     plot_name = a + b
                     plt.show()
                     plt.savefig(plot_name)
+
             res = {'preds': predictions, 'reals': reales, 'times_test': times_test, 'cv_rmse': cv,
                    'std_cv': np.std(cv),
                    'nmbe': nmbe, 'rmse': rmse,
@@ -884,11 +916,17 @@ class SVM(ML):
             else:
                 return (res)
 
-    def optimal_search(self, C_options,epsilon_options,tol_options, fold,mean_y, parallel, weights):
+    def optimal_search(self, C_options,epsilon_options,tol_options, fold,values,mean_y, parallel, weights):
         '''
+        :param C_options:possible values for C
+        :param epsilon_options: possible values for epsilon
+        :param tol_options:possible values for tolerance
         :param fold: division in cv analyses
+        :param values specific values to divide the sample. specific values of a variable to search division
+        values: list with: 0-how many divisions, 1-values to divide, 2-place of the variable or variables to divide
+        :param mean_y: mean of y values for error calculations
         :param parallel: True or false (True to linux)
-        :param top: the best options yielded
+        :param weights: weights for the two objective functions (*AL REVES)
         :return: the options with their results and the top options
         '''
 
@@ -897,6 +935,8 @@ class SVM(ML):
         options = {'C':[], 'epsilon':[], 'tol':[]}
         w=0
         contador= len(C_options)*len(epsilon_options)*len(tol_options)-1
+
+        #Based on the cv_analysis and if there is paralelisation colection of results
         if parallel <2:
             for t in range(len(C_options)):
                 print('##################### Option ####################', w)
@@ -971,6 +1011,7 @@ class SVM(ML):
         d1 = complexity.copy()
         print(r1)
 
+        #Scalating the results: errors and complexity
         scal_cv = MinMaxScaler(feature_range=(0, 1))
         scal_com = MinMaxScaler(feature_range=(0, 1))
 
@@ -982,6 +1023,7 @@ class SVM(ML):
 
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
+        #Trying to get the best results consdiering the two metrics
         I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
         #I = get_decomposition("pbi").do(r_final, weights).argmin()
 
@@ -1001,6 +1043,7 @@ class SVM(ML):
         np.savetxt('objectives_selected_brute.txt', np.array([top_result['error'], top_result['complexity']]))
         np.savetxt('x_selected_brute.txt',np.array([top_result['C'],top_result['epsilon'],top_result['tol'] ]))
 
+        #Plotting the results of the two metrics and the best selected
         plt.figure(figsize=(12,9))
         plt.scatter(r_final[:, 0], r_final[:, 1], color='black')
         plt.xlabel('Normalised CV (RMSE)', fontsize=20, labelpad=10)
