@@ -317,8 +317,8 @@ class SVM(ML):
                             nmbe = np.sum(e_n * self.weights)
                             nmbet = np.sum(e_nt * self.weights)
 
-                    print('ERROR TRAINING CV, RMSE,NMBE:', [cvt,rmset, nmbet])
-                    print('ERROR TEST CV, RMSE,NMBE:', [cv,rmse, nmbe])
+                    print('ERROR TRAINING CV RMSE, RMSE,NMBE:', [cvt,rmset, nmbet])
+                    print('ERROR TEST CV RMSE, RMSE,NMBE:', [cv,rmse, nmbe])
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
@@ -429,8 +429,8 @@ class SVM(ML):
                             rmset = np.sum(e_rt * self.weights)
                             nmbe = np.sum(e_n * self.weights)
                             nmbet = np.sum(e_nt * self.weights)
-                    print('ERROR TRAINING CV, RMSE,NMBE:', [cvt,rmset, nmbet])
-                    print('ERROR TEST CV, RMSE,NMBE:', [cv,rmse, nmbe])
+                    print('ERROR TRAINING CV RMSE, RMSE,NMBE:', [cvt,rmset, nmbet])
+                    print('ERROR TEST CV RMSE, RMSE,NMBE:', [cv,rmse, nmbe])
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
@@ -505,8 +505,8 @@ class SVM(ML):
                             nmbe = np.sum(e_n * self.weights)
                             nmbet = np.sum(e_nt * self.weights)
 
-                    print('ERROR TRAINING CV, RMSE,NMBE:', [cvt,rmset, nmbet])
-                    print('ERROR TEST CV, RMSE,NMBE:', [cv,rmse, nmbe])
+                    print('ERROR TRAINING CV RMSE, RMSE,NMBE:', [cvt,rmset, nmbet])
+                    print('ERROR TEST CV RMSE, RMSE,NMBE:', [cv,rmse, nmbe])
                     res = {'y_pred': y_predF,'y_real':y_realF, 'cv_rmse': cv, 'nmbe': nmbe,
                            'rmse': rmse, 'r2': r2}
                 else:
