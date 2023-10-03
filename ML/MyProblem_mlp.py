@@ -177,6 +177,7 @@ class MyProblem_mlp(ElementwiseProblem):
                 y_real = val_y
                 y_real = np.array(self.scalar_y.inverse_transform(y_real))
 
+                #Check limits
                 if isinstance(self.pos_y, collections.abc.Sized):
                     for t in range(len(self.pos_y)):
                         y_pred[np.where(y_pred[:, t] < self.inf_limit[t])[0], t] = self.inf_limit[t]

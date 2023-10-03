@@ -1227,13 +1227,13 @@ class SVM(ML):
         # Creation of the problem
         if n_processes > 1:
             pool = multiprocessing.Pool(n_processes)
-            problem = MyProblem_svm(model,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(model,self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
                                 med, contador,len(xlimit_inf), C_max, epsilon_max, xlimit_inf, xlimit_sup,dictionary,values,self.weights,runner = pool.starmap,func_eval=starmap_parallelized_eval)
         else:
-            problem = MyProblem_svm(model,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
+            problem = MyProblem_svm(model,self.data,self.horizont, self.scalar_y, self.scalar_x,self.zero_problem,self.extract_cero, self.limits, self.times, self.pos_y,self.n_lags,
                                 self.mask,
                                 self.mask_value, self.inf_limit, self.sup_limit,
                                 self.type,
