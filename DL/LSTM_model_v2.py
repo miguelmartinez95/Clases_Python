@@ -210,7 +210,7 @@ class LSTM_model(DL):
 
         #Forming the data set (X, y) according the lags and the steps considered
         if onebyone[0]==True: # 1 a 1
-            for _ in range(len(data)-(n_lags + horizont+(n_steps-1))): #we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
+            for _ in range(len(data)-(n_lags + horizont+(n_steps-1))+1): #we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 out_end=in_end+horizont
