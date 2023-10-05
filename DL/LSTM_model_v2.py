@@ -1140,8 +1140,8 @@ class LSTM_model(DL):
         if dat_supervised==True:
             y_test, x_test = test[0], test[1]
             y_train, x_train = train[0], train[1]
-            ind_test = x_test.index
-            ind_train = x_train.index
+            ind_test = test[2]
+            ind_train = train[2]
         else:
             x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags,self.n_steps, self.horizont,
                                                                          onebyone)
