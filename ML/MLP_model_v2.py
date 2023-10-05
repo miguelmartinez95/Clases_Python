@@ -19,7 +19,8 @@ from ML_v2 import ML
 from MyProblem_mlp import MyProblem_mlp
 from MyRepair_mlp import MyRepair_mlp
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.factory import get_decomposition
+from pymoo.decomposition.pbi import PBI
+from pymoo.decomposition.aasf import AASF
 from pymoo.factory import get_crossover, get_mutation, get_sampling
 from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
@@ -710,8 +711,8 @@ class MLP(ML):
         r_final = np.array([cv[:, 0], com[:, 0]]).T
 
         #Trying to get the best results consdiering the two metrics
-        I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
-        #I = get_decomposition("pbi").do(r_final, weights).argmin()
+        #AASF.do(r_final, weights).argmin()
+        PBI.do(r_final, weights).argmin()
 
         top_result = {'error': [], 'complexity': [], 'nuerons': [], 'pacience': []}
         top_result['error'] = r1[I]
@@ -1192,9 +1193,8 @@ class MLP(ML):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
-            #I = get_decomposition("pbi").do(r_final, weights).argmin()
-
+            # AASF.do(r_final, weights).argmin()
+            PBI.do(r_final, weights).argmin()
             obj_T = res.F
             struct_T = rx
             obj = res.F[I, :]
@@ -1340,8 +1340,8 @@ class MLP(ML):
 
             r_final = np.array([cv[:,0], com[:,0]]).T
 
-            I = get_decomposition("aasf", beta=5).do(r_final, weights).argmin()
-            #I = get_decomposition("pbi").do(r_final, weights).argmin()
+            # AASF.do(r_final, weights).argmin()
+            PBI.do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
