@@ -1138,8 +1138,8 @@ class LSTM_model(DL):
 
         #Define the structure of inputs and outputs
         if dat_supervised==True:
-            y_test, x_test = test[:,:, self.pos_y], np.delete(test, self.pos_y,2)
-            y_train, x_train = train[:,:, self.pos_y], np.delete(train, self.pos_y,2)
+            y_test, x_test = test[0], test[1]
+            y_train, x_train = train[0], train[1]
             ind_test = x_test.index
             ind_train = x_train.index
         else:
