@@ -394,7 +394,6 @@ class DL:
         :return: data scaled depending if x, y or both are scaled
         '''
         scalars = dict()
-        names = list(groups.keys())
         #We make the scalation based on: inputs, outputs and if groups are defined (if not each variable separately)
         if x == True and y == True:
             if not groups:
@@ -417,6 +416,7 @@ class DL:
                     raise NameError('Problems with the scalar by groups of variables')
             else:
                 try:
+                    names = list(groups.keys())
                     for i in range(len(groups)):
                         scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                         selec = groups[names[i]]
@@ -452,6 +452,7 @@ class DL:
                     raise NameError('Problems with the scalar by groups of variables')
             else:
                 try:
+                    names = list(groups.keys())
                     for i in range(len(groups)):
                         scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                         selec = groups[names[i]]
