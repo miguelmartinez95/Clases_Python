@@ -210,7 +210,7 @@ class LSTM_model(DL):
 
         #Forming the data set (X, y) according the lags and the steps considered
         if onebyone[0]==True: # 1 a 1
-            for _ in range(len(data)-(n_lags + horizont+(n_steps))): #we go up to the final of dataset minus the lags, the horizont and the steps
+            for _ in range(len(data)-(n_lags + horizont+(n_steps-1))): #we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
                 # define the end of the input sequence
                 in_end = in_start + n_lags
                 out_end=in_end+horizont
@@ -233,10 +233,10 @@ class LSTM_model(DL):
                 in_start += 1
 
             #check if we go to the correct value (0)
-            dd=len(data)-in_start-(n_lags + horizont-n_steps)
+            dd=len(data)-in_start-(n_lags + horizont+(n_steps-1))
         else:
             if onebyone[1]==True: #lag a lag
-                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps)):#we go up to the final of dataset minus the lags, the horizont and the steps
+                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
                     # define the end of the input sequence
                     in_end = in_start + n_lags
                     out_end = in_end + horizont + (n_steps - 1)
@@ -258,10 +258,10 @@ class LSTM_model(DL):
                     in_start += n_lags
 
                 # check if we go to the correct value (0)
-                dd=len(data)-in_start-(n_lags + horizont-n_steps)
+                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))
 
             else:
-                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps)):#we go up to the final of dataset minus the lags, the horizont and the steps
+                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
                     # define the end of the input sequence
                     in_end = in_start + n_lags
                     out_end = in_end + horizont + (n_steps - 1)
@@ -283,7 +283,7 @@ class LSTM_model(DL):
                     in_start += n_steps
 
                 # check if we go to the correct value (0)
-                dd=len(data)-in_start-(n_lags + horizont-n_steps)
+                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))
 
         print('Data supervised')
         print('X shape: ', np.array(X).shape)
