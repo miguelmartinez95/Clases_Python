@@ -27,9 +27,9 @@ from pymoo.algorithms.moo.rnsga2 import RNSGA2
 from pymoo.decomposition.pbi import PBI
 from pymoo.decomposition.aasf import AASF
 from pymoo.factory import get_crossover, get_mutation, get_sampling
-from pymoo.termination.ftol import MultiObjectiveSpaceToleranceTermination
+from pymoo.termination.ftol import MultiObjectiveSpaceTermination
 from pymoo.optimize import minimize
-from pymoo.core.problem import starmap_parallelized_eval
+from pymoo.core.problem import StarmapParallelization
 from DeepL_v2 import DL
 from MyRepair_lstm import MyRepair_lstm
 from time import time
@@ -1754,7 +1754,7 @@ class LSTM_model(DL):
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
                                 self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,self.optimizer,
-            self.learning_rate,self.activation,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+            self.learning_rate,self.activation,runner = pool.starmap,func_eval=StarmapParallelization)
         else:
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps, self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
@@ -1768,7 +1768,7 @@ class LSTM_model(DL):
                           mutation=get_mutation("int_pm", prob=0.1))
 
         #Define the termination based on tolerance in feasible space
-        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+        termination = MultiObjectiveSpaceTermination(tol=tol,
                                                               n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
                                                               n_max_evals=6000)
         '''
@@ -1980,11 +1980,13 @@ class LSTM_model(DL):
             pool = multiprocessing.Pool(n_processes)
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,runner = pool.starmap,func_eval=starmap_parallelized_eval)
+                                self.scalar_x,self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,
+                                     self.optimizer,self.learning_rate, self.activation,runner = pool.starmap,func_eval=StarmapParallelization)
         else:
             problem = MyProblem_lstm(model,self.names,self.extract_cero,self.horizont, self.scalar_y, self.zero_problem, self.limits,self.times,self.pos_y,self.mask,
                                 self.mask_value, self.n_lags,self.n_steps,self.inf_limit, self.sup_limit, self.repeat_vector, self.type, self.data,
-                                self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values)
+                                self.scalar_x, self.dropout,self.weights,med, contador,len(xlimit_inf),l_lstm, l_dense, batch, xlimit_inf, xlimit_sup,dictionary,onebyone,values,
+                                     self.optimizer,self.learning_rate, self.activation)
 
         # Algorithm for optimisation
         algorithm = RNSGA2(ref_points, pop_size=pop_size, sampling=get_sampling("int_random"),
@@ -1996,7 +1998,7 @@ class LSTM_model(DL):
                            epsilon=epsilon)
 
         # Termination of the algorithm based on tolerance
-        termination = MultiObjectiveSpaceToleranceTermination(tol=tol,
+        termination = MultiObjectiveSpaceTerminationn(tol=tol,
                                                               n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
                                                               n_max_evals=6000)
         '''
