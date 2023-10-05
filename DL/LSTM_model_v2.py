@@ -1108,10 +1108,11 @@ class LSTM_model(DL):
         #FALTARÍA CLASIFICACION !!!!!!!!!!!!!!!!!
         ###################################################################################################
 
-    def train(self, train, test, neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=[False,False],limite=False, testing=False):
+    def train(self, train, test, dat_supervised,neurons_lstm, neurons_dense, pacience, batch, save_model,onebyone,model=[],loss_plot=False,metric_plot=[False,False],limite=False, testing=False):
         '''
         :param train: data for train
         :param test: data for validate
+        :param dat_suerpvised: True if the train/test already enter supervised (3 dimensions)
         :param neurons_lstm: vector of neurons LSTM
         :param neurons_dense: vector of neurons Dens
         :param pacience: stopping criterion
@@ -1136,10 +1137,16 @@ class LSTM_model(DL):
         #print('Data in three dimensions')
 
         #Define the structure of inputs and outputs
-        x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags,self.n_steps, self.horizont,
-                                                                     onebyone)
-        x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags,self.n_steps, self.horizont,
-                                                                        onebyone)
+        if dat_supervised==True:
+            y_test, x_test = test[:,:, self.pos_y], np.delete(test, self.pos_y,2)
+            y_train, x_train = train[:,:, self.pos_y], np.delete(train, self.pos_y,2)
+            ind_test = x_test.index
+            ind_train = x_train.index
+        else:
+            x_test, y_test, ind_test, dif = LSTM_model.to_supervised(test, self.pos_y, self.n_lags,self.n_steps, self.horizont,
+                                                                         onebyone)
+            x_train, y_train, ind_train, dif = LSTM_model.to_supervised(train, self.pos_y, self.n_lags,self.n_steps, self.horizont,
+                                                                            onebyone)
 
         if self.n_steps > 1:
             batch = 1
@@ -1689,7 +1696,7 @@ class LSTM_model(DL):
 
         #We search for the best solution
         #AASF.do(r_final, weights).argmin()
-        PBI.do(r_final, weights).argmin()
+        I=PBI.do(r_final, weights).argmin()
 
         top_result = {'error': [], 'complexity': [], 'neurons_dense': [],'neurons_lstm':[], 'pacience': []}
         top_result['error']=r1[I]
@@ -1798,7 +1805,7 @@ class LSTM_model(DL):
             r_final = np.array([cv[:,0], com[:,0]]).T
 
             # AASF.do(r_final, weights).argmin()
-            PBI.do(r_final, weights).argmin()
+            I=PBI.do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
@@ -1998,7 +2005,7 @@ class LSTM_model(DL):
                            epsilon=epsilon)
 
         # Termination of the algorithm based on tolerance
-        termination = MultiObjectiveSpaceTerminationn(tol=tol,
+        termination = MultiObjectiveSpaceTermination(tol=tol,
                                                               n_last=n_last, nth_gen=nth_gen, n_max_gen=None,
                                                               n_max_evals=6000)
         '''
@@ -2015,7 +2022,6 @@ class LSTM_model(DL):
 
         #We select the final optimum with normalized results
         if res.F.shape[0] > 1:
-            rf=res.F
             rx=res.X
             scal_cv = MinMaxScaler(feature_range=(0, 1))
             scal_com = MinMaxScaler(feature_range=(0, 1))
@@ -2029,7 +2035,7 @@ class LSTM_model(DL):
             r_final = np.array([cv[:,0], com[:,0]]).T
 
             # AASF.do(r_final, weights).argmin()
-            PBI.do(r_final, weights).argmin()
+            I=PBI.do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx

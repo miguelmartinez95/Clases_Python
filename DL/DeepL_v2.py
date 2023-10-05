@@ -404,10 +404,7 @@ class DL:
                     d = scalars.transform(d)
                     scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                     scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-                    if len(self.pos_y) > 1:
-                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-                    else:
-                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                    d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
                     self.data = pd.DataFrame(np.concatenate((d1, d), axis=1))
                     self.scalar_y = scalar_y

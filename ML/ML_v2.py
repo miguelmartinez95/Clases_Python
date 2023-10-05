@@ -390,8 +390,6 @@ class ML:
         :return: data scaled depending if x, y or both are scaled
         '''
         scalars = dict()
-        names = list(groups.keys())
-
         #We make the scalation based on: inputs, outputs and if groups are defined (if not each variable separately)
         if x == True and y == True:
             if not groups:
@@ -402,10 +400,7 @@ class ML:
                     d= scalars.transform(d)
                     scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                     scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-                    if len(self.pos_y) > 1:
-                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
-                    else:
-                        d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
+                    d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
                     self.data= pd.DataFrame(np.concatenate((d1,d),axis=1))
                     self.scalar_y = scalar_y
@@ -414,6 +409,7 @@ class ML:
                     raise NameError('Problems with the scalar by groups of variables')
             else:
                 try:
+                    names = list(groups.keys())
                     for i in range(len(groups)):
                         scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                         selec = groups[names[i]]
@@ -448,6 +444,7 @@ class ML:
                     raise NameError('Problems with the scalar by groups of variables')
             else:
                 try:
+                    names = list(groups.keys())
                     for i in range(len(groups)):
                         scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
                         selec = groups[names[i]]

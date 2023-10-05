@@ -712,7 +712,7 @@ class MLP(ML):
 
         #Trying to get the best results consdiering the two metrics
         #AASF.do(r_final, weights).argmin()
-        PBI.do(r_final, weights).argmin()
+        I=PBI.do(r_final, weights).argmin()
 
         top_result = {'error': [], 'complexity': [], 'nuerons': [], 'pacience': []}
         top_result['error'] = r1[I]
@@ -1194,7 +1194,7 @@ class MLP(ML):
             r_final = np.array([cv[:,0], com[:,0]]).T
 
             # AASF.do(r_final, weights).argmin()
-            PBI.do(r_final, weights).argmin()
+            I=PBI.do(r_final, weights).argmin()
             obj_T = res.F
             struct_T = rx
             obj = res.F[I, :]
@@ -1341,7 +1341,7 @@ class MLP(ML):
             r_final = np.array([cv[:,0], com[:,0]]).T
 
             # AASF.do(r_final, weights).argmin()
-            PBI.do(r_final, weights).argmin()
+            I=PBI.do(r_final, weights).argmin()
 
             obj_T = res.F
             struct_T = rx
