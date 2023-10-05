@@ -11,6 +11,8 @@ from time import time
 import collections
 import multiprocessing
 from multiprocessing import Process,Queue
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from pymoo.algorithms.moo.rnsga2 import RNSGA2
 from pathlib import Path

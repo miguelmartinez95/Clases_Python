@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 print('importa bien')
@@ -233,7 +235,7 @@ class LSTM_model(DL):
                 in_start += 1
 
             #check if we go to the correct value (0)
-            dd=len(data)-in_start-(n_lags + horizont+(n_steps-1)+1)
+            dd=len(data)-in_start-(n_lags + horizont+(n_steps-1))+1
         else:
             if onebyone[1]==True: #lag a lag
                 while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)+1):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
@@ -258,7 +260,7 @@ class LSTM_model(DL):
                     in_start += n_lags
 
                 # check if we go to the correct value (0)
-                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))
+                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))+1
 
             else:
                 while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)+1):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
@@ -283,7 +285,7 @@ class LSTM_model(DL):
                     in_start += n_steps
 
                 # check if we go to the correct value (0)
-                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1)+1)
+                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))+1
 
         print('Data supervised')
         print('X shape: ', np.array(X).shape)
