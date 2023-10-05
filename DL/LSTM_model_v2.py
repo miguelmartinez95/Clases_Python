@@ -5,7 +5,7 @@ from errors import Eval_metrics as evals
 import pandas as pd
 import numpy as np
 import keras
-
+import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping
@@ -14,7 +14,6 @@ from keras.layers import LSTM
 from keras.layers import Masking
 from keras.layers import RepeatVector
 from keras.layers import Dropout
-from keras.constraints import maxnorm
 import time
 import math
 import multiprocessing
@@ -50,7 +49,7 @@ class MyThresholdCallback(keras.callbacks.Callback):
 Conexion con GPUs
 '''
 
-import tensorflow as tf
+
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
@@ -339,7 +338,7 @@ class LSTM_model(DL):
                     if neurons_dense[z] == 0:
                         pass
                     else:
-                        model.add(Dense(neurons_dense[z], activation=activation, kernel_constraint=maxnorm(3)))
+                        model.add(Dense(neurons_dense[z], activation=activation, kernel_constraint=max_norm(3)))
                         model.add(Dropout(dropout))
             else:
                 for z in range(layers_neurons):
@@ -454,7 +453,7 @@ class LSTM_model(DL):
                     if neurons_dense[z]==0:
                         pass
                     else:
-                        model.add(Dense(neurons_dense[z], activation=activation, kernel_constraint=maxnorm(3)))
+                        model.add(Dense(neurons_dense[z], activation=activation))
                         model.add(Dropout(dropout))
             else:
                 for z in range(layers_neurons):
