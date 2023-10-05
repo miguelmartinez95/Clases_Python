@@ -27,7 +27,7 @@ from pymoo.algorithms.moo.rnsga2 import RNSGA2
 from pymoo.decomposition.pbi import PBI
 from pymoo.decomposition.aasf import AASF
 from pymoo.factory import get_crossover, get_mutation, get_sampling
-from pymoo.util.termination.f_tol import MultiObjectiveSpaceToleranceTermination
+from pymoo.termination.f_tol import MultiObjectiveSpaceToleranceTermination
 from pymoo.optimize import minimize
 from pymoo.core.problem import starmap_parallelized_eval
 from DeepL_v2 import DL
