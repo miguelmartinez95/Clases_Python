@@ -217,7 +217,7 @@ class LSTM_model(DL):
                 xx = data.drop(data.columns[pos_y], axis=1)
                 yy = data.iloc[:,pos_y]
                 # ensure we have enough data for this instance
-                if (out_end-1+(n_steps))<= len(data):
+                if (out_end-1+(n_steps-1))<= len(data):
                     x_input = xx.iloc[in_start:in_end,:]
                     X.append(x_input)
 
