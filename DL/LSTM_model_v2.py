@@ -238,7 +238,7 @@ class LSTM_model(DL):
             dd=len(data)-in_start-(n_lags + horizont+(n_steps-1))+1
         else:
             if onebyone[1]==True: #lag a lag
-                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)+1):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
+                while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
                     # define the end of the input sequence
                     in_end = in_start + n_lags
                     out_end = in_end + horizont + (n_steps - 1)
@@ -260,7 +260,7 @@ class LSTM_model(DL):
                     in_start += n_lags
 
                 # check if we go to the correct value (0)
-                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))+1
+                dd = len(data) - in_start - (n_lags + horizont + (n_steps - 1))
 
             else:
                 while in_start <= data.shape[0] -(n_lags + horizont+(n_steps-1)+1):#we go up to the final of dataset minus the lags, the horizont and the steps (steps-1 because wqe start at 1 default)
