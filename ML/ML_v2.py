@@ -474,13 +474,19 @@ class ML:
         self.data = self.data.dropna()
         self.times = self.data.index
 
-    def missing_values_masking_onehot(self):
+    def missing_values_masking_onehot(self, force):
         '''
         :return: the data with a column indicating if there missing values or not
         '''
         d=self.data.drop(self.data.columns[self.pos_y],axis=1)
         places=np.where(d.isnull().any(axis = 1))[0]
-        if len(places)<1:
+        if len(places)<1 and force==True:
+            binary_var= np.array([1 for x in range(self.data.shape[0])])
+            binary_var=pd.DataFrame(binary_var,columns=['onehot'])
+            self.data = pd.concat([self.data, binary_var.set_index(self.data.index)], axis=1)
+
+            print('Onehot Encoder applied to missing values')
+        elif len(places)<1 and force==False:
             print('No rows with missing values')
         else:
             binary_var= np.array([1 for x in range(self.data.shape[0])])
@@ -489,7 +495,6 @@ class ML:
             self.data = pd.concat([self.data, binary_var.set_index(self.data.index)], axis=1)
 
             print('Onehot Encoder applied to missing values')
-
     def missing_values_masking(self):
         self.data = self.data.replace(np.nan, self.mask_value)
 
