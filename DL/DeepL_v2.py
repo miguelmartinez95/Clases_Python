@@ -385,7 +385,7 @@ class DL:
 
         print('Horizont adjusted!')
 
-    def scalating(self, scalar_limits, groups, x, y):
+    def scalating(self, scalar_limits, groups, x, y, scalar_x=[], scalar_y=[]):
         '''
         Scalate date bsed on MinMax scaler and certain limits
 
@@ -399,11 +399,18 @@ class DL:
             if not groups:
                 try:
                     d = self.data.drop(self.data.columns[self.pos_y], axis=1)
-                    scalars = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    scalars.fit(d)
+                    if not scalar_x:
+                        scalars = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        scalars.fit(d)
+                    else:
+                        scalars=scalar_x
                     d = scalars.transform(d)
-                    scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+
+                    if not scalar_y:
+                        scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                    else:
+                        scalar_y=scalar_y
                     d1 = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
 
                     self.data = pd.DataFrame(np.concatenate((d1, d), axis=1))
@@ -415,19 +422,25 @@ class DL:
                 try:
                     names = list(groups.keys())
                     for i in range(len(groups)):
-                        scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                        selec = groups[names[i]]
-                        d = self.data.iloc[:, selec]
-                        if (len(selec) > 1):
-                            scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                        if not scalar_x:
+                            scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                            selec = groups[names[i]]
+                            d = self.data.iloc[:, selec]
+                            if (len(selec) > 1):
+                                scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                            else:
+                                scalars[names[i]].fit(np.array(d).reshape(-1, 1))
                         else:
-                            scalars[names[i]].fit(np.array(d).reshape(-1, 1))
+                            scalars=scalar_x
                         for z in range(len(selec)):
                             self.data.iloc[:, selec[z]] = scalars[names[i]].transform(pd.DataFrame(d.iloc[:, z]))[:, 0]
                 except:
                     raise NameError('Problems with the scalar by groups of variables')
-                scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                if not scalar_y:
+                    scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                    scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+                else:
+                    scalar_y=scalar_y
 
                 if isinstance(self.pos_y, collections.abc.Sized):
                     self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
@@ -440,8 +453,11 @@ class DL:
             if not groups:
                 try:
                     d =self.data.drop(self.data.columns[self.pos_y], axis=1)
-                    scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                    scalars.fit(d)
+                    if not scalar_x:
+                        scalars=MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                        scalars.fit(d)
+                    else:
+                        scalars=scalar_x
                     d= scalars.transform(d)
                     self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d)], axis=1)
                     self.scalar_x = scalars
@@ -451,21 +467,27 @@ class DL:
                 try:
                     names = list(groups.keys())
                     for i in range(len(groups)):
-                        scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-                        selec = groups[names[i]]
-                        d = self.data.iloc[:, selec]
-                        if (len(selec) > 1):
-                            scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                        if not scalar_x:
+                            scalars[names[i]] = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                            selec = groups[names[i]]
+                            d = self.data.iloc[:, selec]
+                            if (len(selec) > 1):
+                                scalars[names[i]].fit(np.concatenate(np.array(d)).reshape(-1, 1))
+                            else:
+                                scalars[names[i]].fit(np.array(d).reshape(-1, 1))
                         else:
-                            scalars[names[i]].fit(np.array(d).reshape(-1, 1))
+                            scalars=scalar_x
                         for z in range(len(selec)):
                             self.data.iloc[:,selec[z]]= scalars[names[i]].transform(pd.DataFrame(d.iloc[:,z]))[:,0]
                     self.scalar_x = scalars
                 except:
                     raise NameError('Problems with the scalar by groups of variables')
         elif y == True and x == False:
-            scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
-            scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+            if not scalar_y:
+                scalar_y = MinMaxScaler(feature_range=(scalar_limits[0], scalar_limits[1]))
+                scalar_y.fit(pd.DataFrame(self.data.iloc[:, self.pos_y]))
+            else:
+                scalar_y=scalar_y
 
             if isinstance(self.pos_y, collections.abc.Sized):
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))
