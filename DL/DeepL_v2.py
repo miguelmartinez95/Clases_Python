@@ -460,7 +460,7 @@ class DL:
                     else:
                         scalars=scalar_x
                     d= scalars.transform(d)
-                    self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d)], axis=1)
+                    self.data = pd.concat([self.data.iloc[:,self.pos_y], pd.DataFrame(d).set_index(self.data.index)], axis=1)
                     self.scalar_x = scalars
                 except:
                     raise NameError('Problems with the scalar by groups of variables')

@@ -1192,7 +1192,8 @@ class LSTM_model(DL):
         :param mean_y: vector of means
         :param batch: batch size for training
         :param times: dates for plot
-        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps        :param scalated: if they are scalated: [0] prediction sample [1] real sample
+        :param onebyone: how divide the data: [0] True 1 by 1, [1] True lags by lags, [1] False steps by steps
+        :param scalated: if they are scalated: [0] prediction sample [1] real sample
         :param daily: option to generate results day by day
         :param plotting: if True we create plots
          :return: prediction with the built metrics
