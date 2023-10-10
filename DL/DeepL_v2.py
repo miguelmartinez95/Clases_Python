@@ -496,7 +496,7 @@ class DL:
                 self.data.iloc[:, self.pos_y] = scalar_y.transform(pd.DataFrame(self.data.iloc[:, self.pos_y]))[:, 0]
 
             self.scalar_y = scalar_y
-        print('Data scaled!!')
+        print('Data normalized!!')
 
 
     def scalating (self, groups, x, y, scalar_x=[], scalar_y=[]):
