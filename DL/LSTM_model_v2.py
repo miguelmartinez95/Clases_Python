@@ -1623,7 +1623,7 @@ class LSTM_model(DL):
             import matplotlib.dates as md
             a = np.round(cv, 2)
             up =int(np.max(y_realF)) + int(np.max(y_realF)/4)
-            low = int(np.min(y_realF)) - int(np.min(y_realF)/4)
+            low = int(np.min(y_realF)) - abs(int(np.min(y_realF)/4))
             fig,ax = plt.subplots(1,1)
             plt.ylim(low, up)
             plt.plot(y_realF, color='black', label='Real')
