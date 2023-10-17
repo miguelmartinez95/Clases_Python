@@ -295,59 +295,116 @@ class LSTM_model(DL):
     @staticmethod
     def built_model_classification(train_x1, train_y1, neurons_lstm, neurons_dense, mask, mask_value, repeat_vector, dropout, optimizer,learning_rate,activation):
         '''
-        WORK IN PROGRESS!!!
 
+        :param trains: datasets
+        :param neurons_lstm: array with the LSTM neurons that define the LSTM layers
+        :param neurons_dense: array with the dense neurons that define the dense layers
         :param mask: True or False
-        :param repeat_vector: True or False
+        :param mask_value: specific value for masking
+        :param repeat_vector: True or False (specific layer). Repeat the inputs n times (batch, 12) -- (batch, n, 12). n would be the timesteps considered as inertia
+        :param dropout: between 0 and 1
+        :param optimizer: for training
+        :param learning_rate: for training
+        :param activation: activation function for training
         :return: the model architecture built to be trained
         '''
-
-        print('No finished')
         from keras import backend as K
 
+        if any(neurons_lstm==0):
+            neurons_lstm = neurons_lstm[neurons_lstm>0]
+        if any(neurons_dense==0):
+            neurons_dense = neurons_dense[neurons_dense>0]
 
+        #Define the operator based on the shape of X and y
         layers_lstm = len(neurons_lstm)
         layers_neurons = len(neurons_dense)
-
-        n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]  # define model
+        if len(train_x1.shape)<3 and len(train_y1.shape)<2:
+            n_timesteps, n_features, n_outputs = train_x1.shape[1], 1,1
+        elif len(train_x1.shape)<3:
+            n_timesteps, n_features, n_outputs = train_x1.shape[1], 1, train_y1.shape[1]
+        elif len(train_y1.shape)<2:
+            n_timesteps, n_features, n_outputs = train_x1.shape[1],train_x1.shape[2], 1
+        else:
+            n_timesteps, n_features, n_outputs = train_x1.shape[1], train_x1.shape[2], train_y1.shape[1]
 
         model = Sequential()
-        for k in range(layers_lstm):
-            if k == 0 and repeat_vector == True:
-                if mask == True:
-                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                    model.add(LSTM(neurons_lstm[k], activation=activation))
-                    model.add(RepeatVector(n_timesteps))
-                else:
-                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation=activation))
-                    model.add(RepeatVector(n_timesteps))
 
-            elif k == 0 and repeat_vector == False:
-                if mask == True:
-                    model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
-                    model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
-                else:
-                    model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), return_sequences=True,
-                                   activation=activation))
-            elif k == layers_lstm - 1:
-                model.add(LSTM(neurons_lstm[k], activation=activation))
+        #Building the structure of LSTM layers (masking, dropout, repeat_vector)
+        if layers_lstm<2:
+            if mask == True:
+                model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                model.add(LSTM(neurons_lstm[0], activation=activation))
             else:
-                model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
-
-        if layers_neurons > 0:
-            if dropout > 0:
-                for z in range(layers_neurons):
-                    if neurons_dense[z] == 0:
-                        pass
+                model.add(LSTM(neurons_lstm[0], input_shape=(n_timesteps, n_features),
+                               activation=activation))
+        else:
+            for k in range(layers_lstm):
+                if dropout>0 and repeat_vector==False:
+                    if k == 0:
+                        if mask == True:
+                            model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                            model.add(LSTM(neurons_lstm[k], activation=activation,return_sequences=True,))
+                            model.add(Dropout(dropout))
+                        else:
+                            model.add(
+                                LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation=activation))
+                            model.add(Dropout(dropout))
+                    elif k==layers_lstm-1:
+                        model.add(LSTM(neurons_lstm[k],activation=activation))
                     else:
-                        model.add(Dense(neurons_dense[z], activation=activation, kernel_constraint=max_norm(3)))
+                        model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
                         model.add(Dropout(dropout))
-            else:
+
+                elif dropout==0 and repeat_vector==True:
+                    if k==0:
+                        if mask==True:
+                            model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                            model.add(LSTM(neurons_lstm[k],activation=activation))
+                            model.add(RepeatVector(n_timesteps))
+                        else:
+                            model.add(LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features),activation=activation))
+                            model.add(RepeatVector(n_timesteps))
+                    elif k==layers_lstm-1:
+                        model.add(LSTM(neurons_lstm[k],activation=activation))
+                    else:
+                        model.add(LSTM(neurons_lstm[k],return_sequences=True,activation=activation))
+                elif dropout == 0 and repeat_vector == False:
+                    if k == 0:
+                        if mask == True:
+                            model.add(Masking(mask_value=mask_value, input_shape=(n_timesteps, n_features)))
+                            model.add(LSTM(neurons_lstm[k], activation=activation,return_sequences=True,))
+                        else:
+                            model.add(
+                                LSTM(neurons_lstm[k], input_shape=(n_timesteps, n_features), activation=activation))
+                    elif k == layers_lstm - 1:
+                        model.add(LSTM(neurons_lstm[k], activation=activation))
+                    else:
+                        model.add(LSTM(neurons_lstm[k], return_sequences=True, activation=activation))
+                else:
+                    raise (NameError('Dropout and Repeat vector together not considered'))
+
+        #Building the structure of Dense layers (dropout)
+        if layers_neurons>0:
+            if dropout>0:
                 for z in range(layers_neurons):
-                    if neurons_dense[z] == 0:
+                    if neurons_dense[z]==0:
                         pass
                     else:
                         model.add(Dense(neurons_dense[z], activation=activation))
+                        model.add(Dropout(dropout))
+            else:
+                for z in range(layers_neurons):
+                    if neurons_dense[z]==0:
+                        pass
+                    else:
+                        model.add(Dense(neurons_dense[z], activation=activation))
+
+        #Last layer neurons equal to the number of outputs
+        model.add(Dense(n_outputs,kernel_initializer='normal', activation='linear'))
+
+        model.compile(loss='mse', optimizer=optimizer,metrics=['mse'])
+        K.set_value(model.optimizer.learning_rate, learning_rate)
+        model.summary()
 
         model.add(Dense(n_outputs), kernel_initializer='normal', activation='softmax')
         model.compile(loss='categorical_crossentropy', optimizer=optimizer,metrics=['accuracy'])
@@ -1563,15 +1620,18 @@ class LSTM_model(DL):
         y_realF.index = y_predF.index
 
         if plotting==True:
+            import matplotlib.dates as md
             a = np.round(cv, 2)
             up =int(np.max(y_realF)) + int(np.max(y_realF)/4)
             low = int(np.min(y_realF)) - int(np.min(y_realF)/4)
-            plt.figure()
+            fig,ax = plt.subplots(1,1)
             plt.ylim(low, up)
             plt.plot(y_realF, color='black', label='Real')
             plt.plot(y_predF, color='blue', label='Prediction')
             plt.legend()
             plt.title("CV(RMSE)={}".format(str(a)))
+            ax.xaxis.set_major_locator(md.HourLocator(byhour=[0, 12]))
+            ax.xaxis.set_major_formatter(md.DateFormatter('%m-%d %H:%M'))
             plt.show()
             plt.savefig('plot1.png')
 
