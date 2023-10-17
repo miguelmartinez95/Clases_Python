@@ -1632,6 +1632,7 @@ class LSTM_model(DL):
             plt.title("CV(RMSE)={}".format(str(a)))
             ax.xaxis.set_major_locator(md.HourLocator(byhour=[0, 12]))
             ax.xaxis.set_major_formatter(md.DateFormatter('%m-%d %H:%M'))
+            plt.xticks(rotation=70)
             plt.show()
             plt.savefig('plot1.png')
 
